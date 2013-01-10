@@ -141,6 +141,8 @@ import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 // CraftBukkit end
 
+import org.bukkit.craftbukkit.SpigotTimings; // Spigot
+
 public abstract class EntityLiving extends Entity implements Attackable {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -2797,6 +2799,7 @@ public abstract class EntityLiving extends Entity implements Attackable {
 
     @Override
     public void tick() {
+        SpigotTimings.timerEntityBaseTick.startTiming(); // Spigot
         super.tick();
         this.updatingUsingItem();
         this.updateSwimAmount();
@@ -2838,7 +2841,9 @@ public abstract class EntityLiving extends Entity implements Attackable {
         }
 
         if (!this.isRemoved()) {
+            SpigotTimings.timerEntityBaseTick.stopTiming(); // Spigot
             this.aiStep();
+            SpigotTimings.timerEntityTickRest.startTiming(); // Spigot
         }
 
         double d0 = this.getX() - this.xo;
@@ -2921,6 +2926,7 @@ public abstract class EntityLiving extends Entity implements Attackable {
             this.setXRot(0.0F);
         }
 
+        SpigotTimings.timerEntityTickRest.stopTiming(); // Spigot
     }
 
     public void detectEquipmentUpdates() {
@@ -3098,6 +3104,7 @@ public abstract class EntityLiving extends Entity implements Attackable {
 
         this.setDeltaMovement(d4, d5, d6);
         this.level.getProfiler().push("ai");
+        SpigotTimings.timerEntityAI.startTiming(); // Spigot
         if (this.isImmobile()) {
             this.jumping = false;
             this.xxa = 0.0F;
@@ -3107,6 +3114,7 @@ public abstract class EntityLiving extends Entity implements Attackable {
             this.serverAiStep();
             this.level.getProfiler().pop();
         }
+        SpigotTimings.timerEntityAI.stopTiming(); // Spigot
 
         this.level.getProfiler().pop();
         this.level.getProfiler().push("jump");
@@ -3143,11 +3151,13 @@ public abstract class EntityLiving extends Entity implements Attackable {
         EntityLiving entityliving = this.getControllingPassenger();
         Vec3D vec3d1 = new Vec3D((double) this.xxa, (double) this.yya, (double) this.zza);
 
+        SpigotTimings.timerEntityAIMove.startTiming(); // Spigot
         if (entityliving != null && this.isAlive()) {
             this.travelRidden(entityliving, vec3d1);
         } else {
             this.travel(vec3d1);
         }
+        SpigotTimings.timerEntityAIMove.stopTiming(); // Spigot
 
         this.level.getProfiler().pop();
         this.level.getProfiler().push("freezing");
@@ -3174,7 +3184,9 @@ public abstract class EntityLiving extends Entity implements Attackable {
             this.checkAutoSpinAttack(axisalignedbb, this.getBoundingBox());
         }
 
+        SpigotTimings.timerEntityAICollision.startTiming(); // Spigot
         this.pushEntities();
+        SpigotTimings.timerEntityAICollision.stopTiming(); // Spigot
         this.level.getProfiler().pop();
         if (!this.level.isClientSide && this.isSensitiveToWater() && this.isInWaterRainOrBubble()) {
             this.hurt(this.damageSources().drown(), 1.0F);
