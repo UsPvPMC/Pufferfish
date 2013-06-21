@@ -2096,6 +2096,7 @@ public class PlayerConnection implements ServerPlayerConnection, TickablePacketL
 
     private void handleCommand(String s) {
         org.bukkit.craftbukkit.SpigotTimings.playerCommandTimer.startTiming(); // Spigot
+        if ( org.spigotmc.SpigotConfig.logCommands ) // Spigot
         this.LOGGER.info(this.player.getScoreboardName() + " issued server command: " + s);
 
         CraftPlayer player = this.getCraftPlayer();
