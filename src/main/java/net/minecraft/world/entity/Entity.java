@@ -1816,6 +1816,7 @@ public abstract class Entity implements INamableTileEntity, EntityAccess, IComma
             if (maxAirTicks != getDefaultMaxAirSupply()) {
                 nbttagcompound.putInt("Bukkit.MaxAirSupply", getMaxAirSupply());
             }
+            nbttagcompound.putInt("Spigot.ticksLived", this.tickCount);
             // CraftBukkit end
             IChatBaseComponent ichatbasecomponent = this.getCustomName();
 
@@ -1974,6 +1975,11 @@ public abstract class Entity implements INamableTileEntity, EntityAccess, IComma
             }
 
             // CraftBukkit start
+            // Spigot start
+            if (this instanceof EntityLiving) {
+                this.tickCount = nbttagcompound.getInt("Spigot.ticksLived");
+            }
+            // Spigot end
             this.persist = !nbttagcompound.contains("Bukkit.persist") || nbttagcompound.getBoolean("Bukkit.persist");
             this.visibleByDefault = !nbttagcompound.contains("Bukkit.visibleByDefault") || nbttagcompound.getBoolean("Bukkit.visibleByDefault");
             // SPIGOT-6907: re-implement LivingEntity#setMaximumAir()
