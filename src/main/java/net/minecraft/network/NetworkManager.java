@@ -151,6 +151,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 
             }
         }
+        if (net.minecraft.server.MinecraftServer.getServer().isDebugging()) throwable.printStackTrace(); // Spigot
     }
 
     protected void channelRead0(ChannelHandlerContext channelhandlercontext, Packet<?> packet) {
