@@ -64,6 +64,7 @@ import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.resources.ResourceKey;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.progress.ChunkProgressListener;
@@ -1725,12 +1726,84 @@ public class ServerLevel extends Level implements WorldGenLevel {
         return ((MapIndex) this.getServer().overworld().getDataStorage().computeIfAbsent(MapIndex::load, MapIndex::new, "idcounts")).getFreeAuxValueForMap();
     }
 
+    // Paper start - helper function for configurable spawn radius
+    public void addTicketsForSpawn(int radiusInBlocks, BlockPos spawn) {
+        // In order to respect vanilla behavior, which is ensuring everything but the spawn border can tick, we add tickets
+        // with level 31 for the non-border spawn chunks
+        ServerChunkCache chunkproviderserver = this.getChunkSource();
+        int tickRadius = radiusInBlocks - 16;
+
+        // add ticking chunks
+        for (int x = -tickRadius; x <= tickRadius; x += 16) {
+            for (int z = -tickRadius; z <= tickRadius; z += 16) {
+                // radius of 2 will have the current chunk be level 31
+                chunkproviderserver.addRegionTicket(TicketType.START, new ChunkPos(spawn.offset(x, 0, z)), 2, Unit.INSTANCE);
+            }
+        }
+
+        // add border chunks
+
+        // add border along x axis (including corner chunks)
+        for (int x = -radiusInBlocks; x <= radiusInBlocks; x += 16) {
+            // top
+            chunkproviderserver.addRegionTicket(TicketType.START, new ChunkPos(spawn.offset(x, 0, radiusInBlocks)), 1, Unit.INSTANCE); // level 32
+            // bottom
+            chunkproviderserver.addRegionTicket(TicketType.START, new ChunkPos(spawn.offset(x, 0, -radiusInBlocks)), 1, Unit.INSTANCE); // level 32
+        }
+
+        // add border along z axis (excluding corner chunks)
+        for (int z = -radiusInBlocks + 16; z < radiusInBlocks; z += 16) {
+            // right
+            chunkproviderserver.addRegionTicket(TicketType.START, new ChunkPos(spawn.offset(radiusInBlocks, 0, z)), 1, Unit.INSTANCE); // level 32
+            // left
+            chunkproviderserver.addRegionTicket(TicketType.START, new ChunkPos(spawn.offset(-radiusInBlocks, 0, z)), 1, Unit.INSTANCE); // level 32
+        }
+    }
+    public void removeTicketsForSpawn(int radiusInBlocks, BlockPos spawn) {
+        // In order to respect vanilla behavior, which is ensuring everything but the spawn border can tick, we added tickets
+        // with level 31 for the non-border spawn chunks
+        ServerChunkCache chunkproviderserver = this.getChunkSource();
+        int tickRadius = radiusInBlocks - 16;
+
+        // remove ticking chunks
+        for (int x = -tickRadius; x <= tickRadius; x += 16) {
+            for (int z = -tickRadius; z <= tickRadius; z += 16) {
+                // radius of 2 will have the current chunk be level 31
+                chunkproviderserver.removeRegionTicket(TicketType.START, new ChunkPos(spawn.offset(x, 0, z)), 2, Unit.INSTANCE);
+            }
+        }
+
+        // remove border chunks
+
+        // remove border along x axis (including corner chunks)
+        for (int x = -radiusInBlocks; x <= radiusInBlocks; x += 16) {
+            // top
+            chunkproviderserver.removeRegionTicket(TicketType.START, new ChunkPos(spawn.offset(x, 0, radiusInBlocks)), 1, Unit.INSTANCE); // level 32
+            // bottom
+            chunkproviderserver.removeRegionTicket(TicketType.START, new ChunkPos(spawn.offset(x, 0, -radiusInBlocks)), 1, Unit.INSTANCE); // level 32
+        }
+
+        // remove border along z axis (excluding corner chunks)
+        for (int z = -radiusInBlocks + 16; z < radiusInBlocks; z += 16) {
+            // right
+            chunkproviderserver.removeRegionTicket(TicketType.START, new ChunkPos(spawn.offset(radiusInBlocks, 0, z)), 1, Unit.INSTANCE); // level 32
+            // left
+            chunkproviderserver.removeRegionTicket(TicketType.START, new ChunkPos(spawn.offset(-radiusInBlocks, 0, z)), 1, Unit.INSTANCE); // level 32
+        }
+    }
+    // Paper end
+
     public void setDefaultSpawnPos(BlockPos pos, float angle) {
-        ChunkPos chunkcoordintpair = new ChunkPos(new BlockPos(this.levelData.getXSpawn(), 0, this.levelData.getZSpawn()));
+        // Paper - configurable spawn radius
+        BlockPos prevSpawn = this.getSharedSpawnPos();
+        //ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(new BlockPosition(this.worldData.a(), 0, this.worldData.c()));
 
         this.levelData.setSpawn(pos, angle);
-        this.getChunkSource().removeRegionTicket(TicketType.START, chunkcoordintpair, 11, Unit.INSTANCE);
-        this.getChunkSource().addRegionTicket(TicketType.START, new ChunkPos(pos), 11, Unit.INSTANCE);
+        if (this.keepSpawnInMemory) {
+            // if this keepSpawnInMemory is false a plugin has already removed our tickets, do not re-add
+            this.removeTicketsForSpawn(this.paperConfig().spawn.keepSpawnLoadedRange * 16, prevSpawn);
+            this.addTicketsForSpawn(this.paperConfig().spawn.keepSpawnLoadedRange * 16, pos);
+        }
         this.getServer().getPlayerList().broadcastAll(new ClientboundSetDefaultSpawnPositionPacket(pos, angle));
     }
 

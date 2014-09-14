@@ -1356,15 +1356,21 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
     @Override
     public void setKeepSpawnInMemory(boolean keepLoaded) {
-        world.keepSpawnInMemory = keepLoaded;
+        // Paper start - Configurable spawn radius
+        if (keepLoaded == world.keepSpawnInMemory) {
+            // do nothing, nothing has changed
+            return;
+        }
+        this.world.keepSpawnInMemory = keepLoaded;
         // Grab the worlds spawn chunk
         BlockPos chunkcoordinates = this.world.getSharedSpawnPos();
         if (keepLoaded) {
-            this.world.getChunkSource().addRegionTicket(TicketType.START, new ChunkPos(chunkcoordinates), 11, Unit.INSTANCE);
+            this.world.addTicketsForSpawn(this.world.paperConfig().spawn.keepSpawnLoadedRange * 16, chunkcoordinates);
         } else {
-            // TODO: doesn't work well if spawn changed....
-            this.world.getChunkSource().removeRegionTicket(TicketType.START, new ChunkPos(chunkcoordinates), 11, Unit.INSTANCE);
+            // TODO: doesn't work well if spawn changed.... // Paper - resolved
+            this.world.removeTicketsForSpawn(this.world.paperConfig().spawn.keepSpawnLoadedRange * 16, chunkcoordinates);
         }
+        // Paper end
     }
 
     @Override

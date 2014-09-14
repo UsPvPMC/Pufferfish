@@ -740,31 +740,34 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     // CraftBukkit start
     public void prepareLevels(ChunkProgressListener worldloadlistener, ServerLevel worldserver) {
+        ServerChunkCache chunkproviderserver = worldserver.getChunkSource(); // Paper
         // WorldServer worldserver = this.overworld();
         this.forceTicks = true;
         // CraftBukkit end
+        if (worldserver.getWorld().getKeepSpawnInMemory()) { // Paper
 
         MinecraftServer.LOGGER.info("Preparing start region for dimension {}", worldserver.dimension().location());
         BlockPos blockposition = worldserver.getSharedSpawnPos();
 
         worldloadlistener.updateSpawnPos(new ChunkPos(blockposition));
-        ServerChunkCache chunkproviderserver = worldserver.getChunkSource();
+        //ChunkProviderServer chunkproviderserver = worldserver.getChunkProvider(); // Paper - move up
 
         chunkproviderserver.getLightEngine().setTaskPerBatch(500);
         this.nextTickTime = Util.getMillis();
-        // CraftBukkit start
-        if (worldserver.getWorld().getKeepSpawnInMemory()) {
-            chunkproviderserver.addRegionTicket(TicketType.START, new ChunkPos(blockposition), 11, Unit.INSTANCE);
+        // Paper start - configurable spawn reason
+        int radiusBlocks = worldserver.paperConfig().spawn.keepSpawnLoadedRange * 16;
+        int radiusChunks = radiusBlocks / 16 + ((radiusBlocks & 15) != 0 ? 1 : 0);
+        int totalChunks = ((radiusChunks) * 2 + 1);
+        totalChunks *= totalChunks;
+        worldloadlistener.setChunkRadius(radiusBlocks / 16);
 
-            while (chunkproviderserver.getTickingGenerated() != 441) {
-                // this.nextTickTime = SystemUtils.getMillis() + 10L;
-                this.executeModerately();
-            }
-        }
+        worldserver.addTicketsForSpawn(radiusBlocks, blockposition);
+        // Paper end
 
         // this.nextTickTime = SystemUtils.getMillis() + 10L;
         this.executeModerately();
         // Iterator iterator = this.levels.values().iterator();
+        }
 
         if (true) {
             ServerLevel worldserver1 = worldserver;
@@ -787,7 +790,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         // this.nextTickTime = SystemUtils.getMillis() + 10L;
         this.executeModerately();
         // CraftBukkit end
-        worldloadlistener.stop();
+        if (worldserver.getWorld().getKeepSpawnInMemory()) worldloadlistener.stop(); // Paper
         chunkproviderserver.getLightEngine().setTaskPerBatch(5);
         // CraftBukkit start
         // this.updateMobSpawningFlags();

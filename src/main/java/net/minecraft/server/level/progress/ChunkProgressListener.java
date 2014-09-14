@@ -12,4 +12,6 @@ public interface ChunkProgressListener {
     void start();
 
     void stop();
+
+    void setChunkRadius(int radius); // Paper - allow changing chunk radius
 }
