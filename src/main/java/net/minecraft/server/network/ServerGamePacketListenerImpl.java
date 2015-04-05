@@ -1755,8 +1755,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             ServerGamePacketListenerImpl.LOGGER.info("Disconnecting {} due to resource pack rejection", this.player.getName());
             this.disconnect(Component.translatable("multiplayer.requiredTexturePrompt.disconnect"));
         }
-        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), PlayerResourcePackStatusEvent.Status.values()[packet.action.ordinal()])); // CraftBukkit
-
+        // Paper start
+        PlayerResourcePackStatusEvent.Status packStatus = PlayerResourcePackStatusEvent.Status.values()[packet.action.ordinal()];
+        player.getBukkitEntity().setResourcePackStatus(packStatus);
+        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), packStatus)); // CraftBukkit
+        // Paper end
     }
 
     @Override

@@ -154,6 +154,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.StandardMessenger;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.scoreboard.Scoreboard;
+import org.jetbrains.annotations.NotNull;
 
 import net.md_5.bungee.api.chat.BaseComponent; // Spigot
 
@@ -172,6 +173,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     private double healthScale = 20;
     private CraftWorldBorder clientWorldBorder = null;
     private BorderChangeListener clientWorldBorderListener = this.createWorldBorderListener();
+    // Paper start
+    private org.bukkit.event.player.PlayerResourcePackStatusEvent.Status resourcePackStatus;
+    private String resourcePackHash;
+    // Paper end
 
     public CraftPlayer(CraftServer server, ServerPlayer entity) {
         super(server, entity);
@@ -2350,6 +2355,45 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     @Override
     public boolean getAffectsSpawning() {
         return this.getHandle().affectsSpawning;
+    }
+
+    @Override
+    public void setResourcePack(@NotNull String url, @NotNull String hash) {
+        this.setResourcePack(url, hash, false, null);
+    }
+
+    @Override
+    public void setResourcePack(@NotNull String url, @NotNull String hash, boolean required) {
+        this.setResourcePack(url, hash, required, null);
+    }
+
+    @Override
+    public void setResourcePack(@NotNull String url, @NotNull String hash, boolean required, net.kyori.adventure.text.Component resourcePackPrompt) {
+        Validate.notNull(url, "Resource pack URL cannot be null");
+        Validate.notNull(hash, "Hash cannot be null");
+        net.minecraft.network.chat.Component promptComponent = resourcePackPrompt != null ?
+                            io.papermc.paper.adventure.PaperAdventure.asVanilla(resourcePackPrompt) :
+                           null;
+        this.getHandle().sendTexturePack(url, hash, required, promptComponent);
+    }
+
+    @Override
+    public org.bukkit.event.player.PlayerResourcePackStatusEvent.Status getResourcePackStatus() {
+        return this.resourcePackStatus;
+    }
+
+    @Override
+    public String getResourcePackHash() {
+        return this.resourcePackHash;
+    }
+
+    @Override
+    public boolean hasResourcePack() {
+        return this.resourcePackStatus == org.bukkit.event.player.PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED;
+    }
+
+    public void setResourcePackStatus(org.bukkit.event.player.PlayerResourcePackStatusEvent.Status status) {
+        this.resourcePackStatus = status;
     }
     // Paper end
 
