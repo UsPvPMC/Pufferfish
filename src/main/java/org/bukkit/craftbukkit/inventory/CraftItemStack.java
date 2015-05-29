@@ -6,7 +6,6 @@ import java.util.Map;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -178,28 +177,11 @@ public final class CraftItemStack extends ItemStack {
     public void addUnsafeEnchantment(Enchantment ench, int level) {
         Validate.notNull(ench, "Cannot add null enchantment");
 
-        if (!CraftItemStack.makeTag(this.handle)) {
-            return;
-        }
-        ListTag list = CraftItemStack.getEnchantmentList(this.handle);
-        if (list == null) {
-            list = new ListTag();
-            this.handle.getTag().put(ENCHANTMENTS.NBT, list);
-        }
-        int size = list.size();
-
-        for (int i = 0; i < size; i++) {
-            CompoundTag tag = (CompoundTag) list.get(i);
-            String id = tag.getString(ENCHANTMENTS_ID.NBT);
-            if (ench.getKey().equals(NamespacedKey.fromString(id))) {
-                tag.putShort(ENCHANTMENTS_LVL.NBT, (short) level);
-                return;
-            }
-        }
-        CompoundTag tag = new CompoundTag();
-        tag.putString(ENCHANTMENTS_ID.NBT, ench.getKey().toString());
-        tag.putShort(ENCHANTMENTS_LVL.NBT, (short) level);
-        list.add(tag);
+        // Paper start - Replace whole method
+        final ItemMeta itemMeta = this.getItemMeta();
+        itemMeta.addEnchant(ench, level, true);
+        this.setItemMeta(itemMeta);
+        // Paper end
     }
 
     static boolean makeTag(net.minecraft.world.item.ItemStack item) {
@@ -225,57 +207,29 @@ public final class CraftItemStack extends ItemStack {
         if (this.handle == null) {
             return 0;
         }
-        return EnchantmentHelper.getItemEnchantmentLevel(CraftEnchantment.getRaw(ench), handle);
+        return net.minecraft.world.item.enchantment.EnchantmentHelper.getItemEnchantmentLevel(CraftEnchantment.getRaw(ench), handle); // Paper
     }
 
     @Override
     public int removeEnchantment(Enchantment ench) {
         Validate.notNull(ench, "Cannot remove null enchantment");
 
-        ListTag list = CraftItemStack.getEnchantmentList(this.handle), listCopy;
-        if (list == null) {
-            return 0;
+        // Paper start - replace entire method
+        int level = getEnchantmentLevel(ench);
+        if (level > 0) {
+            final ItemMeta itemMeta = this.getItemMeta();
+            if (itemMeta == null) return 0;
+            itemMeta.removeEnchant(ench);
+            this.setItemMeta(itemMeta);
         }
-        int index = Integer.MIN_VALUE;
-        int level = Integer.MIN_VALUE;
-        int size = list.size();
-
-        for (int i = 0; i < size; i++) {
-            CompoundTag enchantment = (CompoundTag) list.get(i);
-            String id = enchantment.getString(ENCHANTMENTS_ID.NBT);
-            if (ench.getKey().equals(NamespacedKey.fromString(id))) {
-                index = i;
-                level = 0xffff & enchantment.getShort(ENCHANTMENTS_LVL.NBT);
-                break;
-            }
-        }
-
-        if (index == Integer.MIN_VALUE) {
-            return 0;
-        }
-        if (size == 1) {
-            this.handle.getTag().remove(ENCHANTMENTS.NBT);
-            if (this.handle.getTag().isEmpty()) {
-                this.handle.setTag(null);
-            }
-            return level;
-        }
-
-        // This is workaround for not having an index removal
-        listCopy = new ListTag();
-        for (int i = 0; i < size; i++) {
-            if (i != index) {
-                listCopy.add(list.get(i));
-            }
-        }
-        this.handle.getTag().put(ENCHANTMENTS.NBT, listCopy);
+        // Paper end
 
         return level;
     }
 
     @Override
     public Map<Enchantment, Integer> getEnchantments() {
-        return CraftItemStack.getEnchantments(this.handle);
+        return this.hasItemMeta() ? this.getItemMeta().getEnchants() : ImmutableMap.<Enchantment, Integer>of(); // Paper - use Item Meta
     }
 
     static Map<Enchantment, Integer> getEnchantments(net.minecraft.world.item.ItemStack item) {
