@@ -2156,6 +2156,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void setRealHealth(double health) {
+        if (Double.isNaN(health)) {return;} // Paper
         this.health = health;
     }
 
