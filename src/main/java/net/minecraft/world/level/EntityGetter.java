@@ -82,6 +82,11 @@ public interface EntityGetter {
         }
     }
 
+    // Paper start
+    default @Nullable Player findNearbyPlayer(Entity entity, double maxDistance, @Nullable Predicate<Entity> predicate) {
+        return this.getNearestPlayer(entity.getX(), entity.getY(), entity.getZ(), maxDistance, predicate);
+    }
+    // Paper end
     @Nullable
     default Player getNearestPlayer(double x, double y, double z, double maxDistance, @Nullable Predicate<Entity> targetPredicate) {
         double d = -1.0D;
@@ -110,6 +115,20 @@ public interface EntityGetter {
         Predicate<Entity> predicate = ignoreCreative ? EntitySelector.NO_CREATIVE_OR_SPECTATOR : EntitySelector.NO_SPECTATORS;
         return this.getNearestPlayer(x, y, z, maxDistance, predicate);
     }
+
+    // Paper start
+    default boolean hasNearbyAlivePlayerThatAffectsSpawning(double x, double y, double z, double range) {
+        for (Player player : this.players()) {
+            if (EntitySelector.PLAYER_AFFECTS_SPAWNING.test(player)) { // combines NO_SPECTATORS and LIVING_ENTITY_STILL_ALIVE with an "affects spawning" check
+                double distanceSqr = player.distanceToSqr(x, y, z);
+                if (range < 0.0D || distanceSqr < range * range) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    // Paper end
 
     default boolean hasNearbyAlivePlayer(double x, double y, double z, double range) {
         for(Player player : this.players()) {
