@@ -77,6 +77,7 @@ public class Zombie extends Monster {
 
     private static final UUID SPEED_MODIFIER_BABY_UUID = UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836");
     private static final AttributeModifier SPEED_MODIFIER_BABY = new AttributeModifier(Zombie.SPEED_MODIFIER_BABY_UUID, "Baby speed boost", 0.5D, AttributeModifier.Operation.MULTIPLY_BASE);
+    private final AttributeModifier babyModifier = new net.minecraft.world.entity.ai.attributes.AttributeModifier(SPEED_MODIFIER_BABY.getId(), SPEED_MODIFIER_BABY.getName(), this.level.paperConfig().entities.behavior.babyZombieMovementModifier, SPEED_MODIFIER_BABY.getOperation()); // Paper - Make baby speed configurable
     private static final EntityDataAccessor<Boolean> DATA_BABY_ID = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_SPECIAL_TYPE_ID = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Boolean> DATA_DROWNED_CONVERSION_ID = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
@@ -185,9 +186,9 @@ public class Zombie extends Monster {
         if (this.level != null && !this.level.isClientSide) {
             AttributeInstance attributemodifiable = this.getAttribute(Attributes.MOVEMENT_SPEED);
 
-            attributemodifiable.removeModifier(Zombie.SPEED_MODIFIER_BABY);
+            attributemodifiable.removeModifier(this.babyModifier); // Paper
             if (baby) {
-                attributemodifiable.addTransientModifier(Zombie.SPEED_MODIFIER_BABY);
+                attributemodifiable.addTransientModifier(this.babyModifier); // Paper
             }
         }
 
