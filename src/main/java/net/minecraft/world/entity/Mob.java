@@ -841,14 +841,14 @@ public abstract class Mob extends LivingEntity implements Targeting {
 
             if (entityhuman != null) {
                 double d0 = entityhuman.distanceToSqr((Entity) this);
-                int i = this.getType().getCategory().getDespawnDistance();
+                int i = this.level.paperConfig().entities.spawning.despawnRanges.get(this.getType().getCategory()).hard(); // Paper - custom despawn distances
                 int j = i * i;
 
                 if (d0 > (double) j && this.removeWhenFarAway(d0)) {
                     this.discard();
                 }
 
-                int k = this.getType().getCategory().getNoDespawnDistance();
+                int k = this.level.paperConfig().entities.spawning.despawnRanges.get(this.getType().getCategory()).soft(); // Paper - custom despawn distances
                 int l = k * k;
 
                 if (this.noActionTime > 600 && this.random.nextInt(800) == 0 && d0 > (double) l && this.removeWhenFarAway(d0)) {
