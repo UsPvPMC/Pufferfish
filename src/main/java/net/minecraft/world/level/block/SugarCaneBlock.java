@@ -52,7 +52,7 @@ public class SugarCaneBlock extends Block {
                 ;
             }
 
-            if (i < 3) {
+            if (i < world.paperConfig().maxGrowthHeight.reeds) { // Paper - Configurable growth height
                 int j = (Integer) state.getValue(SugarCaneBlock.AGE);
 
                 int modifier = world.spigotConfig.caneModifier; // Spigot - SPIGOT-7159: Better modifier resolution
