@@ -9,10 +9,9 @@ plugins {
 dependencies {
     implementation(project(":paper-api"))
     implementation("jline:jline:2.12.1")
-    implementation("org.apache.logging.log4j:log4j-iostreams:2.19.0") {
-        exclude(group = "org.apache.logging.log4j", module = "log4j-api")
-    }
+    implementation("org.apache.logging.log4j:log4j-iostreams:2.19.0") // Paper - remove exclusion
     implementation("org.ow2.asm:asm:9.4")
+    implementation("org.ow2.asm:asm-commons:9.4") // Paper - ASM event executor generation
     implementation("commons-lang:commons-lang:2.6")
     runtimeOnly("org.xerial:sqlite-jdbc:3.41.0.0")
     runtimeOnly("com.mysql:mysql-connector-j:8.0.32")
@@ -23,6 +22,8 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.hamcrest:hamcrest-library:1.3")
+
+    implementation("io.netty:netty-all:4.1.87.Final"); // Paper - Bump netty
 }
 
 val craftbukkitPackageVersion = "1_19_R3" // Paper
@@ -34,6 +35,7 @@ tasks.jar {
         val gitHash = git("rev-parse", "--short=7", "HEAD").getText().trim()
         val implementationVersion = System.getenv("BUILD_NUMBER") ?: "\"$gitHash\""
         val date = git("show", "-s", "--format=%ci", gitHash).getText().trim() // Paper
+        val gitBranch = git("rev-parse", "--abbrev-ref", "HEAD").getText().trim() // Paper
         attributes(
             "Main-Class" to "org.bukkit.craftbukkit.Main",
             "Implementation-Title" to "CraftBukkit",
@@ -42,6 +44,9 @@ tasks.jar {
             "Specification-Title" to "Bukkit",
             "Specification-Version" to project.version,
             "Specification-Vendor" to "Bukkit Team",
+            "Git-Branch" to gitBranch, // Paper
+            "Git-Commit" to gitHash, // Paper
+            "CraftBukkit-Package-Version" to craftbukkitPackageVersion, // Paper
         )
         for (tld in setOf("net", "com", "org")) {
             attributes("$tld/bukkit", "Sealed" to true)
@@ -74,6 +79,17 @@ tasks.shadowJar {
         }
     }
 }
+
+// Paper start
+val scanJar = tasks.register("scanJarForBadCalls", io.papermc.paperweight.tasks.ScanJarForBadCalls::class) {
+    badAnnotations.add("Lio/papermc/paper/annotation/DoNotUse;")
+    jarToScan.set(tasks.shadowJar.flatMap { it.archiveFile })
+    classpath.from(configurations.compileClasspath)
+}
+tasks.check {
+    dependsOn(scanJar)
+}
+// Paper end
 
 tasks.test {
     exclude("org/bukkit/craftbukkit/inventory/ItemStack*Test.class")
