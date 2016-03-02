@@ -213,7 +213,12 @@ public abstract class BlockEntity {
             return minecraftkey + " // " + this.getClass().getCanonicalName();
         });
         if (this.level != null) {
-            CrashReportCategory.populateBlockDetails(crashReportSection, this.level, this.worldPosition, this.getBlockState());
+            // Paper start - Prevent TileEntity and Entity crashes
+            BlockState block = this.getBlockState();
+            if (block != null) {
+                CrashReportCategory.populateBlockDetails(crashReportSection, this.level, this.worldPosition, block);
+            }
+            // Paper end
             CrashReportCategory.populateBlockDetails(crashReportSection, this.level, this.worldPosition, this.level.getBlockState(this.worldPosition));
         }
     }

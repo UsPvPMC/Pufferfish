@@ -735,11 +735,11 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         try {
             tickConsumer.accept(entity);
         } catch (Throwable throwable) {
-            CrashReport crashreport = CrashReport.forThrowable(throwable, "Ticking entity");
-            CrashReportCategory crashreportsystemdetails = crashreport.addCategory("Entity being ticked");
-
-            entity.fillCrashReportCategory(crashreportsystemdetails);
-            throw new ReportedException(crashreport);
+            // Paper start - Prevent tile entity and entity crashes
+            final String msg = String.format("Entity threw exception at %s:%s,%s,%s", entity.level.getWorld().getName(), entity.getX(), entity.getY(), entity.getZ());
+            MinecraftServer.LOGGER.error(msg, throwable);
+            entity.discard();
+            // Paper end
         }
     }
 
