@@ -71,6 +71,7 @@ public class Bootstrap {
                     CauldronInteraction.bootStrap();
                     // Paper start
                     BuiltInRegistries.bootStrap(() -> {
+                        net.minecraft.core.Registry.register(net.minecraft.core.registries.BuiltInRegistries.MATERIAL_CONDITION, new net.minecraft.resources.ResourceLocation("paper", "bedrock_condition_source"), net.minecraft.data.worldgen.SurfaceRuleData.PaperBedrockConditionSource.CODEC.codec());
                         io.papermc.paper.plugin.entrypoint.LaunchEntryPointHandler.enterBootstrappers(); // Paper - Entrypoint for bootstrapping
                     });
                     // Paper end

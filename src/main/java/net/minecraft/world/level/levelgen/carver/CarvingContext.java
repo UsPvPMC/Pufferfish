@@ -21,8 +21,8 @@ public class CarvingContext extends WorldGenerationContext {
     private final RandomState randomState;
     private final SurfaceRules.RuleSource surfaceRule;
 
-    public CarvingContext(NoiseBasedChunkGenerator noiseChunkGenerator, RegistryAccess registryManager, LevelHeightAccessor heightLimitView, NoiseChunk chunkNoiseSampler, RandomState noiseConfig, SurfaceRules.RuleSource materialRule) {
-        super(noiseChunkGenerator, heightLimitView);
+    public CarvingContext(NoiseBasedChunkGenerator noiseChunkGenerator, RegistryAccess registryManager, LevelHeightAccessor heightLimitView, NoiseChunk chunkNoiseSampler, RandomState noiseConfig, SurfaceRules.RuleSource materialRule, @javax.annotation.Nullable net.minecraft.world.level.Level level) { // Paper
+        super(noiseChunkGenerator, heightLimitView, level); // Paper
         this.registryAccess = registryManager;
         this.noiseChunk = chunkNoiseSampler;
         this.randomState = noiseConfig;
