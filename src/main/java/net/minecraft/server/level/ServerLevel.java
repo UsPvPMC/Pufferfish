@@ -2214,6 +2214,15 @@ public class ServerLevel extends Level implements WorldGenLevel {
 
             entity.updateDynamicGameEventListener(DynamicGameEventListener::add);
             entity.valid = true; // CraftBukkit
+            // Paper start - Set origin location when the entity is being added to the world
+            if (entity.getOriginVector() == null) {
+                entity.setOrigin(entity.getBukkitEntity().getLocation());
+            }
+            // Default to current world if unknown, gross assumption but entities rarely change world
+            if (entity.getOriginWorld() == null) {
+                entity.setOrigin(entity.getOriginVector().toLocation(getWorld()));
+            }
+            // Paper end
         }
 
         public void onTrackingEnd(Entity entity) {

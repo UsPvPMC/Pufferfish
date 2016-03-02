@@ -307,7 +307,27 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     public long activatedTick = Integer.MIN_VALUE;
     public void inactiveTick() { }
     // Spigot end
+    // Paper start
+    @javax.annotation.Nullable
+    private org.bukkit.util.Vector origin;
+    @javax.annotation.Nullable
+    private UUID originWorld;
 
+    public void setOrigin(@javax.annotation.Nonnull Location location) {
+        this.origin = location.toVector();
+        this.originWorld = location.getWorld().getUID();
+    }
+
+    @javax.annotation.Nullable
+    public org.bukkit.util.Vector getOriginVector() {
+        return this.origin != null ? this.origin.clone() : null;
+    }
+
+    @javax.annotation.Nullable
+    public UUID getOriginWorld() {
+        return this.originWorld;
+    }
+    // Paper end
     public float getBukkitYaw() {
         return this.yRot;
     }
@@ -1942,6 +1962,15 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                 this.bukkitEntity.storeBukkitValues(nbt);
             }
             // CraftBukkit end
+            // Paper start - Save the entity's origin location
+            if (this.origin != null) {
+                UUID originWorld = this.originWorld != null ? this.originWorld : this.level != null ? this.level.getWorld().getUID() : null;
+                if (originWorld != null) {
+                    nbt.putUUID("Paper.OriginWorld", originWorld);
+                }
+                nbt.put("Paper.Origin", this.newDoubleList(origin.getX(), origin.getY(), origin.getZ()));
+            }
+            // Paper end
             return nbt;
         } catch (Throwable throwable) {
             CrashReport crashreport = CrashReport.forThrowable(throwable, "Saving entity NBT");
@@ -2068,6 +2097,20 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                 this.persistentInvisibility = bukkitInvisible;
             }
             // CraftBukkit end
+
+            // Paper start - Restore the entity's origin location
+            ListTag originTag = nbt.getList("Paper.Origin", 6);
+            if (!originTag.isEmpty()) {
+                UUID originWorld = null;
+                if (nbt.contains("Paper.OriginWorld")) {
+                    originWorld = nbt.getUUID("Paper.OriginWorld");
+                } else if (this.level != null) {
+                    originWorld = this.level.getWorld().getUID();
+                }
+                this.originWorld = originWorld;
+                origin = new org.bukkit.util.Vector(originTag.getDouble(0), originTag.getDouble(1), originTag.getDouble(2));
+            }
+            // Paper end
 
         } catch (Throwable throwable) {
             CrashReport crashreport = CrashReport.forThrowable(throwable, "Loading entity NBT");

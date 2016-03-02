@@ -118,6 +118,14 @@ public class PrimedTnt extends Entity implements TraceableEntity {
     @Override
     protected void readAdditionalSaveData(CompoundTag nbt) {
         this.setFuse(nbt.getShort("Fuse"));
+        // Paper start - Try and load origin location from the old NBT tags for backwards compatibility
+        if (nbt.contains("SourceLoc_x")) {
+            int srcX = nbt.getInt("SourceLoc_x");
+            int srcY = nbt.getInt("SourceLoc_y");
+            int srcZ = nbt.getInt("SourceLoc_z");
+            this.setOrigin(new org.bukkit.Location(level.getWorld(), srcX, srcY, srcZ));
+        }
+        // Paper end
     }
 
     @Nullable
