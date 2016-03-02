@@ -692,7 +692,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
         gameprofilerfiller.push("thunder");
         BlockPos blockposition;
 
-        if (flag && this.isThundering() && this.spigotConfig.thunderChance > 0 && this.random.nextInt(this.spigotConfig.thunderChance) == 0) { // Spigot
+        if (!this.paperConfig().environment.disableThunder && flag && this.isThundering() && this.spigotConfig.thunderChance > 0 && this.random.nextInt(this.spigotConfig.thunderChance) == 0) { // Spigot // Paper - disable thunder
             blockposition = this.findLightningTargetAround(this.getBlockRandomPos(j, 0, k, 15));
             if (this.isRainingAt(blockposition)) {
                 DifficultyInstance difficultydamagescaler = this.getCurrentDifficultyAt(blockposition);
