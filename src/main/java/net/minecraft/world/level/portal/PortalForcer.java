@@ -55,7 +55,7 @@ public class PortalForcer {
         Optional<PoiRecord> optional = villageplace.getInSquare((holder) -> {
             return holder.is(PoiTypes.NETHER_PORTAL);
         }, blockposition, i, PoiManager.Occupancy.ANY).filter((villageplacerecord) -> {
-            return worldborder.isWithinBounds(villageplacerecord.getPos());
+            return worldborder.isWithinBounds(villageplacerecord.getPos()) && !this.level.paperConfig().environment.netherCeilingVoidDamageHeight.test(v -> villageplacerecord.getPos().getY() >= v); // Paper - don't teleport into void damage
         }).sorted(Comparator.comparingDouble((PoiRecord villageplacerecord) -> { // CraftBukkit - decompile error
             return villageplacerecord.getPos().distSqr(blockposition);
         }).thenComparingInt((villageplacerecord) -> {
@@ -90,6 +90,11 @@ public class PortalForcer {
         BlockPos blockposition2 = null;
         WorldBorder worldborder = this.level.getWorldBorder();
         int i = Math.min(this.level.getMaxBuildHeight(), this.level.getMinBuildHeight() + this.level.getLogicalHeight()) - 1;
+        // Paper start - if ceiling void damage is enabled, make sure the max height doesn't exceed the void damage height
+        if (this.level.paperConfig().environment.netherCeilingVoidDamageHeight.enabled()) {
+            i = Math.min(i, this.level.paperConfig().environment.netherCeilingVoidDamageHeight.intValue() - 1);
+        }
+        // Paper end
         BlockPos.MutableBlockPos blockposition_mutableblockposition = blockposition.mutable();
         Iterator iterator = BlockPos.spiralAround(blockposition, createRadius, Direction.EAST, Direction.SOUTH).iterator(); // CraftBukkit
 

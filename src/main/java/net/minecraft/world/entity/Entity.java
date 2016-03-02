@@ -708,7 +708,11 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     }
 
     public void checkOutOfWorld() {
-        if (this.getY() < (double) (this.level.getMinBuildHeight() - 64)) {
+        // Paper start - Configurable nether ceiling damage
+        if (this.getY() < (double) (this.level.getMinBuildHeight() - 64) || (this.level.getWorld().getEnvironment() == org.bukkit.World.Environment.NETHER
+            && this.level.paperConfig().environment.netherCeilingVoidDamageHeight.test(v -> this.getY() >= v)
+            && (!(this instanceof Player player) || !player.getAbilities().invulnerable))) {
+            // Paper end
             this.outOfWorld();
         }
 
