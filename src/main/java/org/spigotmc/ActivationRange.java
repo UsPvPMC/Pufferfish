@@ -89,6 +89,7 @@ public class ActivationRange
                 || entity instanceof AbstractHurtingProjectile
                 || entity instanceof LightningBolt
                 || entity instanceof PrimedTnt
+                || entity instanceof net.minecraft.world.entity.item.FallingBlockEntity // Paper - Always tick falling blocks
                 || entity instanceof EndCrystal
                 || entity instanceof FireworkRocketEntity
                 || entity instanceof ThrownTrident )
