@@ -1897,12 +1897,13 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
     @Override
     public void setFlying(boolean value) {
+        boolean needsUpdate = getHandle().getAbilities().flying != value; // Paper - Only refresh abilities if needed
         if (!this.getAllowFlight() && value) {
             throw new IllegalArgumentException("Cannot make player fly if getAllowFlight() is false");
         }
 
         this.getHandle().getAbilities().flying = value;
-        this.getHandle().onUpdateAbilities();
+        if (needsUpdate) this.getHandle().onUpdateAbilities(); // Paper - Only refresh abilities if needed
     }
 
     @Override
