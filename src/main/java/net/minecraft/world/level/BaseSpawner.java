@@ -45,6 +45,7 @@ public abstract class BaseSpawner {
     public int maxNearbyEntities = 6;
     public int requiredPlayerRange = 16;
     public int spawnRange = 4;
+    private int tickDelay = 0; // Paper
 
     public BaseSpawner() {}
 
@@ -79,13 +80,18 @@ public abstract class BaseSpawner {
     }
 
     public void serverTick(ServerLevel world, BlockPos pos) {
+        // Paper start - Configurable mob spawner tick rate
+        if (spawnDelay > 0 && --tickDelay > 0) return;
+        tickDelay = world.paperConfig().tickRates.mobSpawner;
+        if (tickDelay == -1) { return; } // If disabled
+        // Paper end
         if (this.isNearPlayer(world, pos)) {
-            if (this.spawnDelay == -1) {
+            if (this.spawnDelay < -tickDelay) {
                 this.delay(world, pos);
             }
 
             if (this.spawnDelay > 0) {
-                --this.spawnDelay;
+                this.spawnDelay -= tickDelay; // Paper
             } else {
                 boolean flag = false;
                 RandomSource randomsource = world.getRandom();
@@ -152,8 +158,7 @@ public abstract class BaseSpawner {
                                 ((Mob) entity).finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.SPAWNER, (SpawnGroupData) null, (CompoundTag) null);
                             }
                             // Spigot Start
-                            if ( entityinsentient.level.spigotConfig.nerfSpawnerMobs )
-                            {
+                            if (entityinsentient.level.spigotConfig.nerfSpawnerMobs) {
                                 entityinsentient.aware = false;
                             }
                             // Spigot End
