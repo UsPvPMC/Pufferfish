@@ -56,7 +56,7 @@ public class PlayerDataStorage {
             File file = new File(this.playerDir, player.getStringUUID() + ".dat");
             // Spigot Start
             boolean usingWrongFile = false;
-            if ( !file.exists() )
+            if ( org.bukkit.Bukkit.getOnlineMode() && !file.exists() ) // Paper - Check online mode first
             {
                 file = new File( this.playerDir, java.util.UUID.nameUUIDFromBytes( ( "OfflinePlayer:" + player.getScoreboardName() ).getBytes( "UTF-8" ) ).toString() + ".dat");
                 if ( file.exists() )
