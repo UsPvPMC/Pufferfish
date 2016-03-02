@@ -202,7 +202,7 @@ public class Explosion {
         int i1 = Mth.floor(this.y + (double) f2 + 1.0D);
         int j1 = Mth.floor(this.z - (double) f2 - 1.0D);
         int k1 = Mth.floor(this.z + (double) f2 + 1.0D);
-        List<Entity> list = this.level.getEntities(this.source, new AABB((double) i, (double) l, (double) j1, (double) j, (double) i1, (double) k1));
+        List<Entity> list = this.level.getEntities(this.source, new AABB((double) i, (double) l, (double) j1, (double) j, (double) i1, (double) k1), (com.google.common.base.Predicate<Entity>) entity -> entity.isAlive() && !entity.isSpectator()); // Paper - Fix lag from explosions processing dead entities
         Vec3 vec3d = new Vec3(this.x, this.y, this.z);
 
         for (int l1 = 0; l1 < list.size(); ++l1) {
