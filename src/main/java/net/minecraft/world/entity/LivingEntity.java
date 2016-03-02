@@ -1405,10 +1405,12 @@ public abstract class LivingEntity extends Entity implements Attackable {
                 }
             }
 
+            boolean knockbackCancelled = level.paperConfig().environment.disableExplosionKnockback && source.is(DamageTypeTags.IS_EXPLOSION) && this instanceof net.minecraft.world.entity.player.Player; // Paper - Disable explosion knockback
             if (flag1) {
                 if (flag) {
                     this.level.broadcastEntityEvent(this, (byte) 29);
                 } else {
+                    if (!knockbackCancelled) // Paper - Disable explosion knockback
                     this.level.broadcastDamageEvent(this, source);
                 }
 
@@ -1432,6 +1434,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
                 }
             }
 
+            if (knockbackCancelled) this.level.broadcastEntityEvent(this, (byte) 2); // Paper - Disable explosion knockback
             if (this.isDeadOrDying()) {
                 if (!this.checkTotemDeathProtection(source)) {
                     SoundEvent soundeffect = this.getDeathSound();
