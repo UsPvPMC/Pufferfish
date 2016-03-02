@@ -722,7 +722,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
         gameprofilerfiller.popPush("iceandsnow");
         int l;
 
-        if (this.random.nextInt(16) == 0) {
+        if (!this.paperConfig().environment.disableIceAndSnow && this.random.nextInt(16) == 0) { // Paper - Disable ice and snow
             blockposition = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.getBlockRandomPos(j, 0, k, 15));
             BlockPos blockposition1 = blockposition.below();
             Biome biomebase = (Biome) this.getBiome(blockposition).value();
