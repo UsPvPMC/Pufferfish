@@ -236,6 +236,8 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.potion.PotionEffect;
 
+import org.bukkit.event.entity.SpawnerSpawnEvent; // Spigot
+
 public class CraftEventFactory {
     public static org.bukkit.block.Block blockDamage; // For use in EntityDamageByBlockEvent
     public static Entity entityDamage; // For use in EntityDamageByEntityEvent
@@ -1524,6 +1526,21 @@ public class CraftEventFactory {
         PrepareSmithingEvent event = new PrepareSmithingEvent(view, CraftItemStack.asCraftMirror(item).clone());
         event.getView().getPlayer().getServer().getPluginManager().callEvent(event);
         event.getInventory().setResult(event.getResult());
+        return event;
+    }
+
+    /**
+     * Mob spawner event.
+     */
+    public static SpawnerSpawnEvent callSpawnerSpawnEvent(Entity spawnee, BlockPosition pos) {
+        org.bukkit.craftbukkit.entity.CraftEntity entity = spawnee.getBukkitEntity();
+        BlockState state = entity.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()).getState();
+        if (!(state instanceof org.bukkit.block.CreatureSpawner)) {
+            state = null;
+        }
+
+        SpawnerSpawnEvent event = new SpawnerSpawnEvent(entity, (org.bukkit.block.CreatureSpawner) state);
+        entity.getServer().getPluginManager().callEvent(event);
         return event;
     }
 
