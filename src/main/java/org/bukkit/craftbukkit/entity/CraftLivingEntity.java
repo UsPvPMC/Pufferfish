@@ -102,7 +102,10 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     public void setHealth(double health) {
         health = (float) health;
         if ((health < 0) || (health > this.getMaxHealth())) {
-            throw new IllegalArgumentException("Health must be between 0 and " + this.getMaxHealth() + "(" + health + ")");
+            // Paper - Be more informative
+            throw new IllegalArgumentException("Health must be between 0 and " + getMaxHealth() + ", but was " + health
+                + ". (attribute base value: " + this.getHandle().getAttribute(Attributes.MAX_HEALTH).getBaseValue()
+                + (this instanceof CraftPlayer ? ", player: " + this.getName() + ')' : ')'));
         }
 
         // during world generation, we don't want to run logic for dropping items and xp
