@@ -548,6 +548,11 @@ public class FriendlyByteBuf extends ByteBuf {
     public FriendlyByteBuf writeComponent(final net.kyori.adventure.text.Component component) {
         return this.writeUtf(PaperAdventure.asJsonString(component, this.adventure$locale), 262144);
     }
+
+    @Deprecated
+    public FriendlyByteBuf writeComponent(final net.md_5.bungee.api.chat.BaseComponent[] component) {
+        return this.writeUtf(net.md_5.bungee.chat.ComponentSerializer.toString(component), 262144);
+    }
     // Paper end
 
     public FriendlyByteBuf writeComponent(Component text) {
