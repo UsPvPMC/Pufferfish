@@ -701,9 +701,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         // Spigot start
         // Iterator iterator = this.blockEntityTickers.iterator();
         int tilesThisCycle = 0;
-        for (this.tileLimiter.initTick();
-                tilesThisCycle < this.blockEntityTickers.size() && (tilesThisCycle % 10 != 0 || this.tileLimiter.shouldContinue());
-                this.tileTickPosition++, tilesThisCycle++) {
+        for (tileTickPosition = 0; tileTickPosition < this.blockEntityTickers.size(); tileTickPosition++) { // Paper - Disable tick limiters
             this.tileTickPosition = (this.tileTickPosition < this.blockEntityTickers.size()) ? this.tileTickPosition : 0;
             TickingBlockEntity tickingblockentity = (TickingBlockEntity) this.blockEntityTickers.get(tileTickPosition);
             // Spigot start
