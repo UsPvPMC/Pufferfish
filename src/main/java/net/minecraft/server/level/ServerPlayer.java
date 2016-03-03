@@ -239,6 +239,7 @@ public class ServerPlayer extends Player {
     private int containerCounter;
     public int latency;
     public boolean wonGame;
+    private int containerUpdateDelay; // Paper
 
     // CraftBukkit start
     public String displayName;
@@ -629,7 +630,12 @@ public class ServerPlayer extends Player {
             --this.invulnerableTime;
         }
 
-        this.containerMenu.broadcastChanges();
+        // Paper start - Configurable container update tick rate
+        if (--containerUpdateDelay <= 0) {
+            this.containerMenu.broadcastChanges();
+            containerUpdateDelay = level.paperConfig().tickRates.containerUpdate;
+        }
+        // Paper end
         if (!this.level.isClientSide && !this.containerMenu.stillValid(this)) {
             this.closeContainer();
             this.containerMenu = this.inventoryMenu;
