@@ -2035,7 +2035,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         return true;
     }
 
-    private static boolean isChatMessageIllegal(String message) {
+    public static boolean isChatMessageIllegal(String message) { // Paper - private -> public
         for (int i = 0; i < message.length(); ++i) {
             if (!SharedConstants.isAllowedChatCharacter(message.charAt(i))) {
                 return true;
@@ -2052,7 +2052,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
         OutgoingChatMessage outgoing = OutgoingChatMessage.create(original);
 
-        if (!async && s.startsWith("/")) {
+        if (false && !async && s.startsWith("/")) { // Paper - don't handle commands in chat logic
             this.handleCommand(s);
         } else if (this.player.getChatVisibility() == ChatVisiblity.SYSTEM) {
             // Do nothing, this is coming from a plugin
@@ -2142,7 +2142,29 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
     }
 
-    private void handleCommand(String s) {
+    public void handleCommand(String s) { // Paper - private -> public
+        // Paper Start
+        if (!org.spigotmc.AsyncCatcher.shuttingDown && !org.bukkit.Bukkit.isPrimaryThread()) {
+            LOGGER.error("Command Dispatched Async: " + s);
+            LOGGER.error("Please notify author of plugin causing this execution to fix this bug! see: http://bit.ly/1oSiM6C", new Throwable());
+            Waitable<Void> wait = new Waitable<>() {
+                @Override
+                protected Void evaluate() {
+                    ServerGamePacketListenerImpl.this.handleCommand(s);
+                    return null;
+                }
+            };
+            server.processQueue.add(wait);
+            try {
+                wait.get();
+                return;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // This is proper habit for java. If we aren't handling it, pass it on!
+            } catch (Exception e) {
+                throw new RuntimeException("Exception processing chat command", e.getCause());
+            }
+        }
+        // Paper End
         co.aikar.timings.MinecraftTimings.playerCommandTimer.startTiming(); // Paper
         if ( org.spigotmc.SpigotConfig.logCommands ) // Spigot
         this.LOGGER.info(this.player.getScoreboardName() + " issued server command: " + s);
