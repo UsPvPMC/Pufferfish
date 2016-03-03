@@ -55,6 +55,12 @@ public class EmptyLevelChunk extends LevelChunk {
     public void setBlockEmptinessMap(final boolean[] emptinessMap) {}
     // Paper end - starlight
 
+    // Paper start
+    @Override
+    public BlockState getBlockState(int x, int y, int z) {
+        return Blocks.VOID_AIR.defaultBlockState();
+    }
+    // Paper end
     @Override
     public BlockState getBlockState(BlockPos pos) {
         return Blocks.VOID_AIR.defaultBlockState();

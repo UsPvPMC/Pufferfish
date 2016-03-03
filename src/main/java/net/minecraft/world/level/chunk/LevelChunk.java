@@ -335,12 +335,29 @@ public class LevelChunk extends ChunkAccess {
         }
     }
 
+    // Paper start - Optimize getBlockData to reduce instructions
     @Override
     public BlockState getBlockState(BlockPos pos) {
-        int i = pos.getX();
-        int j = pos.getY();
-        int k = pos.getZ();
+        return this.getBlockStateFinal(pos.getX(), pos.getY(), pos.getZ());
+    }
 
+    @Override
+    public BlockState getBlockState(final int x, final int y, final int z) {
+        return this.getBlockStateFinal(x, y, z);
+    }
+    public final BlockState getBlockStateFinal(final int x, final int y, final int z) {
+        // Method body / logic copied from below
+        final int i = this.getSectionIndex(y);
+        if (i < 0 || i >= this.sections.length || this.sections[i].nonEmptyBlockCount == 0 || this.sections[i].hasOnlyAir()) {
+            return Blocks.AIR.defaultBlockState();
+        }
+        // Inlined ChunkSection.getType() and DataPaletteBlock.a(int,int,int)
+        return this.sections[i].states.get((y & 15) << 8 | (z & 15) << 4 | x & 15);
+
+    }
+
+    public BlockState getBlockState_unused(int i, int j, int k) {
+        // Paper end
         if (this.level.isDebug()) {
             BlockState iblockdata = null;
 

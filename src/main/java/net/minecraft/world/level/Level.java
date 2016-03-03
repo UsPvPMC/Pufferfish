@@ -285,7 +285,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     }
 
     public boolean isInWorldBounds(BlockPos pos) {
-        return !this.isOutsideBuildHeight(pos) && Level.isInWorldBoundsHorizontal(pos);
+        return pos.isInsideBuildHeightAndWorldBoundsHorizontal(this); // Paper - use better/optimized check
     }
 
     public static boolean isInSpawnableBounds(BlockPos pos) {
