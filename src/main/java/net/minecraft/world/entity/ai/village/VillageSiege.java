@@ -118,6 +118,7 @@ public class VillageSiege implements CustomSpawner {
                 entityzombie.finalizeSpawn(world, world.getCurrentDifficultyAt(entityzombie.blockPosition()), MobSpawnType.EVENT, (SpawnGroupData) null, (CompoundTag) null);
             } catch (Exception exception) {
                 VillageSiege.LOGGER.warn("Failed to create zombie for village siege at {}", vec3d, exception);
+                com.destroystokyo.paper.exception.ServerInternalException.reportInternalException(exception); // Paper
                 return;
             }
 

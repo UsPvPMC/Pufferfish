@@ -1,5 +1,10 @@
 package net.minecraft.world.level;
 
+import co.aikar.timings.Timing;
+import co.aikar.timings.Timings;
+import com.destroystokyo.paper.event.server.ServerExceptionEvent;
+import com.destroystokyo.paper.exception.ServerInternalException;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.mojang.serialization.Codec;
 import java.io.IOException;
@@ -737,6 +742,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
             // Paper start - Prevent tile entity and entity crashes
             final String msg = String.format("Entity threw exception at %s:%s,%s,%s", entity.level.getWorld().getName(), entity.getX(), entity.getY(), entity.getZ());
             MinecraftServer.LOGGER.error(msg, throwable);
+            getCraftServer().getPluginManager().callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable)));
             entity.discard();
             // Paper end
         }

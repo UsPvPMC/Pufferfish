@@ -1,5 +1,6 @@
 package net.minecraft.server.players;
 
+import com.destroystokyo.paper.exception.ServerInternalException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
@@ -363,6 +364,7 @@ public class OldUsersConverter {
                             root = NbtIo.readCompressed(new java.io.FileInputStream(file5));
                         } catch (Exception exception) {
                             exception.printStackTrace();
+                            ServerInternalException.reportInternalException(exception); // Paper
                         }
 
                         if (root != null) {
@@ -376,6 +378,7 @@ public class OldUsersConverter {
                                 NbtIo.writeCompressed(root, new java.io.FileOutputStream(file2));
                             } catch (Exception exception) {
                                 exception.printStackTrace();
+                                ServerInternalException.reportInternalException(exception); // Paper
                             }
                        }
                         // CraftBukkit end

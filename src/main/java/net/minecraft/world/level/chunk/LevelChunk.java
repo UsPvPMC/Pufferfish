@@ -1,6 +1,7 @@
 package net.minecraft.world.level.chunk;
 
 import com.google.common.collect.ImmutableList;
+import com.destroystokyo.paper.exception.ServerInternalException;
 import com.google.common.collect.Maps;
 import com.google.common.collect.UnmodifiableIterator;
 import com.mojang.logging.LogUtils;
@@ -598,10 +599,16 @@ public class LevelChunk extends ChunkAccess {
 
             // CraftBukkit start
         } else {
-            System.out.println("Attempted to place a tile entity (" + blockEntity + ") at " + blockEntity.getBlockPos().getX() + "," + blockEntity.getBlockPos().getY() + "," + blockEntity.getBlockPos().getZ()
-                + " (" + this.getBlockState(blockposition) + ") where there was no entity tile!");
-            System.out.println("Chunk coordinates: " + (this.chunkPos.x * 16) + "," + (this.chunkPos.z * 16));
-            new Exception().printStackTrace();
+            // Paper start
+            ServerInternalException e = new ServerInternalException(
+                "Attempted to place a tile entity (" + blockEntity + ") at " + blockEntity.getBlockPos().getX() + ","
+                    + blockEntity.getBlockPos().getY() + "," + blockEntity.getBlockPos().getZ()
+                    + " (" + getBlockState(blockposition) + ") where there was no entity tile!\n" +
+                    "Chunk coordinates: " + (this.chunkPos.x * 16) + "," + (this.chunkPos.z * 16) +
+                    "\nWorld: " + level.getLevel().dimension().location());
+            e.printStackTrace();
+            ServerInternalException.reportInternalException(e);
+            // Paper end
             // CraftBukkit end
         }
     }
@@ -1194,6 +1201,7 @@ public class LevelChunk extends ChunkAccess {
                         // Paper start - Prevent tile entity and entity crashes
                         final String msg = String.format("BlockEntity threw exception at %s:%s,%s,%s", LevelChunk.this.getLevel().getWorld().getName(), this.getPos().getX(), this.getPos().getY(), this.getPos().getZ());
                         net.minecraft.server.MinecraftServer.LOGGER.error(msg, throwable);
+                        net.minecraft.world.level.chunk.LevelChunk.this.level.getCraftServer().getPluginManager().callEvent(new com.destroystokyo.paper.event.server.ServerExceptionEvent(new ServerInternalException(msg, throwable)));
                         LevelChunk.this.removeBlockEntity(this.getPos());
                         // Paper end
                         // Spigot start
