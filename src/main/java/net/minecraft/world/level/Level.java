@@ -262,6 +262,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         });
         // CraftBukkit end
         timings = new co.aikar.timings.WorldTimingsHandler(this); // Paper - code below can generate new world and access timings
+        this.keepSpawnInMemory = this.paperConfig().spawn.keepSpawnLoaded; // Paper
         this.entityLimiter = new org.spigotmc.TickLimiter(spigotConfig.entityMaxTickTime);
         this.tileLimiter = new org.spigotmc.TickLimiter(spigotConfig.tileMaxTickTime);
     }
