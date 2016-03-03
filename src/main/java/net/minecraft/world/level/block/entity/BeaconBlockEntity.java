@@ -41,6 +41,10 @@ import net.minecraft.world.phys.AABB;
 import org.bukkit.craftbukkit.potion.CraftPotionUtil;
 import org.bukkit.potion.PotionEffect;
 // CraftBukkit end
+// Paper start
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import com.destroystokyo.paper.event.block.BeaconEffectEvent;
+// Paper end
 
 public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Nameable {
 
@@ -280,15 +284,23 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
         }
     }
 
-    private static void applyEffect(List list, MobEffect mobeffectlist, int j, int b0) {
-        {
+    private static void applyEffect(List list, MobEffect effects, int i, int b0, boolean isPrimary, BlockPos worldPosition) { // Paper - BeaconEffectEvent
+        if (!list.isEmpty()) { // Paper - BeaconEffectEvent
             Iterator iterator = list.iterator();
 
             Player entityhuman;
+            // Paper start - BeaconEffectEvent
+            org.bukkit.block.Block block = ((Player) list.get(0)).level.getWorld().getBlockAt(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
+            PotionEffect effect = CraftPotionUtil.toBukkit(new MobEffectInstance(effects, i, b0, true, true));
+            // Paper end
 
             while (iterator.hasNext()) {
-                entityhuman = (Player) iterator.next();
-                entityhuman.addEffect(new MobEffectInstance(mobeffectlist, j, b0, true, true), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.BEACON);
+                // Paper start - BeaconEffectEvent
+                entityhuman = (ServerPlayer) iterator.next();
+                BeaconEffectEvent event = new BeaconEffectEvent(block, effect, (org.bukkit.entity.Player) entityhuman.getBukkitEntity(), isPrimary);
+                if (CraftEventFactory.callEvent(event).isCancelled()) continue;
+                entityhuman.addEffect(new MobEffectInstance(CraftPotionUtil.fromBukkit(event.getEffect())), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.BEACON);
+                // Paper end
             }
         }
     }
@@ -311,10 +323,10 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
             int j = BeaconBlockEntity.getLevel(beaconLevel);
             List list = BeaconBlockEntity.getHumansInRange(world, pos, beaconLevel);
 
-            BeaconBlockEntity.applyEffect(list, primaryEffect, j, b0);
+            BeaconBlockEntity.applyEffect(list, primaryEffect, j, b0, true, pos); // Paper - BeaconEffectEvent
 
             if (BeaconBlockEntity.hasSecondaryEffect(beaconLevel, primaryEffect, secondaryEffect)) {
-                BeaconBlockEntity.applyEffect(list, secondaryEffect, j, 0);
+                BeaconBlockEntity.applyEffect(list, secondaryEffect, j, 0, false, pos); // Paper - BeaconEffectEvent
             }
         }
 
