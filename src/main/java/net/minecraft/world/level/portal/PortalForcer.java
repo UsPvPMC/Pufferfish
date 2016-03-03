@@ -43,7 +43,7 @@ public class PortalForcer {
 
     public Optional<BlockUtil.FoundRectangle> findPortalAround(BlockPos pos, boolean destIsNether, WorldBorder worldBorder) {
         // CraftBukkit start
-        return this.findPortalAround(pos, worldBorder, destIsNether ? 16 : 128); // Search Radius
+        return this.findPortalAround(pos, worldBorder, destIsNether ? level.paperConfig().environment.portalCreateRadius : level.paperConfig().environment.portalSearchRadius); // Search Radius // Paper - search Radius
     }
 
     public Optional<BlockUtil.FoundRectangle> findPortalAround(BlockPos blockposition, WorldBorder worldborder, int i) {

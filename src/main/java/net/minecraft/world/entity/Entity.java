@@ -3050,7 +3050,13 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                 double d0 = DimensionType.getTeleportationScale(this.level.dimensionType(), destination.dimensionType());
                 BlockPos blockposition = worldborder.clampToBounds(this.getX() * d0, this.getY(), this.getZ() * d0);
                 // CraftBukkit start
-                CraftPortalEvent event = this.callPortalEvent(this, destination, new PositionImpl(blockposition.getX(), blockposition.getY(), blockposition.getZ()), PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
+                // Paper start
+                int portalSearchRadius = destination.paperConfig().environment.portalSearchRadius;
+                if (level.paperConfig().environment.portalSearchVanillaDimensionScaling && flag2) { // == THE_NETHER
+                    portalSearchRadius = (int) (portalSearchRadius / destination.dimensionType().coordinateScale());
+                }
+                // Paper end
+                CraftPortalEvent event = this.callPortalEvent(this, destination, new PositionImpl(blockposition.getX(), blockposition.getY(), blockposition.getZ()), PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, portalSearchRadius, destination.paperConfig().environment.portalCreateRadius); // Paper start - configurable portal radius
                 if (event == null) {
                     return null;
                 }
