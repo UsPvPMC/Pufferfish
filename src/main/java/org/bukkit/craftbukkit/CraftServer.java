@@ -1991,6 +1991,7 @@ public final class CraftServer implements Server {
         return this.helpMap;
     }
 
+    @Override // Paper - add override
     public SimpleCommandMap getCommandMap() {
         return this.commandMap;
     }
