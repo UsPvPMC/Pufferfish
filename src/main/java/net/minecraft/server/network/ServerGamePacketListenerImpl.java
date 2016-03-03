@@ -338,7 +338,6 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
     @Override
     public void tick() {
-        org.bukkit.craftbukkit.SpigotTimings.playerConnectionTimer.startTiming(); // Spigot
         if (this.ackBlockChangesUpTo > -1) {
             this.send(new ClientboundBlockChangedAckPacket(this.ackBlockChangesUpTo));
             this.ackBlockChangesUpTo = -1;
@@ -419,7 +418,6 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             this.player.resetLastActionTime(); // CraftBukkit - SPIGOT-854
             this.disconnect(Component.translatable("multiplayer.disconnect.idling"));
         }
-        org.bukkit.craftbukkit.SpigotTimings.playerConnectionTimer.stopTiming(); // Spigot
 
     }
 
@@ -2138,7 +2136,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     }
 
     private void handleCommand(String s) {
-        org.bukkit.craftbukkit.SpigotTimings.playerCommandTimer.startTiming(); // Spigot
+        co.aikar.timings.MinecraftTimings.playerCommandTimer.startTiming(); // Paper
         if ( org.spigotmc.SpigotConfig.logCommands ) // Spigot
         this.LOGGER.info(this.player.getScoreboardName() + " issued server command: " + s);
 
@@ -2148,7 +2146,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         this.cserver.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
-            org.bukkit.craftbukkit.SpigotTimings.playerCommandTimer.stopTiming(); // Spigot
+            co.aikar.timings.MinecraftTimings.playerCommandTimer.stopTiming(); // Paper
             return;
         }
 
@@ -2161,7 +2159,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             java.util.logging.Logger.getLogger(ServerGamePacketListenerImpl.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             return;
         } finally {
-            org.bukkit.craftbukkit.SpigotTimings.playerCommandTimer.stopTiming(); // Spigot
+            co.aikar.timings.MinecraftTimings.playerCommandTimer.stopTiming(); // Paper
         }
     }
     // CraftBukkit end

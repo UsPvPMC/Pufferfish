@@ -88,7 +88,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.SpigotTimings; // Spigot
 import org.bukkit.craftbukkit.block.CapturedBlockState;
 import org.bukkit.craftbukkit.block.CraftBlockState;
 import org.bukkit.craftbukkit.block.data.CraftBlockData;
@@ -164,7 +163,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     }
     // Paper end
 
-    public final SpigotTimings.WorldTimingsHandler timings; // Spigot
+    public final co.aikar.timings.WorldTimingsHandler timings; // Paper
     public static BlockPos lastPhysicsProblem; // Spigot
     private org.spigotmc.TickLimiter entityLimiter;
     private org.spigotmc.TickLimiter tileLimiter;
@@ -262,7 +261,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
             public void onBorderSetDamageSafeZOne(WorldBorder border, double safeZoneRadius) {}
         });
         // CraftBukkit end
-        this.timings = new SpigotTimings.WorldTimingsHandler(this); // Spigot - code below can generate new world and access timings
+        timings = new co.aikar.timings.WorldTimingsHandler(this); // Paper - code below can generate new world and access timings
         this.entityLimiter = new org.spigotmc.TickLimiter(spigotConfig.entityMaxTickTime);
         this.tileLimiter = new org.spigotmc.TickLimiter(spigotConfig.tileMaxTickTime);
     }
@@ -721,15 +720,14 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 
         timings.tileEntityTick.stopTiming(); // Spigot
         this.tickingBlockEntities = false;
+        co.aikar.timings.TimingHistory.tileEntityTicks += this.blockEntityTickers.size(); // Paper
         gameprofilerfiller.pop();
         spigotConfig.currentPrimedTnt = 0; // Spigot
     }
 
     public <T extends Entity> void guardEntityTick(Consumer<T> tickConsumer, T entity) {
         try {
-            SpigotTimings.tickEntityTimer.startTiming(); // Spigot
             tickConsumer.accept(entity);
-            SpigotTimings.tickEntityTimer.stopTiming(); // Spigot
         } catch (Throwable throwable) {
             CrashReport crashreport = CrashReport.forThrowable(throwable, "Ticking entity");
             CrashReportCategory crashreportsystemdetails = crashreport.addCategory("Entity being ticked");

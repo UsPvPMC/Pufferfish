@@ -88,7 +88,7 @@ public class ServerFunctionManager {
         } else {
             int i;
 
-            try {
+            try (co.aikar.timings.Timing timing = function.getTiming().startTiming()) { // Paper
                 this.context = new ServerFunctionManager.ExecutionContext(tracer);
                 i = this.context.runTopCommand(function, source);
             } finally {

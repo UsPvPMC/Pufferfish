@@ -58,8 +58,9 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.io.IoBuilder;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.SpigotTimings; // Spigot
+import co.aikar.timings.MinecraftTimings; // Paper
 import org.bukkit.event.server.ServerCommandEvent;
+import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 // CraftBukkit end
 
@@ -404,7 +405,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
     }
 
     public void handleConsoleInputs() {
-        SpigotTimings.serverCommandTimer.startTiming(); // Spigot
+        MinecraftTimings.serverCommandTimer.startTiming(); // Spigot
         while (!this.consoleInput.isEmpty()) {
             ConsoleInput servercommand = (ConsoleInput) this.consoleInput.remove(0);
 
@@ -419,7 +420,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
             // CraftBukkit end
         }
 
-        SpigotTimings.serverCommandTimer.stopTiming(); // Spigot
+        MinecraftTimings.serverCommandTimer.stopTiming(); // Spigot
     }
 
     @Override
@@ -665,6 +666,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
 
     @Override
     public String runCommand(String command) {
+        Waitable[] waitableArray = new Waitable[1];
         this.rconConsoleSource.prepareForCommand();
         this.executeBlocking(() -> {
             // CraftBukkit start - fire RemoteServerCommandEvent
@@ -673,10 +675,39 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
             if (event.isCancelled()) {
                 return;
             }
+            // Paper start
+            if (command.toLowerCase().startsWith("timings") && command.toLowerCase().matches("timings (report|paste|get|merged|seperate)")) {
+                org.bukkit.command.BufferedCommandSender sender = new org.bukkit.command.BufferedCommandSender();
+                Waitable<String> waitable = new Waitable<String>() {
+                    @Override
+                    protected String evaluate() {
+                        return sender.getBuffer();
+                    }
+                };
+                waitableArray[0] = waitable;
+                co.aikar.timings.Timings.generateReport(new co.aikar.timings.TimingsReportListener(sender, waitable));
+            } else {
+            // Paper end
             ConsoleInput serverCommand = new ConsoleInput(event.getCommand(), this.rconConsoleSource.createCommandSourceStack());
             server.dispatchServerCommand(remoteConsole, serverCommand);
+            } // Paper
             // CraftBukkit end
         });
+        // Paper start
+        if (waitableArray[0] != null) {
+            //noinspection unchecked
+            Waitable<String> waitable = waitableArray[0];
+            try {
+                return waitable.get();
+            } catch (java.util.concurrent.ExecutionException e) {
+                throw new RuntimeException("Exception processing rcon command " + command, e.getCause());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Maintain interrupted state
+                throw new RuntimeException("Interrupted processing rcon command " + command, e);
+            }
+
+        }
+        // Paper end
         return this.rconConsoleSource.getCommandResponse();
     }
 

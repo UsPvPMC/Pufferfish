@@ -415,13 +415,15 @@ public class ServerChunkCache extends ChunkSource {
             }
 
             gameprofilerfiller.incrementCounter("getChunkCacheMiss");
-            level.timings.syncChunkLoadTimer.startTiming(); // Spigot
             CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> completablefuture = this.getChunkFutureMainThread(x, z, leastStatus, create);
             ServerChunkCache.MainThreadExecutor chunkproviderserver_b = this.mainThreadProcessor;
 
             Objects.requireNonNull(completablefuture);
+            if (!completablefuture.isDone()) { // Paper
+                this.level.timings.syncChunkLoad.startTiming(); // Paper
             chunkproviderserver_b.managedBlock(completablefuture::isDone);
-            level.timings.syncChunkLoadTimer.stopTiming(); // Spigot
+                this.level.timings.syncChunkLoad.stopTiming(); // Paper
+            } // Paper
             ichunkaccess = (ChunkAccess) ((Either) completablefuture.join()).map((ichunkaccess1) -> {
                 return ichunkaccess1;
             }, (playerchunk_failure) -> {
@@ -619,7 +621,9 @@ public class ServerChunkCache extends ChunkSource {
 
     public void save(boolean flush) {
         this.runDistanceManagerUpdates();
+        try (co.aikar.timings.Timing timed = level.timings.chunkSaveData.startTiming()) { // Paper - Timings
         this.chunkMap.saveAllChunks(flush);
+        } // Paper - Timings
     }
 
     @Override
@@ -658,7 +662,9 @@ public class ServerChunkCache extends ChunkSource {
         this.level.timings.doChunkMap.stopTiming(); // Spigot
         this.level.getProfiler().popPush("chunks");
         if (tickChunks) {
+            this.level.timings.chunks.startTiming(); // Paper - timings
             this.tickChunks();
+            this.level.timings.chunks.stopTiming(); // Paper - timings
         }
 
         this.level.timings.doChunkUnload.startTiming(); // Spigot
@@ -687,13 +693,16 @@ public class ServerChunkCache extends ChunkSource {
             boolean flag1 = level.ticksPerSpawnCategory.getLong(org.bukkit.entity.SpawnCategory.ANIMAL) != 0L && worlddata.getGameTime() % level.ticksPerSpawnCategory.getLong(org.bukkit.entity.SpawnCategory.ANIMAL) == 0L; // CraftBukkit
 
             gameprofilerfiller.push("naturalSpawnCount");
+            this.level.timings.countNaturalMobs.startTiming(); // Paper - timings
             int l = this.distanceManager.getNaturalSpawnChunkCount();
             NaturalSpawner.SpawnState spawnercreature_d = NaturalSpawner.createState(l, this.level.getAllEntities(), this::getFullChunk, new LocalMobCapCalculator(this.chunkMap));
+            this.level.timings.countNaturalMobs.stopTiming(); // Paper - timings
 
             this.lastSpawnState = spawnercreature_d;
             gameprofilerfiller.popPush("filteringLoadedChunks");
             List<ServerChunkCache.ChunkAndHolder> list = Lists.newArrayListWithCapacity(l);
             Iterator iterator = this.chunkMap.getChunks().iterator();
+            this.level.timings.chunkTicks.startTiming(); // Paper
 
             while (iterator.hasNext()) {
                 ChunkHolder playerchunk = (ChunkHolder) iterator.next();
@@ -722,27 +731,27 @@ public class ServerChunkCache extends ChunkSource {
                     }
 
                     if (this.level.shouldTickBlocksAt(chunkcoordintpair.toLong())) {
-                        this.level.timings.doTickTiles.startTiming(); // Spigot
                         this.level.tickChunk(chunk1, k);
-                        this.level.timings.doTickTiles.stopTiming(); // Spigot
                     }
                 }
             }
-
+            this.level.timings.chunkTicks.stopTiming(); // Paper
             gameprofilerfiller.popPush("customSpawners");
             if (flag2) {
+                try (co.aikar.timings.Timing ignored = this.level.timings.miscMobSpawning.startTiming()) { // Paper - timings
                 this.level.tickCustomSpawners(this.spawnEnemies, this.spawnFriendlies);
+                } // Paper - timings
             }
 
             gameprofilerfiller.popPush("broadcast");
             list.forEach((chunkproviderserver_a1) -> {
+                this.level.timings.broadcastChunkUpdates.startTiming(); // Paper - timing
                 chunkproviderserver_a1.holder.broadcastChanges(chunkproviderserver_a1.chunk);
+                this.level.timings.broadcastChunkUpdates.stopTiming(); // Paper - timing
             });
             gameprofilerfiller.pop();
             gameprofilerfiller.pop();
-            this.level.timings.tracker.startTiming(); // Spigot
             this.chunkMap.tick();
-            this.level.timings.tracker.stopTiming(); // Spigot
         }
     }
 

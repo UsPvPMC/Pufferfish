@@ -322,6 +322,15 @@ public class EntityType<T extends Entity> implements FeatureElement, EntityTypeT
     }
 
     public EntityType(EntityType.EntityFactory<T> factory, MobCategory spawnGroup, boolean saveable, boolean summonable, boolean fireImmune, boolean spawnableFarFromPlayer, ImmutableSet<Block> canSpawnInside, EntityDimensions dimensions, int maxTrackDistance, int trackTickInterval, FeatureFlagSet requiredFeatures) {
+       // Paper start
+        this(factory, spawnGroup, saveable, summonable, fireImmune, spawnableFarFromPlayer, canSpawnInside, dimensions, maxTrackDistance, trackTickInterval, requiredFeatures, "custom");
+    }
+    public EntityType(EntityType.EntityFactory<T> factory, MobCategory spawnGroup, boolean saveable, boolean summonable, boolean fireImmune, boolean spawnableFarFromPlayer, ImmutableSet<Block> canSpawnInside, EntityDimensions dimensions, int maxTrackDistance, int trackTickInterval, FeatureFlagSet requiredFeatures, String id) {
+        this.tickTimer = co.aikar.timings.MinecraftTimings.getEntityTimings(id, "tick");
+        this.inactiveTickTimer = co.aikar.timings.MinecraftTimings.getEntityTimings(id, "inactiveTick");
+        this.passengerTickTimer = co.aikar.timings.MinecraftTimings.getEntityTimings(id, "passengerTick");
+        this.passengerInactiveTickTimer = co.aikar.timings.MinecraftTimings.getEntityTimings(id, "passengerInactiveTick");
+        // Paper end
         this.builtInRegistryHolder = BuiltInRegistries.ENTITY_TYPE.createIntrusiveHolder(this);
         this.factory = factory;
         this.category = spawnGroup;
@@ -643,6 +652,12 @@ public class EntityType<T extends Entity> implements FeatureElement, EntityTypeT
         return this.updateInterval;
     }
 
+    // Paper start - timings
+    public final co.aikar.timings.Timing tickTimer;
+    public final co.aikar.timings.Timing inactiveTickTimer;
+    public final co.aikar.timings.Timing passengerTickTimer;
+    public final co.aikar.timings.Timing passengerInactiveTickTimer;
+    // Paper end
     public boolean trackDeltas() {
         return this != EntityType.PLAYER && this != EntityType.LLAMA_SPIT && this != EntityType.WITHER && this != EntityType.BAT && this != EntityType.ITEM_FRAME && this != EntityType.GLOW_ITEM_FRAME && this != EntityType.LEASH_KNOT && this != EntityType.PAINTING && this != EntityType.END_CRYSTAL && this != EntityType.EVOKER_FANGS;
     }
@@ -748,7 +763,7 @@ public class EntityType<T extends Entity> implements FeatureElement, EntityTypeT
                 Util.fetchChoiceType(References.ENTITY_TREE, id);
             }
 
-            return new EntityType<>(this.factory, this.category, this.serialize, this.summon, this.fireImmune, this.canSpawnFarFromPlayer, this.immuneTo, this.dimensions, this.clientTrackingRange, this.updateInterval, this.requiredFeatures);
+            return new EntityType<>(this.factory, this.category, this.serialize, this.summon, this.fireImmune, this.canSpawnFarFromPlayer, this.immuneTo, this.dimensions, this.clientTrackingRange, this.updateInterval, this.requiredFeatures, id); // Paper - add id
         }
     }
 

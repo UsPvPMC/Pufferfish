@@ -1,8 +1,10 @@
 package net.minecraft.server.level;
 
+import co.aikar.timings.Timing; // Paper
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ComparisonChain; // Paper
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
@@ -867,6 +869,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
             ChunkStatus chunkstatus = ChunkHolder.getStatus(chunkHolder.getTicketLevel());
 
             return !chunkstatus.isOrAfter(ChunkStatus.FULL) ? ChunkHolder.UNLOADED_CHUNK : either.mapLeft((ichunkaccess) -> {
+                try (Timing ignored = level.timings.chunkPostLoad.startTimingIfSync()) { // Paper
                 ChunkPos chunkcoordintpair = chunkHolder.getPos();
                 ProtoChunk protochunk = (ProtoChunk) ichunkaccess;
                 LevelChunk chunk;
@@ -891,6 +894,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
                 }
 
                 return chunk;
+                } // Paper
             });
         }, (runnable) -> {
             ProcessorHandle mailbox = this.mainThreadMailbox;
@@ -1443,6 +1447,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
         List<ServerPlayer> list = Lists.newArrayList();
         List<ServerPlayer> list1 = this.level.players();
         ObjectIterator objectiterator = this.entityMap.values().iterator();
+        level.timings.tracker1.startTiming(); // Paper
 
         ChunkMap.TrackedEntity playerchunkmap_entitytracker;
 
@@ -1467,14 +1472,17 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
                 playerchunkmap_entitytracker.serverEntity.sendChanges();
             }
         }
+        level.timings.tracker1.stopTiming(); // Paper
 
         if (!list.isEmpty()) {
             objectiterator = this.entityMap.values().iterator();
 
+            level.timings.tracker2.startTiming(); // Paper
             while (objectiterator.hasNext()) {
                 playerchunkmap_entitytracker = (ChunkMap.TrackedEntity) objectiterator.next();
                 playerchunkmap_entitytracker.updatePlayers(list);
             }
+            level.timings.tracker2.stopTiming(); // Paper
         }
 
     }

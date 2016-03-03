@@ -222,6 +222,12 @@ public final class CraftMagicNumbers implements UnsafeValues {
     }
     // Paper end
     // ========================================================================
+    // Paper start
+    @Override
+    public void reportTimings() {
+        co.aikar.timings.TimingsExport.reportTimings();
+    }
+    // Paper end
 
     public static byte toLegacyData(BlockState data) {
         return CraftLegacy.toLegacyData(data);
@@ -441,6 +447,13 @@ public final class CraftMagicNumbers implements UnsafeValues {
     @Override
     public boolean isSupportedApiVersion(String apiVersion) {
         return apiVersion != null && SUPPORTED_API.contains(apiVersion);
+    }
+    // Paper end
+
+    // Paper start
+    @Override
+    public String getTimingsServerName() {
+        return io.papermc.paper.configuration.GlobalConfiguration.get().timings.serverName;
     }
     // Paper end
 

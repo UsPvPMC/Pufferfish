@@ -16,6 +16,15 @@ import net.minecraft.server.ServerFunctionManager;
 public class CommandFunction {
     private final CommandFunction.Entry[] entries;
     final ResourceLocation id;
+    // Paper start
+    public co.aikar.timings.Timing timing;
+    public co.aikar.timings.Timing getTiming() {
+        if (timing == null) {
+            timing = co.aikar.timings.MinecraftTimings.getCommandFunctionTiming(this);
+        }
+        return timing;
+    }
+    // Paper end
 
     public CommandFunction(ResourceLocation id, CommandFunction.Entry[] elements) {
         this.id = id;

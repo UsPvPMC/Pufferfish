@@ -674,6 +674,7 @@ public class LevelChunk extends ChunkAccess {
             server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(bukkitChunk, this.needsDecoration));
 
             if (this.needsDecoration) {
+                try (co.aikar.timings.Timing ignored = this.level.timings.chunkLoadPopulate.startTiming()) { // Paper
                 this.needsDecoration = false;
                 java.util.Random random = new java.util.Random();
                 random.setSeed(this.level.getSeed());
@@ -693,6 +694,7 @@ public class LevelChunk extends ChunkAccess {
                     }
                 }
                 server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkPopulateEvent(bukkitChunk));
+                } // Paper
             }
         }
     }
