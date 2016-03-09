@@ -14,7 +14,7 @@ public record ClientboundSystemChatPacket(@javax.annotation.Nullable net.kyori.a
     }
 
     public ClientboundSystemChatPacket(net.md_5.bungee.api.chat.BaseComponent[] content, boolean overlay) {
-        this(null, net.md_5.bungee.chat.ComponentSerializer.toString(content), overlay); // Paper - Adventure
+        this(null, improveBungeeComponentSerialization(content), overlay); // Paper - Adventure
     }
     // Spigot end
     // Paper start
@@ -24,6 +24,14 @@ public record ClientboundSystemChatPacket(@javax.annotation.Nullable net.kyori.a
 
     public ClientboundSystemChatPacket(net.kyori.adventure.text.Component content, boolean overlay) {
         this(content, null, overlay);
+    }
+
+    private static String improveBungeeComponentSerialization(net.md_5.bungee.api.chat.BaseComponent[] content) {
+        if (content.length == 1) {
+            return net.md_5.bungee.chat.ComponentSerializer.toString(content[0]);
+        } else {
+            return net.md_5.bungee.chat.ComponentSerializer.toString(content);
+        }
     }
     // Paper end
 
