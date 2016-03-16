@@ -1023,6 +1023,7 @@ public class ServerPlayer extends Player {
             this.unRide();
             this.getLevel().removePlayerImmediately(this, Entity.RemovalReason.CHANGED_DIMENSION);
             if (!this.wonGame) {
+                if (level.paperConfig().misc.disableEndCredits) this.seenCredits = true; // Paper - Toggle to always disable end credits
                 this.wonGame = true;
                 this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.WIN_GAME, this.seenCredits ? 0.0F : 1.0F));
                 this.seenCredits = true;
