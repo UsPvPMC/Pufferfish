@@ -312,7 +312,7 @@ public abstract class AbstractArrow extends Projectile {
 
     protected void tickDespawn() {
         ++this.life;
-        if (this.life >= ((this instanceof ThrownTrident) ? level.spigotConfig.tridentDespawnRate : level.spigotConfig.arrowDespawnRate)) { // Spigot
+        if (this.life >= (pickup == Pickup.CREATIVE_ONLY ? level.paperConfig().entities.spawning.creativeArrowDespawnRate.value() : (pickup == Pickup.DISALLOWED ? level.paperConfig().entities.spawning.nonPlayerArrowDespawnRate.value() : ((this instanceof ThrownTrident) ? level.spigotConfig.tridentDespawnRate : level.spigotConfig.arrowDespawnRate)))) { // Spigot // Paper - TODO: Extract this to init?
             this.discard();
         }
 
