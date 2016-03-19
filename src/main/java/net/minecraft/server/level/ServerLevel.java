@@ -217,7 +217,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     public final LevelStorageSource.LevelStorageAccess convertable;
     public final UUID uuid;
 
-    public LevelChunk getChunkIfLoaded(int x, int z) {
+    @Override public LevelChunk getChunkIfLoaded(int x, int z) { // Paper - this was added in world too but keeping here for NMS ABI
         return this.chunkSource.getChunk(x, z, false);
     }
 
