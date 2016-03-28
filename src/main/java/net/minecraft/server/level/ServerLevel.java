@@ -216,6 +216,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     // CraftBukkit start
     public final LevelStorageSource.LevelStorageAccess convertable;
     public final UUID uuid;
+    public boolean hasPhysicsEvent = true; // Paper
 
     @Override public LevelChunk getChunkIfLoaded(int x, int z) { // Paper - this was added in world too but keeping here for NMS ABI
         return this.chunkSource.getChunk(x, z, false);
