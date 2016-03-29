@@ -27,6 +27,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.dimension.DimensionType;
 
 public abstract class Monster extends PathfinderMob implements Enemy {
+    public org.bukkit.craftbukkit.entity.CraftMonster getBukkitMonster() { return (org.bukkit.craftbukkit.entity.CraftMonster) super.getBukkitEntity(); } // Paper
     protected Monster(EntityType<? extends Monster> type, Level world) {
         super(type, world);
         this.xpReward = 5;

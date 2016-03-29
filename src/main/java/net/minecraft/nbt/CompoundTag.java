@@ -123,7 +123,7 @@ public class CompoundTag implements Tag {
             return "TAG_Compound";
         }
     };
-    private final Map<String, Tag> tags;
+    public final Map<String, Tag> tags; // Paper
 
     protected CompoundTag(Map<String, Tag> entries) {
         this.tags = entries;
@@ -199,6 +199,10 @@ public class CompoundTag implements Tag {
         this.tags.put(key, NbtUtils.createUUID(value));
     }
 
+
+    /**
+     * You must use {@link #hasUUID(String)} before or else it <b>will</b> throw an NPE.
+     */
     public UUID getUUID(String key) {
         return NbtUtils.loadUUID(this.get(key));
     }

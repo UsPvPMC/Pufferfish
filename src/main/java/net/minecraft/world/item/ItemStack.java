@@ -786,6 +786,25 @@ public final class ItemStack {
         return this.tag != null ? this.tag.getList("Enchantments", 10) : new ListTag();
     }
 
+    // Paper start - (this is just a good no conflict location)
+    public org.bukkit.inventory.ItemStack asBukkitMirror() {
+        return CraftItemStack.asCraftMirror(this);
+    }
+    public org.bukkit.inventory.ItemStack asBukkitCopy() {
+        return CraftItemStack.asCraftMirror(this.copy());
+    }
+    public static ItemStack fromBukkitCopy(org.bukkit.inventory.ItemStack itemstack) {
+        return CraftItemStack.asNMSCopy(itemstack);
+    }
+    private org.bukkit.craftbukkit.inventory.CraftItemStack bukkitStack;
+    public org.bukkit.inventory.ItemStack getBukkitStack() {
+        if (bukkitStack == null || bukkitStack.handle != this) {
+            bukkitStack = org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(this);
+        }
+        return bukkitStack;
+    }
+    // Paper end
+
     public void setTag(@Nullable CompoundTag nbt) {
         this.tag = nbt;
         if (this.getItem().canBeDepleted()) {
@@ -1176,6 +1195,7 @@ public final class ItemStack {
     // CraftBukkit start
     @Deprecated
     public void setItem(Item item) {
+        this.bukkitStack = null; // Paper
         this.item = item;
     }
     // CraftBukkit end

@@ -58,7 +58,7 @@ public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiom
     protected final ShortList[] postProcessing;
     protected volatile boolean unsaved;
     private volatile boolean isLightCorrect;
-    protected final ChunkPos chunkPos;
+    protected final ChunkPos chunkPos; public final long coordinateKey; public final int locX; public final int locZ; // Paper - cache coordinate key
     private long inhabitedTime;
     /** @deprecated */
     @Nullable
@@ -83,7 +83,8 @@ public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiom
     // CraftBukkit end
 
     public ChunkAccess(ChunkPos pos, UpgradeData upgradeData, LevelHeightAccessor heightLimitView, Registry<Biome> biome, long inhabitedTime, @Nullable LevelChunkSection[] sectionArrayInitializer, @Nullable BlendingData blendingData) {
-        this.chunkPos = pos;
+        this.locX = pos.x; this.locZ = pos.z; // Paper - reduce need for field lookups
+        this.chunkPos = pos; this.coordinateKey = ChunkPos.asLong(locX, locZ); // Paper - cache long key
         this.upgradeData = upgradeData;
         this.levelHeightAccessor = heightLimitView;
         this.sections = new LevelChunkSection[heightLimitView.getSectionsCount()];

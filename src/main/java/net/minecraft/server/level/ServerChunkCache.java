@@ -51,6 +51,7 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 
 public class ServerChunkCache extends ChunkSource {
 
+    public static final org.slf4j.Logger LOGGER = com.mojang.logging.LogUtils.getLogger(); // Paper
     private static final List<ChunkStatus> CHUNK_STATUSES = ChunkStatus.getStatusList();
     private final DistanceManager distanceManager;
     final ServerLevel level;
@@ -69,6 +70,231 @@ public class ServerChunkCache extends ChunkSource {
     @Nullable
     @VisibleForDebug
     private NaturalSpawner.SpawnState lastSpawnState;
+    // Paper start
+    final com.destroystokyo.paper.util.concurrent.WeakSeqLock loadedChunkMapSeqLock = new com.destroystokyo.paper.util.concurrent.WeakSeqLock();
+    final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<LevelChunk> loadedChunkMap = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>(8192, 0.5f);
+
+    private final LevelChunk[] lastLoadedChunks = new LevelChunk[4 * 4];
+
+    private static int getChunkCacheKey(int x, int z) {
+        return x & 3 | ((z & 3) << 2);
+    }
+
+    public void addLoadedChunk(LevelChunk chunk) {
+        this.loadedChunkMapSeqLock.acquireWrite();
+        try {
+            this.loadedChunkMap.put(chunk.coordinateKey, chunk);
+        } finally {
+            this.loadedChunkMapSeqLock.releaseWrite();
+        }
+
+        // rewrite cache if we have to
+        // we do this since we also cache null chunks
+        int cacheKey = getChunkCacheKey(chunk.locX, chunk.locZ);
+
+        this.lastLoadedChunks[cacheKey] = chunk;
+    }
+
+    public void removeLoadedChunk(LevelChunk chunk) {
+        this.loadedChunkMapSeqLock.acquireWrite();
+        try {
+            this.loadedChunkMap.remove(chunk.coordinateKey);
+        } finally {
+            this.loadedChunkMapSeqLock.releaseWrite();
+        }
+
+        // rewrite cache if we have to
+        // we do this since we also cache null chunks
+        int cacheKey = getChunkCacheKey(chunk.locX, chunk.locZ);
+
+        LevelChunk cachedChunk = this.lastLoadedChunks[cacheKey];
+        if (cachedChunk != null && cachedChunk.coordinateKey == chunk.coordinateKey) {
+            this.lastLoadedChunks[cacheKey] = null;
+        }
+    }
+
+    public final LevelChunk getChunkAtIfLoadedMainThread(int x, int z) {
+        int cacheKey = getChunkCacheKey(x, z);
+
+        LevelChunk cachedChunk = this.lastLoadedChunks[cacheKey];
+        if (cachedChunk != null && cachedChunk.locX == x & cachedChunk.locZ == z) {
+            return cachedChunk;
+        }
+
+        long chunkKey = ChunkPos.asLong(x, z);
+
+        cachedChunk = this.loadedChunkMap.get(chunkKey);
+        // Skipping a null check to avoid extra instructions to improve inline capability
+        this.lastLoadedChunks[cacheKey] = cachedChunk;
+        return cachedChunk;
+    }
+
+    public final LevelChunk getChunkAtIfLoadedMainThreadNoCache(int x, int z) {
+        return this.loadedChunkMap.get(ChunkPos.asLong(x, z));
+    }
+
+    public final LevelChunk getChunkAtMainThread(int x, int z) {
+        LevelChunk ret = this.getChunkAtIfLoadedMainThread(x, z);
+        if (ret != null) {
+            return ret;
+        }
+        return (LevelChunk)this.getChunk(x, z, ChunkStatus.FULL, true);
+    }
+
+    long chunkFutureAwaitCounter; // Paper - private -> package private
+
+    public void getEntityTickingChunkAsync(int x, int z, java.util.function.Consumer<LevelChunk> onLoad) {
+        io.papermc.paper.chunk.system.ChunkSystem.scheduleTickingState(
+            this.level, x, z, ChunkHolder.FullChunkStatus.ENTITY_TICKING, true,
+            ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor.Priority.NORMAL, onLoad
+        );
+    }
+
+    public void getTickingChunkAsync(int x, int z, java.util.function.Consumer<LevelChunk> onLoad) {
+        io.papermc.paper.chunk.system.ChunkSystem.scheduleTickingState(
+            this.level, x, z, ChunkHolder.FullChunkStatus.TICKING, true,
+            ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor.Priority.NORMAL, onLoad
+        );
+    }
+
+    public void getFullChunkAsync(int x, int z, java.util.function.Consumer<LevelChunk> onLoad) {
+        io.papermc.paper.chunk.system.ChunkSystem.scheduleTickingState(
+            this.level, x, z, ChunkHolder.FullChunkStatus.BORDER, true,
+            ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor.Priority.NORMAL, onLoad
+        );
+    }
+
+    void chunkLoadAccept(int chunkX, int chunkZ, ChunkAccess chunk, java.util.function.Consumer<ChunkAccess> consumer) {
+        try {
+            consumer.accept(chunk);
+        } catch (Throwable throwable) {
+            if (throwable instanceof ThreadDeath) {
+                throw (ThreadDeath)throwable;
+            }
+            LOGGER.error("Load callback for chunk " + chunkX + "," + chunkZ + " in world '" + this.level.getWorld().getName() + "' threw an exception", throwable);
+        }
+    }
+
+    void getChunkAtAsynchronously(int chunkX, int chunkZ, int ticketLevel,
+                                  java.util.function.Consumer<ChunkAccess> consumer) {
+        if (ticketLevel <= 33) {
+            this.getFullChunkAsync(chunkX, chunkZ, (java.util.function.Consumer)consumer);
+            return;
+        }
+
+        io.papermc.paper.chunk.system.ChunkSystem.scheduleChunkLoad(
+            this.level, chunkX, chunkZ, ChunkHolder.getStatus(ticketLevel), true,
+            ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor.Priority.NORMAL, consumer
+        );
+    }
+
+
+    public final void getChunkAtAsynchronously(int chunkX, int chunkZ, ChunkStatus status, boolean gen, boolean allowSubTicketLevel, java.util.function.Consumer<ChunkAccess> onLoad) {
+        // try to fire sync
+        int chunkStatusTicketLevel = 33 + ChunkStatus.getDistance(status);
+        ChunkHolder playerChunk = this.chunkMap.getUpdatingChunkIfPresent(io.papermc.paper.util.CoordinateUtils.getChunkKey(chunkX, chunkZ));
+        if (playerChunk != null) {
+            ChunkStatus holderStatus = playerChunk.getChunkHolderStatus();
+            ChunkAccess immediate = playerChunk.getAvailableChunkNow();
+            if (immediate != null) {
+                if (allowSubTicketLevel ? immediate.getStatus().isOrAfter(status) : (playerChunk.getTicketLevel() <= chunkStatusTicketLevel && holderStatus != null && holderStatus.isOrAfter(status))) {
+                    this.chunkLoadAccept(chunkX, chunkZ, immediate, onLoad);
+                    return;
+                } else {
+                    if (gen || (!allowSubTicketLevel && immediate.getStatus().isOrAfter(status))) {
+                        this.getChunkAtAsynchronously(chunkX, chunkZ, chunkStatusTicketLevel, onLoad);
+                        return;
+                    } else {
+                        this.chunkLoadAccept(chunkX, chunkZ, null, onLoad);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // need to fire async
+
+        if (gen && !allowSubTicketLevel) {
+            this.getChunkAtAsynchronously(chunkX, chunkZ, chunkStatusTicketLevel, onLoad);
+            return;
+        }
+
+        this.getChunkAtAsynchronously(chunkX, chunkZ, io.papermc.paper.util.MCUtil.getTicketLevelFor(ChunkStatus.EMPTY), (ChunkAccess chunk) -> {
+            if (chunk == null) {
+                throw new IllegalStateException("Chunk cannot be null");
+            }
+
+            if (!chunk.getStatus().isOrAfter(status)) {
+                if (gen) {
+                    this.getChunkAtAsynchronously(chunkX, chunkZ, chunkStatusTicketLevel, onLoad);
+                    return;
+                } else {
+                    ServerChunkCache.this.chunkLoadAccept(chunkX, chunkZ, null, onLoad);
+                    return;
+                }
+            } else {
+                if (allowSubTicketLevel) {
+                    ServerChunkCache.this.chunkLoadAccept(chunkX, chunkZ, chunk, onLoad);
+                    return;
+                } else {
+                    this.getChunkAtAsynchronously(chunkX, chunkZ, chunkStatusTicketLevel, onLoad);
+                    return;
+                }
+            }
+        });
+    }
+    // Paper end
+
+    // Paper start
+    @Nullable
+    public ChunkAccess getChunkAtImmediately(int x, int z) {
+        ChunkHolder holder = this.chunkMap.getVisibleChunkIfPresent(ChunkPos.asLong(x, z));
+        if (holder == null) {
+            return null;
+        }
+
+        return holder.getLastAvailable();
+    }
+
+    // this will try to avoid chunk neighbours for lighting
+    public final ChunkAccess getFullStatusChunkAt(int chunkX, int chunkZ) {
+        LevelChunk ifLoaded = this.getChunkAtIfLoadedImmediately(chunkX, chunkZ);
+        if (ifLoaded != null) {
+            return ifLoaded;
+        }
+
+        ChunkAccess empty = this.getChunk(chunkX, chunkZ, ChunkStatus.EMPTY, true);
+        if (empty != null && empty.getStatus().isOrAfter(ChunkStatus.FULL)) {
+            return empty;
+        }
+        return this.getChunk(chunkX, chunkZ, ChunkStatus.FULL, true);
+    }
+
+    public final ChunkAccess getFullStatusChunkAtIfLoaded(int chunkX, int chunkZ) {
+        LevelChunk ifLoaded = this.getChunkAtIfLoadedImmediately(chunkX, chunkZ);
+        if (ifLoaded != null) {
+            return ifLoaded;
+        }
+
+        ChunkAccess ret = this.getChunkAtImmediately(chunkX, chunkZ);
+        if (ret != null && ret.getStatus().isOrAfter(ChunkStatus.FULL)) {
+            return ret;
+        } else {
+            return null;
+        }
+    }
+
+    public <T> void addTicketAtLevel(TicketType<T> ticketType, ChunkPos chunkPos, int ticketLevel, T identifier) {
+        this.distanceManager.addTicket(ticketType, chunkPos, ticketLevel, identifier);
+    }
+
+    public <T> void removeTicketAtLevel(TicketType<T> ticketType, ChunkPos chunkPos, int ticketLevel, T identifier) {
+        this.distanceManager.removeTicket(ticketType, chunkPos, ticketLevel, identifier);
+    }
+
+    public final io.papermc.paper.util.maplist.IteratorSafeOrderedReferenceSet<LevelChunk> tickingChunks = new io.papermc.paper.util.maplist.IteratorSafeOrderedReferenceSet<>(4096, 0.75f, 4096, 0.15, true);
+    public final io.papermc.paper.util.maplist.IteratorSafeOrderedReferenceSet<LevelChunk> entityTickingChunks = new io.papermc.paper.util.maplist.IteratorSafeOrderedReferenceSet<>(4096, 0.75f, 4096, 0.15, true);
+    // Paper end
 
     public ServerChunkCache(ServerLevel world, LevelStorageSource.LevelStorageAccess session, DataFixer dataFixer, StructureTemplateManager structureTemplateManager, Executor workerExecutor, ChunkGenerator chunkGenerator, int viewDistance, int simulationDistance, boolean dsync, ChunkProgressListener worldGenerationProgressListener, ChunkStatusUpdateListener chunkStatusChangeListener, Supplier<DimensionDataStorage> persistentStateManagerFactory) {
         this.level = world;
@@ -120,6 +346,49 @@ public class ServerChunkCache extends ChunkSource {
         this.lastChunkStatus[0] = status;
         this.lastChunk[0] = chunk;
     }
+
+    // Paper start - "real" get chunk if loaded
+    // Note: Partially copied from the getChunkAt method below
+    @Nullable
+    public LevelChunk getChunkAtIfCachedImmediately(int x, int z) {
+        long k = ChunkPos.asLong(x, z);
+
+        // Note: Bypass cache since we need to check ticket level, and to make this MT-Safe
+
+        ChunkHolder playerChunk = this.getVisibleChunkIfPresent(k);
+        if (playerChunk == null) {
+            return null;
+        }
+
+        return playerChunk.getFullChunkNowUnchecked();
+    }
+
+    @Nullable
+    public LevelChunk getChunkAtIfLoadedImmediately(int x, int z) {
+        long k = ChunkPos.asLong(x, z);
+
+        if (Thread.currentThread() == this.mainThread) {
+            return this.getChunkAtIfLoadedMainThread(x, z);
+        }
+
+        LevelChunk ret = null;
+        long readlock;
+        do {
+            readlock = this.loadedChunkMapSeqLock.acquireRead();
+            try {
+                ret = this.loadedChunkMap.get(k);
+            } catch (Throwable thr) {
+                if (thr instanceof ThreadDeath) {
+                    throw (ThreadDeath)thr;
+                }
+                // re-try, this means a CME occurred...
+                continue;
+            }
+        } while (!this.loadedChunkMapSeqLock.tryReleaseRead(readlock));
+
+        return ret;
+    }
+    // Paper end
 
     @Nullable
     @Override
@@ -327,6 +596,12 @@ public class ServerChunkCache extends ChunkSource {
             return true;
         }
     }
+
+    // Paper start
+    public boolean isPositionTicking(Entity entity) {
+        return this.isPositionTicking(ChunkPos.asLong(net.minecraft.util.Mth.floor(entity.getX()) >> 4, net.minecraft.util.Mth.floor(entity.getZ()) >> 4));
+    }
+    // Paper end
 
     public boolean isPositionTicking(long pos) {
         ChunkHolder playerchunk = this.getVisibleChunkIfPresent(pos);

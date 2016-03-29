@@ -1182,4 +1182,37 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         return this.spigot;
     }
     // Spigot end
+
+    // Paper start
+    @Override
+    public java.util.concurrent.CompletableFuture<Boolean> teleportAsync(Location location, TeleportCause cause) {
+        Preconditions.checkArgument(location != null, "location");
+        location.checkFinite();
+        Location locationClone = location.clone(); // clone so we don't need to worry about mutations after this call.
+
+        net.minecraft.server.level.ServerLevel world = ((CraftWorld)locationClone.getWorld()).getHandle();
+        java.util.concurrent.CompletableFuture<Boolean> ret = new java.util.concurrent.CompletableFuture<>();
+
+        world.loadChunksForMoveAsync(getHandle().getBoundingBoxAt(locationClone.getX(), locationClone.getY(), locationClone.getZ()),
+            this instanceof CraftPlayer ? ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor.Priority.HIGHER : ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor.Priority.NORMAL, (list) -> {
+            net.minecraft.server.level.ServerChunkCache chunkProviderServer = world.getChunkSource();
+            for (net.minecraft.world.level.chunk.ChunkAccess chunk : list) {
+                chunkProviderServer.addTicketAtLevel(net.minecraft.server.level.TicketType.POST_TELEPORT, chunk.getPos(), 33, CraftEntity.this.getEntityId());
+            }
+            net.minecraft.server.MinecraftServer.getServer().scheduleOnMain(() -> {
+                try {
+                    ret.complete(CraftEntity.this.teleport(locationClone, cause) ? Boolean.TRUE : Boolean.FALSE);
+                } catch (Throwable throwable) {
+                    if (throwable instanceof ThreadDeath) {
+                        throw (ThreadDeath)throwable;
+                    }
+                    net.minecraft.server.MinecraftServer.LOGGER.error("Failed to teleport entity " + CraftEntity.this, throwable);
+                    ret.completeExceptionally(throwable);
+                }
+            });
+        });
+
+        return ret;
+    }
+    // Paper end
 }
