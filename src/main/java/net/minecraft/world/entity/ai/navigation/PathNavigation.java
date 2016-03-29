@@ -110,7 +110,13 @@ public abstract class PathNavigation {
 
     @Nullable
     public Path createPath(BlockPos target, int distance) {
-        return this.createPath(ImmutableSet.of(target), 8, false, distance);
+        // Paper start - add target entity parameter
+        return this.createPath(target, null, distance);
+    }
+    @Nullable
+    public Path createPath(BlockPos target, @Nullable Entity entity, int distance) {
+        return this.createPath(ImmutableSet.of(target), entity, 8, false, distance);
+        // Paper end
     }
 
     @Nullable
@@ -120,7 +126,7 @@ public abstract class PathNavigation {
 
     @Nullable
     public Path createPath(Entity entity, int distance) {
-        return this.createPath(ImmutableSet.of(entity.blockPosition()), 16, true, distance);
+        return this.createPath(ImmutableSet.of(entity.blockPosition()), entity, 16, true, distance); // Paper
     }
 
     @Nullable
@@ -130,6 +136,16 @@ public abstract class PathNavigation {
 
     @Nullable
     protected Path createPath(Set<BlockPos> positions, int range, boolean useHeadPos, int distance, float followRange) {
+        return this.createPath(positions, null, range, useHeadPos, distance, followRange);
+    }
+
+    @Nullable
+    protected Path createPath(Set<BlockPos> positions, @Nullable Entity target, int range, boolean useHeadPos, int distance) {
+        return this.createPath(positions, target, range, useHeadPos, distance, (float) this.mob.getAttributeValue(Attributes.FOLLOW_RANGE));
+    }
+
+    @Nullable protected Path createPath(Set<BlockPos> positions, @Nullable Entity target, int range, boolean useHeadPos, int distance, float followRange) {
+        // Paper end
         if (positions.isEmpty()) {
             return null;
         } else if (this.mob.getY() < (double)this.level.getMinBuildHeight()) {
@@ -139,6 +155,23 @@ public abstract class PathNavigation {
         } else if (this.path != null && !this.path.isDone() && positions.contains(this.targetPos)) {
             return this.path;
         } else {
+            // Paper start - Pathfind event
+            boolean copiedSet = false;
+            for (BlockPos possibleTarget : positions) {
+                if (!new com.destroystokyo.paper.event.entity.EntityPathfindEvent(this.mob.getBukkitEntity(),
+                    io.papermc.paper.util.MCUtil.toLocation(this.mob.level, possibleTarget), target == null ? null : target.getBukkitEntity()).callEvent()) {
+                    if (!copiedSet) {
+                        copiedSet = true;
+                        positions = new java.util.HashSet<>(positions);
+                    }
+                    // note: since we copy the set this remove call is safe, since we're iterating over the old copy
+                    positions.remove(possibleTarget);
+                    if (positions.isEmpty()) {
+                        return null;
+                    }
+                }
+            }
+            // Paper end
             this.level.getProfiler().push("pathfind");
             BlockPos blockPos = useHeadPos ? this.mob.blockPosition().above() : this.mob.blockPosition();
             int i = (int)(followRange + (float)range);
