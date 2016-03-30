@@ -150,7 +150,7 @@ public class Camel extends AbstractHorse implements PlayerRideableJumping, Rider
     @Override
     protected void customServerAiStep() {
         this.level.getProfiler().push("camelBrain");
-        Brain<?> brain = this.getBrain();
+        Brain<Camel> brain = (Brain<Camel>) this.getBrain(); // Paper - decompile fix
         brain.tick((ServerLevel)this.level, this);
         this.level.getProfiler().pop();
         this.level.getProfiler().push("camelActivityUpdate");

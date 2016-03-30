@@ -138,9 +138,8 @@ public class ComponentUtils {
             ComponentContents string = text.getContents();
             if (string instanceof TranslatableContents) {
                 TranslatableContents translatableContents = (TranslatableContents)string;
-                String string = translatableContents.getKey();
                 String string2 = translatableContents.getFallback();
-                return string2 != null || Language.getInstance().has(string);
+                return string2 != null || Language.getInstance().has(translatableContents.getKey()); // Paper - decompile fix
             }
         }
 

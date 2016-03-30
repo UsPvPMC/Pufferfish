@@ -123,7 +123,7 @@ public class Hoglin extends Animal implements Enemy, HoglinBase {
 
     @Override
     public Brain<Hoglin> getBrain() {
-        return super.getBrain();
+        return (Brain<Hoglin>) super.getBrain(); // Paper - decompile fix
     }
 
     @Override

@@ -357,7 +357,7 @@ public class Util {
     }
 
     public static <K> Hash.Strategy<K> identityStrategy() {
-        return Util.IdentityStrategy.INSTANCE;
+        return (Hash.Strategy<K>) Util.IdentityStrategy.INSTANCE; // Paper - decompile fix
     }
 
     public static <V> CompletableFuture<List<V>> sequence(List<? extends CompletableFuture<V>> futures) {

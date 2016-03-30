@@ -78,7 +78,7 @@ public class RecipeManager extends SimpleJsonResourceReloadListener {
         }
 
         this.recipes = (Map) map1.entrySet().stream().collect(ImmutableMap.toImmutableMap(Entry::getKey, (entry1) -> {
-            return (entry1.getValue()); // CraftBukkit
+            return entry1.getValue(); // CraftBukkit // Paper - decompile fix - *shrugs internally* // todo: is this needed anymore?
         }));
         this.byName = Maps.newHashMap(builder.build()); // CraftBukkit
         RecipeManager.LOGGER.info("Loaded {} recipes", map1.size());

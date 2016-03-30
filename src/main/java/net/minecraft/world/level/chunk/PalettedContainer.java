@@ -56,7 +56,7 @@ public class PalettedContainer<T> implements PaletteResize<T>, PalettedContainer
     }
 
     private static <T, C extends PalettedContainerRO<T>> Codec<C> codec(IdMap<T> idList, Codec<T> entryCodec, PalettedContainer.Strategy provider, T defaultValue, PalettedContainerRO.Unpacker<T, C> reader) {
-        return RecordCodecBuilder.<PalettedContainerRO.PackedData>create((instance) -> {
+        return RecordCodecBuilder.<PalettedContainerRO.PackedData<T>>create((instance) -> { // Paper - decompile fix
             return instance.group(entryCodec.mapResult(ExtraCodecs.orElsePartial(defaultValue)).listOf().fieldOf("palette").forGetter(PalettedContainerRO.PackedData::paletteEntries), Codec.LONG_STREAM.optionalFieldOf("data").forGetter(PalettedContainerRO.PackedData::storage)).apply(instance, PalettedContainerRO.PackedData::new);
         }).comapFlatMap((serialized) -> {
             return reader.read(idList, provider, serialized);

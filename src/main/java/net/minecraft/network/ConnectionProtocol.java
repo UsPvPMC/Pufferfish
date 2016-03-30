@@ -335,7 +335,7 @@ public enum ConnectionProtocol implements BundlerInfo.Provider {
 
         public void listAllPackets(Consumer<Class<? extends Packet<?>>> consumer) {
             this.classToId.keySet().stream().filter((type) -> {
-                return type != BundleDelimiterPacket.class;
+                return !type.equals(BundleDelimiterPacket.class); // Paper - fix of some kind
             }).forEach(consumer);
             this.extraClasses.forEach(consumer);
         }

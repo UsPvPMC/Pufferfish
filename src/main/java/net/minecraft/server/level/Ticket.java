@@ -21,7 +21,7 @@ public final class Ticket<T> implements Comparable<Ticket<?>> {
             return i;
         } else {
             int j = Integer.compare(System.identityHashCode(this.type), System.identityHashCode(ticket.type));
-            return j != 0 ? j : this.type.getComparator().compare(this.key, ticket.key);
+            return j != 0 ? j : this.type.getComparator().compare(this.key, (T)ticket.key); // Paper - decompile fix
         }
     }
 

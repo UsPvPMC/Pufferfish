@@ -44,7 +44,7 @@ public class EntitySection<T extends EntityAccess> {
         } else {
             for(T entityAccess : collection) {
                 U entityAccess2 = (U)((EntityAccess)type.tryCast(entityAccess));
-                if (entityAccess2 != null && entityAccess.getBoundingBox().intersects(box) && consumer.accept((T)entityAccess2).shouldAbort()) {
+                if (entityAccess2 != null && entityAccess.getBoundingBox().intersects(box) && consumer.accept(entityAccess2).shouldAbort()) { // Paper - decompile fix
                     return AbortableIterationConsumer.Continuation.ABORT;
                 }
             }

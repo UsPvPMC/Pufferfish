@@ -91,7 +91,7 @@ public class RegistryDataLoader {
         return new RegistryOps.RegistryInfoLookup() {
             @Override
             public <T> Optional<RegistryOps.RegistryInfo<T>> lookup(ResourceKey<? extends Registry<? extends T>> registryRef) {
-                return Optional.ofNullable(map.get(registryRef));
+                return Optional.ofNullable((RegistryOps.RegistryInfo<T>) map.get(registryRef)); // Paper - decompile fix
             }
         };
     }

@@ -19,7 +19,7 @@ public class EntityLookup<T extends EntityAccess> {
     public <U extends T> void getEntities(EntityTypeTest<T, U> filter, AbortableIterationConsumer<U> consumer) {
         for(T entityAccess : this.byId.values()) {
             U entityAccess2 = (U)((EntityAccess)filter.tryCast(entityAccess));
-            if (entityAccess2 != null && consumer.accept((T)entityAccess2).shouldAbort()) {
+            if (entityAccess2 != null && consumer.accept(entityAccess2).shouldAbort()) { // Paper - decompile fix
                 return;
             }
         }
