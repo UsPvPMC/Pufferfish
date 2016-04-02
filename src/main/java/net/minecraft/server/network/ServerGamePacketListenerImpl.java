@@ -2535,8 +2535,37 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                 });
             }
         }
+        // Paper start - fire event
+        else {
+            packet.dispatch(new net.minecraft.network.protocol.game.ServerboundInteractPacket.Handler() {
+                @Override
+                public void onInteraction(net.minecraft.world.InteractionHand hand) {
+                    ServerGamePacketListenerImpl.this.callPlayerUseUnknownEntityEvent(packet, hand);
+                }
+
+                @Override
+                public void onInteraction(net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.Vec3 pos) {
+                    ServerGamePacketListenerImpl.this.callPlayerUseUnknownEntityEvent(packet, hand);
+                }
+
+                @Override
+                public void onAttack() {
+                    ServerGamePacketListenerImpl.this.callPlayerUseUnknownEntityEvent(packet, net.minecraft.world.InteractionHand.MAIN_HAND);
+                }
+            });
+        }
 
     }
+
+    private void callPlayerUseUnknownEntityEvent(ServerboundInteractPacket packet, InteractionHand hand) {
+        this.cserver.getPluginManager().callEvent(new com.destroystokyo.paper.event.player.PlayerUseUnknownEntityEvent(
+            this.getCraftPlayer(),
+            packet.getEntityId(),
+            packet.getActionType() == ServerboundInteractPacket.ActionType.ATTACK,
+            hand == InteractionHand.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND
+        ));
+    }
+    // Paper end
 
     @Override
     public void handleClientCommand(ServerboundClientCommandPacket packet) {

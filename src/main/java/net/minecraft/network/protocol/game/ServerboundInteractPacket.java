@@ -10,8 +10,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 public class ServerboundInteractPacket implements Packet<ServerGamePacketListener> {
-    private final int entityId;
-    private final ServerboundInteractPacket.Action action;
+    private final int entityId; public final int getEntityId() { return this.entityId; } // Paper - add accessor
+    private final ServerboundInteractPacket.Action action; public final ServerboundInteractPacket.ActionType getActionType() { return this.action.getType(); } // Paper - add accessor
     private final boolean usingSecondaryAction;
     static final ServerboundInteractPacket.Action ATTACK_ACTION = new ServerboundInteractPacket.Action() {
         @Override
