@@ -2,6 +2,7 @@ package net.minecraft.world.level.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
@@ -39,6 +40,7 @@ public abstract class SpreadingSnowyDirtBlock extends SnowyDirtBlock {
 
     @Override
     public void randomTick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+        if (this instanceof GrassBlock && world.paperConfig().tickRates.grassSpread != 1 && (world.paperConfig().tickRates.grassSpread < 1 || (MinecraftServer.currentTick + pos.hashCode()) % world.paperConfig().tickRates.grassSpread != 0)) { return; } // Paper
         if (!SpreadingSnowyDirtBlock.canBeGrass(state, world, pos)) {
             // CraftBukkit start
             if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.DIRT.defaultBlockState()).isCancelled()) {
