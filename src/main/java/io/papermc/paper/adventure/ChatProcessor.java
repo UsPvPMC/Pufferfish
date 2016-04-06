@@ -19,6 +19,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Optionull;
 import net.minecraft.Util;
 import net.minecraft.core.registries.Registries;
@@ -30,6 +31,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.util.LazyPlayerSet;
 import org.bukkit.craftbukkit.util.Waitable;
@@ -365,10 +367,16 @@ public final class ChatProcessor {
     }
 
     static String legacyDisplayName(final CraftPlayer player) {
+        if (((org.bukkit.craftbukkit.CraftWorld) player.getWorld()).getHandle().paperConfig().scoreboards.useVanillaWorldScoreboardNameColoring) {
+            return legacySection().serialize(player.teamDisplayName()) + ChatFormatting.RESET;
+        }
         return player.getDisplayName();
     }
 
     static Component displayName(final CraftPlayer player) {
+        if (((CraftWorld) player.getWorld()).getHandle().paperConfig().scoreboards.useVanillaWorldScoreboardNameColoring) {
+            return player.teamDisplayName();
+        }
         return player.displayName();
     }
 
