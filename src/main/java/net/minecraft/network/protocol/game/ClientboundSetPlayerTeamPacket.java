@@ -193,7 +193,7 @@ public class ClientboundSetPlayerTeamPacket implements Packet<ClientGamePacketLi
             buf.writeComponent(this.displayName);
             buf.writeByte(this.options);
             buf.writeUtf(this.nametagVisibility);
-            buf.writeUtf(this.collisionRule);
+            buf.writeUtf(!io.papermc.paper.configuration.GlobalConfiguration.get().collisions.enablePlayerCollisions ? "never" : this.collisionRule); // Paper
             buf.writeEnum(this.color);
             buf.writeComponent(this.playerPrefix);
             buf.writeComponent(this.playerSuffix);

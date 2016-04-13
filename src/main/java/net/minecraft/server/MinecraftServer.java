@@ -589,6 +589,20 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldLoadEvent(worldserver.getWorld()));
         }
 
+        // Paper start - Handle collideRule team for player collision toggle
+        final ServerScoreboard scoreboard = this.getScoreboard();
+        final java.util.Collection<String> toRemove = scoreboard.getPlayerTeams().stream().filter(team -> team.getName().startsWith("collideRule_")).map(net.minecraft.world.scores.PlayerTeam::getName).collect(java.util.stream.Collectors.toList());
+        for (String teamName : toRemove) {
+            scoreboard.removePlayerTeam(scoreboard.getPlayerTeam(teamName)); // Clean up after ourselves
+        }
+
+        if (!io.papermc.paper.configuration.GlobalConfiguration.get().collisions.enablePlayerCollisions) {
+            this.getPlayerList().collideRuleTeamName = org.apache.commons.lang3.StringUtils.left("collideRule_" + java.util.concurrent.ThreadLocalRandom.current().nextInt(), 16);
+            net.minecraft.world.scores.PlayerTeam collideTeam = scoreboard.addPlayerTeam(this.getPlayerList().collideRuleTeamName);
+            collideTeam.setSeeFriendlyInvisibles(false); // Because we want to mimic them not being on a team at all
+        }
+        // Paper end
+
         this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
         this.server.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.STARTUP));
         this.connection.acceptConnections();
