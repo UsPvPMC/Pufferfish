@@ -1806,7 +1806,7 @@ public class ServerPlayer extends Player {
         }
     }
 
-    public String locale = "en_us"; // CraftBukkit - add, lowercase
+    public String locale = null; // CraftBukkit - add, lowercase // Paper - default to null
     public java.util.Locale adventure$locale = java.util.Locale.US; // Paper
     public void updateOptions(ServerboundClientInformationPacket packet) {
         // CraftBukkit start
@@ -1814,9 +1814,10 @@ public class ServerPlayer extends Player {
             PlayerChangedMainHandEvent event = new PlayerChangedMainHandEvent(this.getBukkitEntity(), getMainArm() == HumanoidArm.LEFT ? MainHand.LEFT : MainHand.RIGHT);
             this.server.server.getPluginManager().callEvent(event);
         }
-        if (!this.locale.equals(packet.language)) {
+        if (this.locale == null || !this.locale.equals(packet.language)) { // Paper - check for null
             PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), packet.language);
             this.server.server.getPluginManager().callEvent(event);
+            this.server.server.getPluginManager().callEvent(new com.destroystokyo.paper.event.player.PlayerLocaleChangeEvent(this.getBukkitEntity(), this.locale, packet.language)); // Paper
         }
         this.locale = packet.language;
         // Paper start
