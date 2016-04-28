@@ -710,10 +710,16 @@ public final class ItemStack {
     }
 
     public ItemStack copy() {
-        if (this.isEmpty()) {
+        // Paper start
+        return this.copy(false);
+    }
+
+    public ItemStack copy(boolean originalItem) {
+        if (!originalItem && this.isEmpty()) {
+            // Paper end
             return ItemStack.EMPTY;
         } else {
-            ItemStack itemstack = new ItemStack(this.getItem(), this.count);
+            ItemStack itemstack = new ItemStack(originalItem ? this.item : this.getItem(), this.count); // Paper
 
             itemstack.setPopTime(this.getPopTime());
             if (this.tag != null) {
