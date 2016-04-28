@@ -193,6 +193,7 @@ import co.aikar.timings.MinecraftTimings; // Paper
 
 public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements CommandSource, AutoCloseable {
 
+    private static MinecraftServer SERVER; // Paper
     public static final Logger LOGGER = LogUtils.getLogger();
     public static final net.kyori.adventure.text.logger.slf4j.ComponentLogger COMPONENT_LOGGER = net.kyori.adventure.text.logger.slf4j.ComponentLogger.logger(LOGGER.getName()); // Paper
     public static final String VANILLA_BRAND = "vanilla";
@@ -322,6 +323,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     public MinecraftServer(OptionSet options, WorldLoader.DataLoadContext worldLoader, Thread thread, LevelStorageSource.LevelStorageAccess convertable_conversionsession, PackRepository resourcepackrepository, WorldStem worldstem, Proxy proxy, DataFixer datafixer, Services services, ChunkProgressListenerFactory worldloadlistenerfactory) {
         super("Server");
+        SERVER = this; // Paper - better singleton
         this.metricsRecorder = InactiveMetricsRecorder.INSTANCE;
         this.profiler = this.metricsRecorder.getProfiler();
         this.onMetricsRecordingStopped = (methodprofilerresults) -> {
@@ -2334,9 +2336,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         return false;
     }
 
-    @Deprecated
     public static MinecraftServer getServer() {
-        return (Bukkit.getServer() instanceof CraftServer) ? ((CraftServer) Bukkit.getServer()).getServer() : null;
+        return SERVER; // Paper
     }
     // CraftBukkit end
 
