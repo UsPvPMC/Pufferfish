@@ -9,7 +9,7 @@ import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.loot.LootTable;
 import org.bukkit.loot.Lootable;
 
-public abstract class CraftLootable<T extends RandomizableContainerBlockEntity> extends CraftContainer<T> implements Nameable, Lootable {
+public abstract class CraftLootable<T extends RandomizableContainerBlockEntity> extends CraftContainer<T> implements Nameable, Lootable, com.destroystokyo.paper.loottable.PaperLootableBlockInventory { // Paper
 
     public CraftLootable(World world, T tileEntity) {
         super(world, tileEntity);

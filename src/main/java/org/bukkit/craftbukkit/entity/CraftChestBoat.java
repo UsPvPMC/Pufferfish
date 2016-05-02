@@ -11,8 +11,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.loot.LootTable;
 
-public class CraftChestBoat extends CraftBoat implements org.bukkit.entity.ChestBoat {
-
+public class CraftChestBoat extends CraftBoat implements org.bukkit.entity.ChestBoat, com.destroystokyo.paper.loottable.PaperLootableEntityInventory { // Paper
     private final Inventory inventory;
 
     public CraftChestBoat(CraftServer server, ChestBoat entity) {
@@ -66,7 +65,7 @@ public class CraftChestBoat extends CraftBoat implements org.bukkit.entity.Chest
         return this.getHandle().getLootTableSeed();
     }
 
-    private void setLootTable(LootTable table, long seed) {
+    public void setLootTable(LootTable table, long seed) { // Paper - change visibility since it overrides a public method
         ResourceLocation newKey = (table == null) ? null : CraftNamespacedKey.toMinecraft(table.getKey());
         this.getHandle().setLootTable(newKey);
         this.getHandle().setLootTableSeed(seed);

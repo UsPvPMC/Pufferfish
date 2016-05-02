@@ -60,7 +60,7 @@ public class CraftSuspiciousSand extends CraftBlockEntityState<SuspiciousSandBlo
         this.setLootTable(this.getLootTable(), seed);
     }
 
-    private void setLootTable(LootTable table, long seed) {
+    public void setLootTable(LootTable table, long seed) {  // Paper - change visibility since it overrides a public method
         ResourceLocation key = (table == null) ? null : CraftNamespacedKey.toMinecraft(table.getKey());
         getSnapshot().setLootTable(key, seed);
     }

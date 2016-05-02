@@ -12,8 +12,9 @@ import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.craftbukkit.inventory.CraftInventoryDoubleChest;
 import org.bukkit.inventory.Inventory;
+import com.destroystokyo.paper.loottable.PaperLootableBlockInventory; // Paper
 
-public class CraftChest extends CraftLootable<ChestBlockEntity> implements Chest {
+public class CraftChest extends CraftLootable<ChestBlockEntity> implements Chest, PaperLootableBlockInventory { // Paper
 
     public CraftChest(World world, ChestBlockEntity tileEntity) {
         super(world, tileEntity);
