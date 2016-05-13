@@ -161,6 +161,12 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     public Map<BlockPos, BlockEntity> capturedTileEntities = new HashMap<>();
     public List<ItemEntity> captureDrops;
     public final it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap<SpawnCategory> ticksPerSpawnCategory = new it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap<>();
+    // Paper start
+    public int wakeupInactiveRemainingAnimals;
+    public int wakeupInactiveRemainingFlying;
+    public int wakeupInactiveRemainingMonsters;
+    public int wakeupInactiveRemainingVillagers;
+    // Paper end
     public boolean populating;
     public final org.spigotmc.SpigotWorldConfig spigotConfig; // Spigot
     // Paper start

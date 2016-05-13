@@ -19,6 +19,7 @@ public abstract class PathfinderMob extends Mob {
     }
 
     public org.bukkit.craftbukkit.entity.CraftCreature getBukkitCreature() { return (org.bukkit.craftbukkit.entity.CraftCreature) super.getBukkitEntity(); } // Paper
+    public BlockPos movingTarget = null; public BlockPos getMovingTarget() { return movingTarget; } // Paper
 
     public float getWalkTargetValue(BlockPos pos) {
         return this.getWalkTargetValue(pos, this.level);

@@ -33,6 +33,7 @@ public class GoalSelector {
     private final EnumSet<Goal.Flag> disabledFlags = EnumSet.noneOf(Goal.Flag.class);
     private int tickCount;
     private int newGoalRate = 3;
+    private int curRate;
 
     public GoalSelector(Supplier<ProfilerFiller> profiler) {
         this.profiler = profiler;
@@ -49,6 +50,20 @@ public class GoalSelector {
         });
     }
 
+    // Paper start
+    public boolean inactiveTick() {
+        this.curRate++;
+        return this.curRate % this.newGoalRate == 0;
+    }
+    public boolean hasTasks() {
+        for (WrappedGoal task : this.availableGoals) {
+            if (task.isRunning()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // Paper end
     public void removeGoal(Goal goal) {
         this.availableGoals.stream().filter((wrappedGoal) -> {
             return wrappedGoal.getGoal() == goal;
