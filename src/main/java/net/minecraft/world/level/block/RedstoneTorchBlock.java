@@ -21,7 +21,7 @@ import org.bukkit.event.block.BlockRedstoneEvent; // CraftBukkit
 public class RedstoneTorchBlock extends TorchBlock {
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
-    private static final Map<BlockGetter, List<RedstoneTorchBlock.Toggle>> RECENT_TOGGLES = new WeakHashMap();
+    // Paper - Move the mapped list to World
     public static final int RECENT_TOGGLE_TIMER = 60;
     public static final int MAX_RECENT_TOGGLES = 8;
     public static final int RESTART_DELAY = 160;
@@ -72,11 +72,15 @@ public class RedstoneTorchBlock extends TorchBlock {
     @Override
     public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
         boolean flag = this.hasNeighborSignal(world, pos, state);
-        List list = (List) RedstoneTorchBlock.RECENT_TOGGLES.get(world);
-
-        while (list != null && !list.isEmpty() && world.getGameTime() - ((RedstoneTorchBlock.Toggle) list.get(0)).when > 60L) {
-            list.remove(0);
+        // Paper start
+        java.util.ArrayDeque<RedstoneTorchBlock.Toggle> redstoneUpdateInfos = world.redstoneUpdateInfos;
+        if (redstoneUpdateInfos != null) {
+            RedstoneTorchBlock.Toggle curr;
+            while ((curr = redstoneUpdateInfos.peek()) != null && world.getGameTime() - curr.when > 60L) {
+                redstoneUpdateInfos.poll();
+            }
         }
+        // Paper end
 
         // CraftBukkit start
         org.bukkit.plugin.PluginManager manager = world.getCraftServer().getPluginManager();
@@ -152,9 +156,12 @@ public class RedstoneTorchBlock extends TorchBlock {
     }
 
     private static boolean isToggledTooFrequently(Level world, BlockPos pos, boolean addNew) {
-        List<RedstoneTorchBlock.Toggle> list = (List) RedstoneTorchBlock.RECENT_TOGGLES.computeIfAbsent(world, (iblockaccess) -> {
-            return Lists.newArrayList();
-        });
+        // Paper start
+        java.util.ArrayDeque<RedstoneTorchBlock.Toggle> list = world.redstoneUpdateInfos;
+        if (list == null) {
+            list = world.redstoneUpdateInfos = new java.util.ArrayDeque<>();
+        }
+
 
         if (addNew) {
             list.add(new RedstoneTorchBlock.Toggle(pos.immutable(), world.getGameTime()));
@@ -162,9 +169,9 @@ public class RedstoneTorchBlock extends TorchBlock {
 
         int i = 0;
 
-        for (int j = 0; j < list.size(); ++j) {
-            RedstoneTorchBlock.Toggle blockredstonetorch_redstoneupdateinfo = (RedstoneTorchBlock.Toggle) list.get(j);
-
+        for (java.util.Iterator<RedstoneTorchBlock.Toggle> iterator = list.iterator(); iterator.hasNext();) {
+            RedstoneTorchBlock.Toggle blockredstonetorch_redstoneupdateinfo = iterator.next();
+            // Paper end
             if (blockredstonetorch_redstoneupdateinfo.pos.equals(pos)) {
                 ++i;
                 if (i >= 8) {
