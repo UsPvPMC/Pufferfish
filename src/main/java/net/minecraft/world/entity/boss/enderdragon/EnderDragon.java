@@ -656,7 +656,7 @@ public class EnderDragon extends Mob implements Enemy {
                 // CraftBukkit start - Use relative location for far away sounds
                 // this.world.b(1028, this.getChunkCoordinates(), 0);
                 int viewDistance = ((ServerLevel) this.level).getCraftServer().getViewDistance() * 16;
-                for (net.minecraft.server.level.ServerPlayer player : this.level.getServer().getPlayerList().players) {
+                for (net.minecraft.server.level.ServerPlayer player : level.spigotConfig.dragonDeathSoundRadius > 0 ? ((ServerLevel) level).players() : level.getServer().getPlayerList().players) { // Paper
                     double deltaX = this.getX() - player.getX();
                     double deltaZ = this.getZ() - player.getZ();
                     double distanceSquared = deltaX * deltaX + deltaZ * deltaZ;

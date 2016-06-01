@@ -271,7 +271,7 @@ public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob
                     // CraftBukkit start - Use relative location for far away sounds
                     // this.world.globalLevelEvent(1023, new BlockPosition(this), 0);
                     int viewDistance = ((ServerLevel) this.level).getCraftServer().getViewDistance() * 16;
-                    for (ServerPlayer player : (List<ServerPlayer>) MinecraftServer.getServer().getPlayerList().players) {
+                    for (ServerPlayer player : level.spigotConfig.witherSpawnSoundRadius > 0 ? ((ServerLevel) level).players() : level.getServer().getPlayerList().players) { // Paper
                         double deltaX = this.getX() - player.getX();
                         double deltaZ = this.getZ() - player.getZ();
                         double distanceSquared = deltaX * deltaX + deltaZ * deltaZ;

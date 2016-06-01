@@ -64,7 +64,7 @@ public class EnderEyeItem extends Item {
                     // world.b(1038, blockposition1.c(1, 0, 1), 0);
                     int viewDistance = world.getCraftServer().getViewDistance() * 16;
                     BlockPos soundPos = blockposition1.offset(1, 0, 1);
-                    for (ServerPlayer player : world.getServer().getPlayerList().players) {
+                    for (ServerPlayer player : world.spigotConfig.endPortalSoundRadius > 0 ? ((ServerLevel) world).players() : world.getServer().getPlayerList().players) { // Paper
                         double deltaX = soundPos.getX() - player.getX();
                         double deltaZ = soundPos.getZ() - player.getZ();
                         double distanceSquared = deltaX * deltaX + deltaZ * deltaZ;
