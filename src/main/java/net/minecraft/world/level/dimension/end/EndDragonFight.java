@@ -417,6 +417,7 @@ public class EndDragonFight {
             enderDragon.moveTo(0.0D, 128.0D, 0.0D, this.level.random.nextFloat() * 360.0F, 0.0F);
             this.level.addFreshEntity(enderDragon);
             this.dragonUUID = enderDragon.getUUID();
+            this.resetSpikeCrystals(); // Paper
         }
 
         return enderDragon;
