@@ -112,7 +112,7 @@ public class SignBlockEntity extends BlockEntity implements CommandSource { // C
                 s = "\"\"";
             }
 
-            if (oldSign) {
+            if (oldSign && !this.isLoadingStructure) { // Paper - saved structures will be in the new format, but will not have isConverted
                 this.messages[i] = org.bukkit.craftbukkit.util.CraftChatMessage.fromString(s)[0];
                 continue;
             }

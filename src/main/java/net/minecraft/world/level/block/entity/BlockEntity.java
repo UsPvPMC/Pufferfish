@@ -32,6 +32,7 @@ public abstract class BlockEntity {
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
     public CraftPersistentDataContainer persistentDataContainer;
     // CraftBukkit end
+    public boolean isLoadingStructure = false; // Paper
     private static final Logger LOGGER = LogUtils.getLogger();
     private final BlockEntityType<?> type;
     @Nullable
