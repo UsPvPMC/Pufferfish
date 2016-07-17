@@ -98,6 +98,7 @@ public class GameProfileCache {
             }
         };
 
+        if (!org.apache.commons.lang3.StringUtils.isBlank(name)) // Paper - Don't lookup a profile with a blank name)
         repository.findProfilesByNames(new String[]{name}, Agent.MINECRAFT, profilelookupcallback);
         GameProfile gameprofile = (GameProfile) atomicreference.get();
 
