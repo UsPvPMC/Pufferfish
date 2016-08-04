@@ -98,7 +98,8 @@ public class GameProfileCache {
             }
         };
 
-        if (!org.apache.commons.lang3.StringUtils.isBlank(name)) // Paper - Don't lookup a profile with a blank name)
+        if (!org.apache.commons.lang3.StringUtils.isBlank(name) // Paper - Don't lookup a profile with a blank name
+                && io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode()) // Paper - only run in online mode - 100 COL
         repository.findProfilesByNames(new String[]{name}, Agent.MINECRAFT, profilelookupcallback);
         GameProfile gameprofile = (GameProfile) atomicreference.get();
 
@@ -116,7 +117,7 @@ public class GameProfileCache {
     }
 
     private static boolean usesAuthentication() {
-        return GameProfileCache.usesAuthentication;
+        return io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode(); // Paper
     }
 
     public void add(GameProfile profile) {

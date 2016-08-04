@@ -66,7 +66,8 @@ public class OldUsersConverter {
             return new String[i];
         });
 
-        if (server.usesAuthentication() || org.spigotmc.SpigotConfig.bungee) { // Spigot: bungee = online mode, for now.
+        if (server.usesAuthentication()
+                || (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode())) { // Spigot: bungee = online mode, for now.  // Paper - Handle via setting
             server.getProfileRepository().findProfilesByNames(astring, Agent.MINECRAFT, callback);
         } else {
             String[] astring1 = astring;
