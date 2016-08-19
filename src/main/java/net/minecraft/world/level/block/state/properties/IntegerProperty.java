@@ -35,8 +35,7 @@ public class IntegerProperty extends Property<Integer> {
         return this.values;
     }
 
-    @Override
-    public boolean equals(Object object) {
+    public boolean equals_unused(Object object) { // Paper
         if (this == object) {
             return true;
         } else if (object instanceof IntegerProperty && super.equals(object)) {

@@ -70,14 +70,7 @@ public abstract class Property<T extends Comparable<T>> {
 
     @Override
     public boolean equals(Object object) {
-        if (this == object) {
-            return true;
-        } else if (!(object instanceof Property)) {
-            return false;
-        } else {
-            Property<?> property = (Property)object;
-            return this.clazz.equals(property.clazz) && this.name.equals(property.name);
-        }
+        return this == object; // Paper
     }
 
     @Override

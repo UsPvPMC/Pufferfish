@@ -45,8 +45,7 @@ public class EnumProperty<T extends Enum<T> & StringRepresentable> extends Prope
         return value.getSerializedName();
     }
 
-    @Override
-    public boolean equals(Object object) {
+    public boolean equals_unused(Object object) { // Paper
         if (this == object) {
             return true;
         } else if (object instanceof EnumProperty && super.equals(object)) {
