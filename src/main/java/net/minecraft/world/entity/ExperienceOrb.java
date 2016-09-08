@@ -248,7 +248,7 @@ public class ExperienceOrb extends Entity {
                 int i = this.repairPlayerItems(player, this.value);
 
                 if (i > 0) {
-                    player.giveExperiencePoints(CraftEventFactory.callPlayerExpChangeEvent(player, i).getAmount()); // CraftBukkit - this.value -> event.getAmount()
+                    player.giveExperiencePoints(CraftEventFactory.callPlayerExpChangeEvent(player, this).getAmount()); // CraftBukkit - this.value -> event.getAmount() // Paper - supply experience orb object
                 }
 
                 --this.count;
