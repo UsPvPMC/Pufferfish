@@ -1595,13 +1595,14 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     // Spigot start - limit place/interactions
     private int limitedPackets;
     private long lastLimitedPacket = -1;
+    private static final int THRESHOLD = io.papermc.paper.configuration.GlobalConfiguration.get().spamLimiter.incomingPacketThreshold; // Paper - Configurable threshold
 
     private boolean checkLimit(long timestamp) {
-        if (this.lastLimitedPacket != -1 && timestamp - this.lastLimitedPacket < 30 && this.limitedPackets++ >= 4) {
+        if (this.lastLimitedPacket != -1 && timestamp - this.lastLimitedPacket < THRESHOLD && this.limitedPackets++ >= 8) { // Paper - Use threshold, raise packet limit to 8
             return false;
         }
 
-        if (this.lastLimitedPacket == -1 || timestamp - this.lastLimitedPacket >= 30) {
+        if (this.lastLimitedPacket == -1 || timestamp - this.lastLimitedPacket >= THRESHOLD) { // Paper
             this.lastLimitedPacket = timestamp;
             this.limitedPackets = 0;
             return true;
