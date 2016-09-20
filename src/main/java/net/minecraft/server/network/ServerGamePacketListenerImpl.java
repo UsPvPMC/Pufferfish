@@ -354,7 +354,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         if (this.clientIsFloating && !this.player.isSleeping() && !this.player.isPassenger() && !this.player.isDeadOrDying()) {
             if (++this.aboveGroundTickCount > 80) {
                 ServerGamePacketListenerImpl.LOGGER.warn("{} was kicked for floating too long!", this.player.getName().getString());
-                this.disconnect(Component.translatable("multiplayer.disconnect.flying"));
+                this.disconnect(io.papermc.paper.configuration.GlobalConfiguration.get().messages.kick.flyingPlayer); // Paper - use configurable kick message
                 return;
             }
         } else {
@@ -373,7 +373,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             if (this.clientVehicleIsFloating && this.player.getRootVehicle().getControllingPassenger() == this.player) {
                 if (++this.aboveGroundVehicleTickCount > 80) {
                     ServerGamePacketListenerImpl.LOGGER.warn("{} was kicked for floating a vehicle too long!", this.player.getName().getString());
-                    this.disconnect(Component.translatable("multiplayer.disconnect.flying"));
+                    this.disconnect(io.papermc.paper.configuration.GlobalConfiguration.get().messages.kick.flyingVehicle); // Paper - use configurable kick message
                     return;
                 }
             } else {
