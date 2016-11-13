@@ -332,7 +332,7 @@ public class FallingBlockEntity extends Entity {
             this.dropItem = nbt.getBoolean("DropItem");
         }
 
-        if (nbt.contains("TileEntityData", 10)) {
+        if (nbt.contains("TileEntityData", 10) && !(this.level.paperConfig().entities.spawning.filterBadTileEntityNbtFromFallingBlocks && this.blockState.getBlock() instanceof net.minecraft.world.level.block.GameMasterBlock)) {
             this.blockData = nbt.getCompound("TileEntityData");
         }
 
