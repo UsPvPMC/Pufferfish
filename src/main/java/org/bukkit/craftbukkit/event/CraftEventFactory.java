@@ -1283,6 +1283,17 @@ public class CraftEventFactory {
         return CraftItemStack.asNMSCopy(bitem);
     }
 
+    // Paper start
+    @Deprecated
+    public static com.destroystokyo.paper.event.entity.ProjectileCollideEvent callProjectileCollideEvent(Entity entity, EntityHitResult position) {
+        Projectile projectile = (Projectile) entity.getBukkitEntity();
+        org.bukkit.entity.Entity collided = position.getEntity().getBukkitEntity();
+        com.destroystokyo.paper.event.entity.ProjectileCollideEvent event = new com.destroystokyo.paper.event.entity.ProjectileCollideEvent(projectile, collided);
+        Bukkit.getPluginManager().callEvent(event);
+        return event;
+    }
+    // Paper end
+
     public static ProjectileLaunchEvent callProjectileLaunchEvent(Entity entity) {
         Projectile bukkitEntity = (Projectile) entity.getBukkitEntity();
         ProjectileLaunchEvent event = new ProjectileLaunchEvent(bukkitEntity);
@@ -1307,8 +1318,15 @@ public class CraftEventFactory {
         if (position.getType() == HitResult.Type.ENTITY) {
             hitEntity = ((EntityHitResult) position).getEntity().getBukkitEntity();
         }
+        // Paper start - legacy event
+        boolean cancelled = false;
+        if (hitEntity != null && position instanceof EntityHitResult entityHitResult) {
+            cancelled = callProjectileCollideEvent(entity, entityHitResult).isCancelled();
+        }
+        // Paper end
 
         ProjectileHitEvent event = new ProjectileHitEvent((Projectile) entity.getBukkitEntity(), hitEntity, hitBlock, hitFace);
+        event.setCancelled(cancelled); // Paper - propagate legacy event cancellation to modern event
         entity.level.getCraftServer().getPluginManager().callEvent(event);
         return event;
     }
