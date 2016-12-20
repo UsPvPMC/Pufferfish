@@ -37,6 +37,18 @@ public class WorldBorder {
         return (double) (pos.getX() + 1) > this.getMinX() && (double) pos.getX() < this.getMaxX() && (double) (pos.getZ() + 1) > this.getMinZ() && (double) pos.getZ() < this.getMaxZ();
     }
 
+    // Paper start
+    private final BlockPos.MutableBlockPos mutPos = new BlockPos.MutableBlockPos();
+    public boolean isBlockInBounds(int chunkX, int chunkZ) {
+        this.mutPos.set(chunkX, 64, chunkZ);
+        return this.isWithinBounds(this.mutPos);
+    }
+    public boolean isChunkInBounds(int chunkX, int chunkZ) {
+        this.mutPos.set(((chunkX << 4) + 15), 64, (chunkZ << 4) + 15);
+        return this.isWithinBounds(this.mutPos);
+    }
+    // Paper end
+
     public boolean isWithinBounds(ChunkPos pos) {
         return (double) pos.getMaxBlockX() > this.getMinX() && (double) pos.getMinBlockX() < this.getMaxX() && (double) pos.getMaxBlockZ() > this.getMinZ() && (double) pos.getMinBlockZ() < this.getMaxZ();
     }

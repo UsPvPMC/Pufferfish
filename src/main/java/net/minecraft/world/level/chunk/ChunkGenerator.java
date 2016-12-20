@@ -217,6 +217,7 @@ public abstract class ChunkGenerator {
 
             while (iterator.hasNext()) {
                 ChunkPos chunkcoordintpair = (ChunkPos) iterator.next();
+                if (!world.getWorldBorder().isChunkInBounds(chunkcoordintpair.x, chunkcoordintpair.z)) { continue; } // Paper
 
                 blockposition_mutableblockposition.set(SectionPos.sectionToBlockCoord(chunkcoordintpair.x, 8), 32, SectionPos.sectionToBlockCoord(chunkcoordintpair.z, 8));
                 double d1 = blockposition_mutableblockposition.distSqr(center);
