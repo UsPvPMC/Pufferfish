@@ -387,7 +387,8 @@ public class VillagerTrades {
                 return null;
             } else {
                 ServerLevel serverLevel = (ServerLevel)entity.level;
-                BlockPos blockPos = serverLevel.findNearestMapStructure(this.destination, entity.blockPosition(), 100, true);
+                if (!serverLevel.paperConfig().environment.treasureMaps.enabled) return null; // Paper
+                BlockPos blockPos = serverLevel.findNearestMapStructure(this.destination, entity.blockPosition(), 100, !serverLevel.paperConfig().environment.treasureMaps.findAlreadyDiscoveredVillager); // Paper
                 if (blockPos != null) {
                     ItemStack itemStack = MapItem.create(serverLevel, blockPos.getX(), blockPos.getZ(), (byte)2, true, true);
                     MapItem.renderBiomePreviewMap(serverLevel, itemStack);
