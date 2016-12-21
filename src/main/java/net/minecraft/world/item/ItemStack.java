@@ -252,7 +252,7 @@ public final class ItemStack {
     }
 
     public boolean isEmpty() {
-        return this == ItemStack.EMPTY ? true : (this.getItem() != null && !this.is(Items.AIR) ? this.count <= 0 : true);
+        return this == ItemStack.EMPTY || this.item == null || this.item == Items.AIR || this.count <= 0; // Paper
     }
 
     public boolean isItemEnabled(FeatureFlagSet enabledFeatures) {
