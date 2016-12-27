@@ -7,6 +7,7 @@ import net.minecraft.network.protocol.Packet;
 public class ClientboundSetActionBarTextPacket implements Packet<ClientGamePacketListener> {
     private final Component text;
     public net.kyori.adventure.text.Component adventure$text; // Paper
+    public net.md_5.bungee.api.chat.BaseComponent[] components; // Paper
 
     public ClientboundSetActionBarTextPacket(Component message) {
         this.text = message;
@@ -21,6 +22,8 @@ public class ClientboundSetActionBarTextPacket implements Packet<ClientGamePacke
         // Paper start
         if (this.adventure$text != null) {
             buf.writeComponent(this.adventure$text);
+        } else if (this.components != null) {
+            buf.writeComponent(this.components);
         } else
         // Paper end
         buf.writeComponent(this.text);
