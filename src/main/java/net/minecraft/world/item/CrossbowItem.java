@@ -221,6 +221,7 @@ public class CrossbowItem extends ProjectileWeaponItem implements Vanishable {
 
             if (flag1) {
                 object = new FireworkRocketEntity(world, projectile, shooter, shooter.getX(), shooter.getEyeY() - 0.15000000596046448D, shooter.getZ(), true);
+                ((FireworkRocketEntity) object).spawningEntity = shooter.getUUID(); // Paper
             } else {
                 object = CrossbowItem.getArrow(world, shooter, crossbow, projectile);
                 if (creative || simulated != 0.0F) {

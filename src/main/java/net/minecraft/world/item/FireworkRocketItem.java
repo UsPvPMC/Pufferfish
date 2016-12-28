@@ -46,6 +46,7 @@ public class FireworkRocketItem extends Item {
             Vec3 vec3 = context.getClickLocation();
             Direction direction = context.getClickedFace();
             FireworkRocketEntity fireworkRocketEntity = new FireworkRocketEntity(level, context.getPlayer(), vec3.x + (double)direction.getStepX() * 0.15D, vec3.y + (double)direction.getStepY() * 0.15D, vec3.z + (double)direction.getStepZ() * 0.15D, itemStack);
+            fireworkRocketEntity.spawningEntity = context.getPlayer() == null ? null : context.getPlayer().getUUID(); // Paper
             level.addFreshEntity(fireworkRocketEntity);
             itemStack.shrink(1);
         }
@@ -59,6 +60,7 @@ public class FireworkRocketItem extends Item {
             ItemStack itemStack = user.getItemInHand(hand);
             if (!world.isClientSide) {
                 FireworkRocketEntity fireworkRocketEntity = new FireworkRocketEntity(world, itemStack, user);
+                fireworkRocketEntity.spawningEntity = user.getUUID(); // Paper
                 world.addFreshEntity(fireworkRocketEntity);
                 if (!user.getAbilities().instabuild) {
                     itemStack.shrink(1);
