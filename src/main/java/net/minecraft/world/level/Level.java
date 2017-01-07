@@ -117,7 +117,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     public static final int TICKS_PER_DAY = 24000;
     public static final int MAX_ENTITY_SPAWN_Y = 20000000;
     public static final int MIN_ENTITY_SPAWN_Y = -20000000;
-    protected final List<TickingBlockEntity> blockEntityTickers = Lists.newArrayList();
+    protected final List<TickingBlockEntity> blockEntityTickers = Lists.newArrayList(); public final int getTotalTileEntityTickers() { return this.blockEntityTickers.size(); } // Paper
     protected final NeighborUpdater neighborUpdater;
     private final List<TickingBlockEntity> pendingBlockEntityTickers = Lists.newArrayList();
     private boolean tickingBlockEntities;
