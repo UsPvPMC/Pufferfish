@@ -952,5 +952,12 @@ public class ArmorStand extends LivingEntity {
             super.move(type, movement);
         }
     }
+
+    // Paper start
+    @Override
+    public boolean canBreatheUnderwater() { // Skips a bit of damage handling code, probably a micro-optimization
+        return true;
+    }
+    // Paper end
     // Paper end
 }
