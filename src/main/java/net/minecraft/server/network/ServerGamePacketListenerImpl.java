@@ -2323,6 +2323,13 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         switch (packet.getAction()) {
             case PRESS_SHIFT_KEY:
                 this.player.setShiftKeyDown(true);
+
+                // Paper start - Hang on!
+                if (this.player.level.paperConfig().entities.behavior.parrotsAreUnaffectedByPlayerMovement) {
+                    this.player.removeEntitiesOnShoulder();
+                }
+                // Paper end
+
                 break;
             case RELEASE_SHIFT_KEY:
                 this.player.setShiftKeyDown(false);
