@@ -168,7 +168,7 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
 import java.util.Random;
-import jline.console.ConsoleReader;
+// import jline.console.ConsoleReader; // Paper
 import joptsimple.OptionSet;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.RegistryOps;
@@ -286,7 +286,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     public OptionSet options;
     public org.bukkit.command.ConsoleCommandSender console;
     public org.bukkit.command.RemoteConsoleCommandSender remoteConsole;
-    public ConsoleReader reader;
+    //public ConsoleReader reader; // Paper
     public static int currentTick = 0; // Paper - Further improve tick loop
     public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<Runnable>();
     public int autosavePeriod;
@@ -370,7 +370,9 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         this.options = options;
         this.worldLoader = worldLoader;
         this.vanillaCommandDispatcher = worldstem.dataPackResources().commands; // CraftBukkit
+        // Paper start - Handled by TerminalConsoleAppender
         // Try to see if we're actually running in a terminal, disable jline if not
+        /*
         if (System.console() == null && System.getProperty("jline.terminal") == null) {
             System.setProperty("jline.terminal", "jline.UnsupportedTerminal");
             Main.useJline = false;
@@ -391,6 +393,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                 MinecraftServer.LOGGER.warn((String) null, ex);
             }
         }
+        */
+        // Paper end
         Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread(this));
         this.paperConfigurations = services.paperConfigurations(); // Paper
     }
@@ -1137,7 +1141,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                 org.spigotmc.WatchdogThread.doStop(); // Spigot
                 // CraftBukkit start - Restore terminal to original settings
                 try {
-                    this.reader.getTerminal().restore();
+                    net.minecrell.terminalconsole.TerminalConsoleAppender.close(); // Paper - Use TerminalConsoleAppender
                 } catch (Exception ignored) {
                 }
                 // CraftBukkit end
@@ -1591,7 +1595,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     @Override
     public void sendSystemMessage(Component message) {
-        MinecraftServer.LOGGER.info(message.getString());
+        MinecraftServer.LOGGER.info(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(io.papermc.paper.adventure.PaperAdventure.asAdventure(message))); // Paper - Log message with colors
     }
 
     public KeyPair getKeyPair() {
