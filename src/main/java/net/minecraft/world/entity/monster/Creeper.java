@@ -285,7 +285,7 @@ public class Creeper extends Monster implements PowerableMob {
     private void spawnLingeringCloud() {
         Collection<MobEffectInstance> collection = this.getActiveEffects();
 
-        if (!collection.isEmpty()) {
+        if (!collection.isEmpty() && !level.paperConfig().entities.behavior.disableCreeperLingeringEffect) { // Paper
             AreaEffectCloud entityareaeffectcloud = new AreaEffectCloud(this.level, this.getX(), this.getY(), this.getZ());
 
             entityareaeffectcloud.setOwner(this); // CraftBukkit
