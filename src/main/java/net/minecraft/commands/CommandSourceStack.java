@@ -328,8 +328,13 @@ public class CommandSourceStack implements SharedSuggestionProvider {
     }
 
     public void sendFailure(Component message) {
+        // Paper start
+        this.sendFailure(message, true);
+    }
+    public void sendFailure(Component message, boolean withStyle) {
+        // Paper end
         if (this.source.acceptsFailure() && !this.silent) {
-            this.source.sendSystemMessage(Component.empty().append(message).withStyle(ChatFormatting.RED));
+            this.source.sendSystemMessage(withStyle ? Component.empty().append(message).withStyle(ChatFormatting.RED) : message); // Paper
         }
 
     }
