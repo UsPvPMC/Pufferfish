@@ -383,6 +383,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     // Spigot end
     // Paper start
     protected int numCollisions = 0; // Paper
+    public boolean spawnedViaMobSpawner; // Paper - Yes this name is similar to above, upstream took the better one
     @javax.annotation.Nullable
     private org.bukkit.util.Vector origin;
     @javax.annotation.Nullable
@@ -2049,6 +2050,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                 }
                 nbt.put("Paper.Origin", this.newDoubleList(origin.getX(), origin.getY(), origin.getZ()));
             }
+            // Save entity's from mob spawner status
+            if (spawnedViaMobSpawner) {
+                nbt.putBoolean("Paper.FromMobSpawner", true);
+            }
             // Paper end
             return nbt;
         } catch (Throwable throwable) {
@@ -2189,6 +2194,8 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                 this.originWorld = originWorld;
                 origin = new org.bukkit.util.Vector(originTag.getDouble(0), originTag.getDouble(1), originTag.getDouble(2));
             }
+
+            spawnedViaMobSpawner = nbt.getBoolean("Paper.FromMobSpawner"); // Restore entity's from mob spawner status
             // Paper end
 
         } catch (Throwable throwable) {

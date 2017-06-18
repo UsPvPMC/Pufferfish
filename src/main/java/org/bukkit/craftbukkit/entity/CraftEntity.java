@@ -1297,5 +1297,10 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         //noinspection ConstantConditions
         return originVector.toLocation(world);
     }
+
+    @Override
+    public boolean fromMobSpawner() {
+        return getHandle().spawnedViaMobSpawner;
+    }
     // Paper end
 }
