@@ -637,9 +637,9 @@ public abstract class PlayerList {
 
             // return chatmessage;
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
-        } else if (!this.isWhiteListed(gameprofile)) {
-            ichatmutablecomponent = Component.translatable("multiplayer.disconnect.not_whitelisted");
-            event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.whitelistMessage)); // Spigot // Paper - Adventure
+        } else if (!this.isWhiteListed(gameprofile, event)) { // Paper
+            //ichatmutablecomponent = Component.translatable("multiplayer.disconnect.not_whitelisted"); // Paper
+            //event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.whitelistMessage)); // Spigot // Paper - Adventure - moved to isWhitelisted
         } else if (this.getIpBans().isBanned(socketaddress) && !this.getIpBans().get(socketaddress).hasExpired()) {
             IpBanListEntry ipbanentry = this.ipBans.get(socketaddress);
 
@@ -1023,7 +1023,23 @@ public abstract class PlayerList {
     }
 
     public boolean isWhiteListed(GameProfile profile) {
-        return !this.doWhiteList || this.ops.contains(profile) || this.whitelist.contains(profile);
+        // Paper start
+        return isWhiteListed(profile, null);
+    }
+    public boolean isWhiteListed(GameProfile gameprofile, org.bukkit.event.player.PlayerLoginEvent loginEvent) {
+        boolean isOp = this.ops.contains(gameprofile);
+        boolean isWhitelisted = !this.doWhiteList || isOp || this.whitelist.contains(gameprofile);
+        final com.destroystokyo.paper.event.profile.ProfileWhitelistVerifyEvent event;
+        event = new com.destroystokyo.paper.event.profile.ProfileWhitelistVerifyEvent(io.papermc.paper.util.MCUtil.toBukkit(gameprofile), this.doWhiteList, isWhitelisted, isOp, org.spigotmc.SpigotConfig.whitelistMessage);
+        event.callEvent();
+        if (!event.isWhitelisted()) {
+            if (loginEvent != null) {
+                loginEvent.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(event.getKickMessage() == null ? org.spigotmc.SpigotConfig.whitelistMessage : event.getKickMessage()));
+            }
+            return false;
+        }
+        return true;
+        // Paper end
     }
 
     public boolean isOp(GameProfile profile) {
