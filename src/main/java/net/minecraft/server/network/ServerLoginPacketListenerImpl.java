@@ -71,6 +71,12 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
 
     @Override
     public void tick() {
+        // Paper start - Do not allow logins while the server is shutting down
+        if (!MinecraftServer.getServer().isRunning()) {
+            this.disconnect(org.bukkit.craftbukkit.util.CraftChatMessage.fromString(org.spigotmc.SpigotConfig.restartMessage)[0]);
+            return;
+        }
+        // Paper end
         if (this.state == ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT) {
             this.handleAcceptedLogin();
         } else if (this.state == ServerLoginPacketListenerImpl.State.DELAY_ACCEPT) {
