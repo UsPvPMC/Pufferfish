@@ -1576,12 +1576,17 @@ public class ServerLevel extends Level implements WorldGenLevel {
     }
 
     public <T extends ParticleOptions> int sendParticles(ServerPlayer sender, T t0, double d0, double d1, double d2, int i, double d3, double d4, double d5, double d6, boolean force) {
+        // Paper start - Particle API Expansion
+        return sendParticles(players, sender, t0, d0, d1, d2, i, d3, d4, d5, d6, force);
+    }
+    public <T extends ParticleOptions> int sendParticles(List<ServerPlayer> receivers, ServerPlayer sender, T t0, double d0, double d1, double d2, int i, double d3, double d4, double d5, double d6, boolean force) {
+        // Paper end
         ClientboundLevelParticlesPacket packetplayoutworldparticles = new ClientboundLevelParticlesPacket(t0, force, d0, d1, d2, (float) d3, (float) d4, (float) d5, (float) d6, i);
         // CraftBukkit end
         int j = 0;
 
-        for (int k = 0; k < this.players.size(); ++k) {
-            ServerPlayer entityplayer = (ServerPlayer) this.players.get(k);
+        for (Player entityhuman : receivers) { // Paper - Particle API Expansion
+            ServerPlayer entityplayer = (ServerPlayer) entityhuman; // Paper - Particle API Expansion
             if (sender != null && !entityplayer.getBukkitEntity().canSee(sender.getBukkitEntity())) continue; // CraftBukkit
 
             if (this.sendParticles(entityplayer, force, d0, d1, d2, packetplayoutworldparticles)) { // CraftBukkit
