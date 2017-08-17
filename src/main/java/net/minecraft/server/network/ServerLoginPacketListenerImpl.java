@@ -294,7 +294,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                         ServerLoginPacketListenerImpl.this.gameProfile = gameprofile;
                         ServerLoginPacketListenerImpl.this.state = ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT;
                     } else {
-                        ServerLoginPacketListenerImpl.this.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+                        ServerLoginPacketListenerImpl.this.disconnect(io.papermc.paper.adventure.PaperAdventure.asVanilla(io.papermc.paper.configuration.GlobalConfiguration.get().messages.kick.authenticationServersDown)); // Paper
                         ServerLoginPacketListenerImpl.LOGGER.error("Couldn't verify username because servers are unavailable");
                     }
                     // CraftBukkit start - catch all exceptions
