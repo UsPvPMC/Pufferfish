@@ -3138,14 +3138,18 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
     @Override
     public void handleKeepAlive(ServerboundKeepAlivePacket packet) {
-        PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel()); // CraftBukkit
+        //PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel()); // CraftBukkit // Paper - This shouldn't be on the main thread
         if (this.keepAlivePending && packet.getId() == this.keepAliveChallenge) {
             int i = (int) (Util.getMillis() - this.keepAliveTime);
 
             this.player.latency = (this.player.latency * 3 + i) / 4;
             this.keepAlivePending = false;
         } else if (!this.isSingleplayerOwner()) {
+            // Paper start - This needs to be handled on the main thread for plugins
+            server.submit(() -> {
             this.disconnect(Component.translatable("disconnect.timeout"));
+            });
+            // Paper end
         }
 
     }
