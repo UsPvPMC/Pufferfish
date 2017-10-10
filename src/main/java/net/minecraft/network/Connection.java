@@ -114,6 +114,10 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         }
     }
     // Paper end - add pending task queue
+    // Paper start - NetworkClient implementation
+    public int protocolVersion;
+    public java.net.InetSocketAddress virtualHost;
+    // Paper end
 
     public Connection(PacketFlow side) {
         this.receiving = side;
