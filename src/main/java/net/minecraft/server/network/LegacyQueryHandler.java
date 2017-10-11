@@ -48,13 +48,21 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
             MinecraftServer minecraftserver = this.serverConnectionListener.getServer();
             int i = bytebuf.readableBytes();
             String s;
-            org.bukkit.event.server.ServerListPingEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callServerListPingEvent(minecraftserver.server, inetsocketaddress.getAddress(), minecraftserver.getMotd(), minecraftserver.getPlayerCount(), minecraftserver.getMaxPlayers()); // CraftBukkit
+            //org.bukkit.event.server.ServerListPingEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callServerListPingEvent(minecraftserver.server, inetsocketaddress.getAddress(), minecraftserver.getMotd(), minecraftserver.getPlayerCount(), minecraftserver.getMaxPlayers()); // CraftBukkit // Paper
+            com.destroystokyo.paper.event.server.PaperServerListPingEvent event; // Paper
 
             switch (i) {
                 case 0:
                     LegacyQueryHandler.LOGGER.debug("Ping: (<1.3.x) from {}:{}", inetsocketaddress.getAddress(), inetsocketaddress.getPort());
-                    s = String.format(Locale.ROOT, "%s\u00a7%d\u00a7%d", event.getMotd(), event.getNumPlayers(), event.getMaxPlayers()); // CraftBukkit
+                    // Paper start - Call PaperServerListPingEvent and use results
+                    event = com.destroystokyo.paper.network.PaperLegacyStatusClient.processRequest(minecraftserver, inetsocketaddress, 39, null);
+                    if (event == null) {
+                        channelhandlercontext.close();
+                        break;
+                    }
+                    s = String.format(Locale.ROOT, "%s\u00a7%d\u00a7%d", com.destroystokyo.paper.network.PaperLegacyStatusClient.getUnformattedMotd(event), event.getNumPlayers(), event.getMaxPlayers());
                     this.sendFlushAndClose(channelhandlercontext, this.createReply(s));
+                    // Paper end
                     break;
                 case 1:
                     if (bytebuf.readUnsignedByte() != 1) {
@@ -62,7 +70,14 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
                     }
 
                     LegacyQueryHandler.LOGGER.debug("Ping: (1.4-1.5.x) from {}:{}", inetsocketaddress.getAddress(), inetsocketaddress.getPort());
-                    s = String.format(Locale.ROOT, "\u00a71\u0000%d\u0000%s\u0000%s\u0000%d\u0000%d", 127, minecraftserver.getServerVersion(), event.getMotd(), event.getNumPlayers(), event.getMaxPlayers()); // CraftBukkit
+                    // Paper start - Call PaperServerListPingEvent and use results
+                    event = com.destroystokyo.paper.network.PaperLegacyStatusClient.processRequest(minecraftserver, inetsocketaddress, 127, null); // Paper
+                    if (event == null) {
+                        channelhandlercontext.close();
+                        break;
+                    }
+                    s = String.format(Locale.ROOT, "\u00a71\u0000%d\u0000%s\u0000%s\u0000%d\u0000%d", new Object[] { event.getProtocolVersion(), minecraftserver.getServerVersion(), event.getMotd(), event.getNumPlayers(), event.getMaxPlayers()}); // CraftBukkit
+                    // Paper end
                     this.sendFlushAndClose(channelhandlercontext, this.createReply(s));
                     break;
                 default:
@@ -172,8 +187,16 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
 
         LOGGER.debug("Ping: (1.6) from {}", ctx.channel().remoteAddress());
 
-        String response = String.format("\u00a71\u0000%d\u0000%s\u0000%s\u0000%d\u0000%d",
-                Byte.MAX_VALUE, server.getServerVersion(), server.getMotd(), server.getPlayerCount(), server.getMaxPlayers());
+        InetSocketAddress virtualHost = com.destroystokyo.paper.network.PaperNetworkClient.prepareVirtualHost(host, port);
+        com.destroystokyo.paper.event.server.PaperServerListPingEvent event = com.destroystokyo.paper.network.PaperLegacyStatusClient.processRequest(
+                server, (InetSocketAddress) ctx.channel().remoteAddress(), protocolVersion, virtualHost);
+        if (event == null) {
+            ctx.close();
+            return;
+        }
+
+        String response = String.format("\u00a71\u0000%d\u0000%s\u0000%s\u0000%d\u0000%d", event.getProtocolVersion(), event.getVersion(),
+            com.destroystokyo.paper.network.PaperLegacyStatusClient.getMotd(event), event.getNumPlayers(), event.getMaxPlayers());
         this.sendFlushAndClose(ctx, this.createReply(response));
     }
 
