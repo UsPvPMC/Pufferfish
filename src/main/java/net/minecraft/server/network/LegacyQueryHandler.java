@@ -17,6 +17,7 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LogUtils.getLogger();
     public static final int FAKE_PROTOCOL_VERSION = 127;
     private final ServerConnectionListener serverConnectionListener;
+    private ByteBuf buf; // Paper
 
     public LegacyQueryHandler(ServerConnectionListener networkIo) {
         this.serverConnectionListener = networkIo;
@@ -25,6 +26,16 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext channelhandlercontext, Object object) {
         ByteBuf bytebuf = (ByteBuf) object;
 
+        // Paper start - Make legacy ping handler more reliable
+        if (this.buf != null) {
+            try {
+                readLegacy1_6(channelhandlercontext, bytebuf);
+            } finally {
+                bytebuf.release();
+            }
+            return;
+        }
+        // Paper end
         bytebuf.markReaderIndex();
         boolean flag = true;
 
@@ -55,6 +66,10 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
                     this.sendFlushAndClose(channelhandlercontext, this.createReply(s));
                     break;
                 default:
+                // Paper start - Replace with improved version below
+                if (bytebuf.readUnsignedByte() != 0x01 || bytebuf.readUnsignedByte() != 0xFA) return;
+                readLegacy1_6(channelhandlercontext, bytebuf);
+                /*
                     boolean flag1 = bytebuf.readUnsignedByte() == 1;
 
                     flag1 &= bytebuf.readUnsignedByte() == 250;
@@ -78,6 +93,7 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
                     } finally {
                         bytebuf1.release();
                     }
+                */ // Paper end - Replace with improved version below
             }
 
             bytebuf.release();
@@ -94,6 +110,90 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
         }
 
     }
+
+    // Paper start
+    private static String readLegacyString(ByteBuf buf) {
+        int size = buf.readShort() * Character.BYTES;
+        if (!buf.isReadable(size)) {
+            return null;
+        }
+
+        String result = buf.toString(buf.readerIndex(), size, StandardCharsets.UTF_16BE);
+        buf.skipBytes(size); // toString doesn't increase readerIndex automatically
+        return result;
+    }
+
+    private void readLegacy1_6(ChannelHandlerContext ctx, ByteBuf part) {
+        ByteBuf buf = this.buf;
+
+        if (buf == null) {
+            this.buf = buf = ctx.alloc().buffer();
+            buf.markReaderIndex();
+        } else {
+            buf.resetReaderIndex();
+        }
+
+        buf.writeBytes(part);
+
+        if (!buf.isReadable(Short.BYTES + Short.BYTES + Byte.BYTES + Short.BYTES + Integer.BYTES)) {
+            return;
+        }
+
+        String s = readLegacyString(buf);
+        if (s == null) {
+            return;
+        }
+
+        if (!s.equals("MC|PingHost")) {
+            removeHandler(ctx);
+            return;
+        }
+
+        if (!buf.isReadable(Short.BYTES) || !buf.isReadable(buf.readShort())) {
+            return;
+        }
+
+        MinecraftServer server = this.serverConnectionListener.getServer();
+        int protocolVersion = buf.readByte();
+        String host = readLegacyString(buf);
+        if (host == null) {
+            removeHandler(ctx);
+            return;
+        }
+        int port = buf.readInt();
+
+        if (buf.isReadable()) {
+            removeHandler(ctx);
+            return;
+        }
+
+        buf.release();
+        this.buf = null;
+
+        LOGGER.debug("Ping: (1.6) from {}", ctx.channel().remoteAddress());
+
+        String response = String.format("\u00a71\u0000%d\u0000%s\u0000%s\u0000%d\u0000%d",
+                Byte.MAX_VALUE, server.getServerVersion(), server.getMotd(), server.getPlayerCount(), server.getMaxPlayers());
+        this.sendFlushAndClose(ctx, this.createReply(response));
+    }
+
+    private void removeHandler(ChannelHandlerContext ctx) {
+        ByteBuf buf = this.buf;
+        this.buf = null;
+
+        buf.resetReaderIndex();
+        ctx.pipeline().remove(this);
+        ctx.fireChannelRead(buf);
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) {
+        if (this.buf != null) {
+            this.buf.release();
+            this.buf = null;
+        }
+    }
+    // Paper end
 
     private void sendFlushAndClose(ChannelHandlerContext ctx, ByteBuf buf) {
         ctx.pipeline().firstContext().writeAndFlush(buf).addListener(ChannelFutureListener.CLOSE);
