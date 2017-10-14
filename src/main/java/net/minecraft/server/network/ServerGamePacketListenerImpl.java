@@ -258,7 +258,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     public ServerPlayer player;
     private int tickCount;
     private int ackBlockChangesUpTo = -1;
-    private long keepAliveTime;
+    private long keepAliveTime = Util.getMillis();
     private boolean keepAlivePending;
     private long keepAliveChallenge;
     // CraftBukkit start - multithreaded fields
@@ -296,6 +296,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     private final LastSeenMessagesValidator lastSeenMessages;
     private final MessageSignatureCache messageSignatureCache;
     private final FutureChain chatMessageChain;
+    private static final long KEEPALIVE_LIMIT = Long.getLong("paper.playerconnection.keepalive", 30) * 1000; // Paper - provide property to set keepalive limit
 
     public ServerGamePacketListenerImpl(MinecraftServer server, Connection connection, ServerPlayer player) {
         this.lastChatTimeStamp = new AtomicReference(Instant.EPOCH);
@@ -387,18 +388,25 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
 
         this.server.getProfiler().push("keepAlive");
-        long i = Util.getMillis();
+        // Paper Start - give clients a longer time to respond to pings as per pre 1.12.2 timings
+        // This should effectively place the keepalive handling back to "as it was" before 1.12.2
+        long currentTime = Util.getMillis();
+        long elapsedTime = currentTime - this.keepAliveTime;
 
-        if (i - this.keepAliveTime >= 25000L) { // CraftBukkit
-            if (this.keepAlivePending) {
-                this.disconnect(Component.translatable("disconnect.timeout"));
-            } else {
+        if (this.keepAlivePending) {
+            if (!this.processedDisconnect && elapsedTime >= KEEPALIVE_LIMIT) { // check keepalive limit, don't fire if already disconnected
+                ServerGamePacketListenerImpl.LOGGER.warn("{} was kicked due to keepalive timeout!", this.player.getScoreboardName()); // more info
+                this.disconnect(Component.translatable("disconnect.timeout", new Object[0]));
+            }
+        } else {
+            if (elapsedTime >= 15000L) { // 15 seconds
                 this.keepAlivePending = true;
-                this.keepAliveTime = i;
-                this.keepAliveChallenge = i;
+                this.keepAliveTime = currentTime;
+                this.keepAliveChallenge = currentTime;
                 this.send(new ClientboundKeepAlivePacket(this.keepAliveChallenge));
             }
         }
+        // Paper end
 
         this.server.getProfiler().pop();
         // CraftBukkit start
