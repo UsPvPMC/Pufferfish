@@ -78,7 +78,11 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
         }
         // Paper end
         if (this.state == ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT) {
-            this.handleAcceptedLogin();
+            // Paper start - prevent logins to be processed even though disconnect was called
+            if (connection.isConnected()) {
+                this.handleAcceptedLogin();
+            }
+            // Paper end
         } else if (this.state == ServerLoginPacketListenerImpl.State.DELAY_ACCEPT) {
             ServerPlayer entityplayer = this.server.getPlayerList().getPlayer(this.gameProfile.getId());
 
