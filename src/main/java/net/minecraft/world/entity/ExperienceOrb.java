@@ -38,13 +38,65 @@ public class ExperienceOrb extends Entity {
     public int value;
     private int count;
     private Player followingPlayer;
+    // Paper start
+    public java.util.UUID sourceEntityId;
+    public java.util.UUID triggerEntityId;
+    public org.bukkit.entity.ExperienceOrb.SpawnReason spawnReason = org.bukkit.entity.ExperienceOrb.SpawnReason.UNKNOWN;
 
+    private void loadPaperNBT(CompoundTag nbttagcompound) {
+        if (!nbttagcompound.contains("Paper.ExpData", 10)) { // 10 = compound
+            return;
+        }
+        CompoundTag comp = nbttagcompound.getCompound("Paper.ExpData");
+        if (comp.hasUUID("source")) {
+            this.sourceEntityId = comp.getUUID("source");
+        }
+        if (comp.hasUUID("trigger")) {
+            this.triggerEntityId = comp.getUUID("trigger");
+        }
+        if (comp.contains("reason")) {
+            String reason = comp.getString("reason");
+            try {
+                this.spawnReason = org.bukkit.entity.ExperienceOrb.SpawnReason.valueOf(reason);
+            } catch (Exception e) {
+                this.level.getCraftServer().getLogger().warning("Invalid spawnReason set for experience orb: " + e.getMessage() + " - " + reason);
+            }
+        }
+    }
+    private void savePaperNBT(CompoundTag nbttagcompound) {
+        CompoundTag comp = new CompoundTag();
+        if (this.sourceEntityId != null) {
+            comp.putUUID("source", this.sourceEntityId);
+        }
+        if (this.triggerEntityId != null) {
+            comp.putUUID("trigger", triggerEntityId);
+        }
+        if (this.spawnReason != null && this.spawnReason != org.bukkit.entity.ExperienceOrb.SpawnReason.UNKNOWN) {
+            comp.putString("reason", this.spawnReason.name());
+        }
+        nbttagcompound.put("Paper.ExpData", comp);
+    }
+
+    @io.papermc.paper.annotation.DoNotUse
+    @Deprecated
     public ExperienceOrb(Level world, double x, double y, double z, int amount) {
+        this(world, x, y, z, amount, null, null);
+    }
+
+    public ExperienceOrb(Level world, double d0, double d1, double d2, int i, org.bukkit.entity.ExperienceOrb.SpawnReason reason, Entity triggerId) {
+        this(world, d0, d1, d2, i, reason, triggerId, null);
+    }
+
+    public ExperienceOrb(Level world, double d0, double d1, double d2, int i, org.bukkit.entity.ExperienceOrb.SpawnReason reason, Entity triggerId, Entity sourceId) {
         this(EntityType.EXPERIENCE_ORB, world);
-        this.setPos(x, y, z);
+        this.sourceEntityId = sourceId != null ? sourceId.getUUID() : null;
+        this.triggerEntityId = triggerId != null ? triggerId.getUUID() : null;
+        this.spawnReason = reason != null ? reason : org.bukkit.entity.ExperienceOrb.SpawnReason.UNKNOWN;
+        // Paper end
+        this.setPos(d0, d1, d2);
         this.setYRot((float) (this.random.nextDouble() * 360.0D));
         this.setDeltaMovement((this.random.nextDouble() * 0.20000000298023224D - 0.10000000149011612D) * 2.0D, this.random.nextDouble() * 0.2D * 2.0D, (this.random.nextDouble() * 0.20000000298023224D - 0.10000000149011612D) * 2.0D);
-        this.value = amount;
+        this.value = i;
     }
 
     public ExperienceOrb(EntityType<? extends ExperienceOrb> type, Level world) {
@@ -154,12 +206,20 @@ public class ExperienceOrb extends Entity {
     }
 
     public static void award(ServerLevel world, Vec3 pos, int amount) {
+        // Paper start - add reasons for orbs
+        award(world, pos, amount, null, null, null);
+    }
+    public static void award(ServerLevel world, Vec3 pos, int amount, org.bukkit.entity.ExperienceOrb.SpawnReason reason, Entity triggerId) {
+        award(world, pos, amount, reason, triggerId, null);
+    }
+    public static void award(ServerLevel world, Vec3 pos, int amount, org.bukkit.entity.ExperienceOrb.SpawnReason reason, Entity triggerId, Entity sourceId) {
+        // Paper end - add reasons for orbs
         while (amount > 0) {
             int j = ExperienceOrb.getExperienceValue(amount);
 
             amount -= j;
             if (!ExperienceOrb.tryMergeToExisting(world, pos, j)) {
-                world.addFreshEntity(new ExperienceOrb(world, pos.x(), pos.y(), pos.z(), j));
+                world.addFreshEntity(new ExperienceOrb(world, pos.x(), pos.y(), pos.z(), j, reason, triggerId, sourceId)); // Paper - add reason
             }
         }
 
@@ -229,6 +289,7 @@ public class ExperienceOrb extends Entity {
         nbt.putShort("Age", (short) this.age);
         nbt.putShort("Value", (short) this.value);
         nbt.putInt("Count", this.count);
+        this.savePaperNBT(nbt); // Paper
     }
 
     @Override
@@ -237,6 +298,7 @@ public class ExperienceOrb extends Entity {
         this.age = nbt.getShort("Age");
         this.value = nbt.getShort("Value");
         this.count = Math.max(nbt.getInt("Count"), 1);
+        this.loadPaperNBT(nbt); // Paper
     }
 
     @Override

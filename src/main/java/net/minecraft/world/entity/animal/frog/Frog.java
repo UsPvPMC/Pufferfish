@@ -264,7 +264,7 @@ public class Frog extends Animal implements VariantHolder<FrogVariant> {
         this.getBrain().setMemory(MemoryModuleType.IS_PREGNANT, Unit.INSTANCE);
         world.broadcastEntityEvent(this, (byte)18);
         if (world.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
-            world.addFreshEntity(new ExperienceOrb(world, this.getX(), this.getY(), this.getZ(), this.getRandom().nextInt(7) + 1));
+            world.addFreshEntity(new ExperienceOrb(world, this.getX(), this.getY(), this.getZ(), this.getRandom().nextInt(7) + 1, org.bukkit.entity.ExperienceOrb.SpawnReason.BREED, serverPlayer)); // Paper
         }
 
     }

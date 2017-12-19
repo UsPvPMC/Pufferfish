@@ -637,7 +637,7 @@ public abstract class AbstractFurnaceBlockEntity extends BaseContainerBlockEntit
         j = event.getExpToDrop();
         // CraftBukkit end
 
-        ExperienceOrb.award(worldserver, vec3d, j);
+        ExperienceOrb.award(worldserver, vec3d, j, org.bukkit.entity.ExperienceOrb.SpawnReason.FURNACE, entityhuman); // Paper
     }
 
     @Override

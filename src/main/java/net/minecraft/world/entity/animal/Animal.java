@@ -262,7 +262,7 @@ public abstract class Animal extends AgeableMob {
             if (world.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
                 // CraftBukkit start - use event experience
                 if (experience > 0) {
-                    world.addFreshEntity(new ExperienceOrb(world, this.getX(), this.getY(), this.getZ(), experience));
+                    world.addFreshEntity(new ExperienceOrb(world, this.getX(), this.getY(), this.getZ(), experience, org.bukkit.entity.ExperienceOrb.SpawnReason.BREED, entityplayer, entityageable)); // Paper
                 }
                 // CraftBukkit end
             }

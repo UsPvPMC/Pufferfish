@@ -1716,7 +1716,8 @@ public abstract class LivingEntity extends Entity implements Attackable {
     protected void dropExperience() {
         // CraftBukkit start - Update getExpReward() above if the removed if() changes!
         if (true && !(this instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon)) { // CraftBukkit - SPIGOT-2420: Special case ender dragon will drop the xp over time
-            ExperienceOrb.award((ServerLevel) this.level, this.position(), this.expToDrop);
+            LivingEntity attacker = this.lastHurtByPlayer != null ? this.lastHurtByPlayer : this.lastHurtByMob; // Paper
+            ExperienceOrb.award((ServerLevel) this.level, this.position(), this.expToDrop, this instanceof ServerPlayer ? org.bukkit.entity.ExperienceOrb.SpawnReason.PLAYER_DEATH : org.bukkit.entity.ExperienceOrb.SpawnReason.ENTITY_DEATH, attacker, this); // Paper
             this.expToDrop = 0;
         }
         // CraftBukkit end
