@@ -304,7 +304,7 @@ public class ExperienceOrb extends Entity {
     @Override
     public void playerTouch(Player player) {
         if (!this.level.isClientSide) {
-            if (player.takeXpDelay == 0) {
+            if (player.takeXpDelay == 0 && new com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent(((net.minecraft.server.level.ServerPlayer) player).getBukkitEntity(), (org.bukkit.entity.ExperienceOrb) this.getBukkitEntity()).callEvent()) { // Paper
                 player.takeXpDelay = 2;
                 player.take(this, 1);
                 int i = this.repairPlayerItems(player, this.value);
