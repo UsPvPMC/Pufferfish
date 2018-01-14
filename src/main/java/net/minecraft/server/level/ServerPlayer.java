@@ -1,5 +1,6 @@
 package net.minecraft.server.level;
 
+import com.destroystokyo.paper.event.entity.PlayerNaturallySpawnCreaturesEvent;
 import com.google.common.collect.Lists;
 import com.google.common.net.InetAddresses;
 import com.mojang.authlib.GameProfile;
@@ -258,6 +259,7 @@ public class ServerPlayer extends Player {
     // CraftBukkit end
     public boolean isRealPlayer; // Paper
     public final com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> cachedSingleHashSet; // Paper
+    public PlayerNaturallySpawnCreaturesEvent playerNaturallySpawnedEvent; // Paper
 
     public ServerPlayer(MinecraftServer server, ServerLevel world, GameProfile profile) {
         super(world, world.getSharedSpawnPos(), world.getSharedSpawnAngle(), profile);

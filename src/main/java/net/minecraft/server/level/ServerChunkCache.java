@@ -715,6 +715,15 @@ public class ServerChunkCache extends ChunkSource {
             boolean flag2 = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING) && !this.level.players().isEmpty(); // CraftBukkit
 
             Collections.shuffle(list);
+            // Paper start - call player naturally spawn event
+            int chunkRange = level.spigotConfig.mobSpawnRange;
+            chunkRange = (chunkRange > level.spigotConfig.viewDistance) ? (byte) level.spigotConfig.viewDistance : chunkRange;
+            chunkRange = Math.min(chunkRange, 8);
+            for (ServerPlayer entityPlayer : this.level.players()) {
+                entityPlayer.playerNaturallySpawnedEvent = new com.destroystokyo.paper.event.entity.PlayerNaturallySpawnCreaturesEvent(entityPlayer.getBukkitEntity(), (byte) chunkRange);
+                entityPlayer.playerNaturallySpawnedEvent.callEvent();
+            };
+            // Paper end
             Iterator iterator1 = list.iterator();
 
             while (iterator1.hasNext()) {
