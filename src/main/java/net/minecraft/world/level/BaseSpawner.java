@@ -128,6 +128,27 @@ public abstract class BaseSpawner {
                         } else if (!SpawnPlacements.checkSpawnRules((EntityType) optional.get(), world, MobSpawnType.SPAWNER, blockposition1, world.getRandom())) {
                             continue;
                         }
+                        // Paper start
+                        EntityType<?> entityType = optional.get();
+                        String key = EntityType.getKey(entityType).getPath();
+
+                        org.bukkit.entity.EntityType type = org.bukkit.entity.EntityType.fromName(key);
+                        if (type != null) {
+                            com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent event;
+                            event = new com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent(
+                                io.papermc.paper.util.MCUtil.toLocation(world, d0, d1, d2),
+                                type,
+                                org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER
+                            );
+                            if (!event.callEvent()) {
+                                flag = true;
+                                if (event.shouldAbortSpawn()) {
+                                    break;
+                                }
+                                continue;
+                            }
+                        }
+                        // Paper end
 
                         Entity entity = EntityType.loadEntityRecursive(nbttagcompound, world, (entity1) -> {
                             entity1.moveTo(d0, d1, d2, entity1.getYRot(), entity1.getXRot());

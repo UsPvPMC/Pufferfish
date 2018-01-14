@@ -413,6 +413,20 @@ public class EntityType<T extends Entity> implements FeatureElement, EntityTypeT
     @Nullable
     public T spawn(ServerLevel worldserver, @Nullable CompoundTag nbttagcompound, @Nullable Consumer<T> consumer, BlockPos blockposition, MobSpawnType enummobspawn, boolean flag, boolean flag1, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason spawnReason) {
         // CraftBukkit end
+        // Paper start - Call PreCreatureSpawnEvent
+        org.bukkit.entity.EntityType type = org.bukkit.entity.EntityType.fromName(EntityType.getKey(this).getPath());
+        if (type != null) {
+            com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent event;
+            event = new com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent(
+                io.papermc.paper.util.MCUtil.toLocation(worldserver, blockposition),
+                type,
+                spawnReason
+            );
+            if (!event.callEvent()) {
+                return null;
+            }
+        }
+        // Paper end
         T t0 = this.create(worldserver, nbttagcompound, consumer, blockposition, enummobspawn, flag, flag1);
 
         if (t0 != null) {

@@ -213,7 +213,13 @@ public final class NaturalSpawner {
                                         j1 = biomesettingsmobs_c.minCount + world.random.nextInt(1 + biomesettingsmobs_c.maxCount - biomesettingsmobs_c.minCount);
                                     }
 
-                                    if (NaturalSpawner.isValidSpawnPostitionForType(world, group, structuremanager, chunkgenerator, biomesettingsmobs_c, blockposition_mutableblockposition, d2) && checker.test(biomesettingsmobs_c.type, blockposition_mutableblockposition, chunk)) {
+                                    // Paper start
+                                    Boolean doSpawning = isValidSpawnPostitionForType(world, group, structuremanager, chunkgenerator, biomesettingsmobs_c, blockposition_mutableblockposition, d2);
+                                    if (doSpawning == null) {
+                                        return;
+                                    }
+                                    if (doSpawning && checker.test(biomesettingsmobs_c.type, blockposition_mutableblockposition, chunk)) {
+                                        // Paper end
                                         Mob entityinsentient = NaturalSpawner.getMobForSpawn(world, biomesettingsmobs_c.type);
 
                                         if (entityinsentient == null) {
@@ -261,9 +267,25 @@ public final class NaturalSpawner {
         return squaredDistance <= 576.0D ? false : (world.getSharedSpawnPos().closerToCenterThan(new Vec3((double) pos.getX() + 0.5D, (double) pos.getY(), (double) pos.getZ() + 0.5D), 24.0D) ? false : Objects.equals(new ChunkPos(pos), chunk.getPos()) || world.isNaturalSpawningAllowed((BlockPos) pos));
     }
 
-    private static boolean isValidSpawnPostitionForType(ServerLevel world, MobCategory group, StructureManager structureAccessor, ChunkGenerator chunkGenerator, MobSpawnSettings.SpawnerData spawnEntry, BlockPos.MutableBlockPos pos, double squaredDistance) {
+    private static Boolean isValidSpawnPostitionForType(ServerLevel world, MobCategory group, StructureManager structureAccessor, ChunkGenerator chunkGenerator, MobSpawnSettings.SpawnerData spawnEntry, BlockPos.MutableBlockPos pos, double squaredDistance) { // Paper
         EntityType<?> entitytypes = spawnEntry.type;
 
+        // Paper start
+        com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent event;
+        org.bukkit.entity.EntityType type = org.bukkit.entity.EntityType.fromName(EntityType.getKey(entitytypes).getPath());
+        if (type != null) {
+            event = new com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent(
+                io.papermc.paper.util.MCUtil.toLocation(world, pos),
+                type, SpawnReason.NATURAL
+            );
+            if (!event.callEvent()) {
+                if (event.shouldAbortSpawn()) {
+                    return null;
+                }
+                return false;
+            }
+        }
+        // Paper end
         if (entitytypes.getCategory() == MobCategory.MISC) {
             return false;
         } else if (!entitytypes.canSpawnFarFromPlayer() && squaredDistance > (double) (entitytypes.getCategory().getDespawnDistance() * entitytypes.getCategory().getDespawnDistance())) {
