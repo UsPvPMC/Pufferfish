@@ -170,7 +170,7 @@ public class Main {
             }
 
             File file = (File) optionset.valueOf("universe"); // CraftBukkit
-            Services services = Services.create(new YggdrasilAuthenticationService(Proxy.NO_PROXY), file, optionset); // Paper
+            Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file, optionset); // Paper
             // CraftBukkit start
             String s = (String) Optional.ofNullable((String) optionset.valueOf("world")).orElse(dedicatedserversettings.getProperties().levelName);
             LevelStorageSource convertable = LevelStorageSource.createDefault(file.toPath());

@@ -27,7 +27,7 @@ import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
 @SerializableAs("PlayerProfile")
-public final class CraftPlayerProfile implements PlayerProfile {
+public final class CraftPlayerProfile implements PlayerProfile, com.destroystokyo.paper.profile.SharedPlayerProfile { // Paper
 
     @Nonnull
     public static GameProfile validateSkullProfile(@Nonnull GameProfile gameProfile) {
@@ -92,8 +92,10 @@ public final class CraftPlayerProfile implements PlayerProfile {
         }
     }
 
-    void removeProperty(String propertyName) {
-        this.properties.removeAll(propertyName);
+    // Paper start - change return value for shared interface
+    public boolean removeProperty(String propertyName) {
+        return !this.properties.removeAll(propertyName).isEmpty();
+        // Paper end
     }
 
     void rebuildDirtyProperties() {
@@ -236,6 +238,7 @@ public final class CraftPlayerProfile implements PlayerProfile {
 
     @Override
     public Map<String, Object> serialize() {
+        // Paper - diff on change
         Map<String, Object> map = new LinkedHashMap<>();
         if (this.uniqueId != null) {
             map.put("uniqueId", this.uniqueId.toString());
@@ -251,10 +254,12 @@ public final class CraftPlayerProfile implements PlayerProfile {
             });
             map.put("properties", propertiesData);
         }
+        // Paper - diff on change
         return map;
     }
 
     public static CraftPlayerProfile deserialize(Map<String, Object> map) {
+        // Paper - diff on change
         UUID uniqueId = ConfigSerializationUtil.getUuid(map, "uniqueId", true);
         String name = ConfigSerializationUtil.getString(map, "name", true);
 
@@ -270,7 +275,7 @@ public final class CraftPlayerProfile implements PlayerProfile {
                 profile.properties.put(property.getName(), property);
             }
         }
-
+        // Paper - diff on change
         return profile;
     }
 }
