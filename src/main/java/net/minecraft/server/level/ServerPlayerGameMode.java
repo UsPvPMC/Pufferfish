@@ -186,6 +186,11 @@ public class ServerPlayerGameMode {
                 PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_BLOCK, pos, direction, this.player.getInventory().getSelected(), InteractionHand.MAIN_HAND);
                 if (event.isCancelled()) {
                     // Let the client know the block still exists
+                    // Paper start - brute force neighbor blocks for any attached blocks
+                    for (Direction dir : Direction.values()) {
+                        this.player.connection.send(new ClientboundBlockUpdatePacket(level, pos.relative(dir)));
+                    }
+                    // Paper end
                     this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, pos));
                     // Update any tile entity data for this block
                     BlockEntity tileentity = this.level.getBlockEntity(pos);
@@ -519,7 +524,13 @@ public class ServerPlayerGameMode {
 
                 // send a correcting update to the client for the block above as well, this because of replaceable blocks (such as grass, sea grass etc)
                 player.connection.send(new ClientboundBlockUpdatePacket(world, blockposition.above()));
+            // Paper start  - extend Player Interact cancellation // TODO: consider merging this into the extracted method
+            } else if (iblockdata.getBlock() instanceof net.minecraft.world.level.block.StructureBlock) {
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundContainerClosePacket(this.player.containerMenu.containerId));
+            } else if (iblockdata.getBlock() instanceof net.minecraft.world.level.block.CommandBlock) {
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundContainerClosePacket(this.player.containerMenu.containerId));
             }
+            // Paper end - extend Player Interact cancellation
             player.getBukkitEntity().updateInventory(); // SPIGOT-2867
             enuminteractionresult = (event.useItemInHand() != Event.Result.ALLOW) ? InteractionResult.SUCCESS : InteractionResult.PASS;
         } else if (this.gameModeForPlayer == GameType.SPECTATOR) {
