@@ -7,6 +7,8 @@ import com.google.gson.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.TextComponent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,7 +32,10 @@ public class PaperVersionFetcher implements VersionFetcher {
     @Override
     public Component getVersionMessage(@Nonnull String serverVersion) {
         String[] parts = serverVersion.substring("git-Paper-".length()).split("[-\\s]");
-        return getUpdateStatusMessage("PaperMC/Paper", GITHUB_BRANCH_NAME, parts[0]);
+        final Component updateMessage = getUpdateStatusMessage("PaperMC/Paper", GITHUB_BRANCH_NAME, parts[0]);
+        final Component history = getHistory();
+
+        return history != null ? TextComponent.ofChildren(updateMessage, Component.newline(), history) : updateMessage;
     }
 
     private static @Nullable String getMinecraftVersion() {
@@ -125,5 +130,20 @@ public class PaperVersionFetcher implements VersionFetcher {
             e.printStackTrace();
             return -1;
         }
+    }
+
+    @Nullable
+    private Component getHistory() {
+        final VersionHistoryManager.VersionData data = VersionHistoryManager.INSTANCE.getVersionData();
+        if (data == null) {
+            return null;
+        }
+
+        final String oldVersion = data.getOldVersion();
+        if (oldVersion == null) {
+            return null;
+        }
+
+        return Component.text("Previous version: " + oldVersion, NamedTextColor.GRAY, TextDecoration.ITALIC);
     }
 }
