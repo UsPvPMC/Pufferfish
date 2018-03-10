@@ -38,7 +38,8 @@ public class FrostedIceBlock extends IceBlock {
 
             for(Direction direction : Direction.values()) {
                 mutableBlockPos.setWithOffset(pos, direction);
-                BlockState blockState = world.getBlockState(mutableBlockPos);
+                BlockState blockState = world.getBlockStateIfLoaded(mutableBlockPos); // Paper
+                if (blockState == null) { continue; } // Paper
                 if (blockState.is(this) && !this.slightlyMelt(blockState, world, mutableBlockPos)) {
                     world.scheduleTick(mutableBlockPos, this, Mth.nextInt(random, world.paperConfig().environment.frostedIce.delay.min, world.paperConfig().environment.frostedIce.delay.max)); // Paper - use configurable min/max delay
                 }
@@ -75,7 +76,10 @@ public class FrostedIceBlock extends IceBlock {
 
         for(Direction direction : Direction.values()) {
             mutableBlockPos.setWithOffset(pos, direction);
-            if (world.getBlockState(mutableBlockPos).is(this)) {
+            // Paper start
+            BlockState blockState = world.getBlockStateIfLoaded(mutableBlockPos);
+            if (blockState != null && blockState.is(this)) {
+                // Paper end
                 ++i;
                 if (i >= maxNeighbors) {
                     return false;
