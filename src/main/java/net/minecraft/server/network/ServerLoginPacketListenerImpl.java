@@ -329,8 +329,16 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                         java.util.UUID uniqueId = ServerLoginPacketListenerImpl.this.gameProfile.getId();
                         final org.bukkit.craftbukkit.CraftServer server = ServerLoginPacketListenerImpl.this.server.server;
 
-                        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId);
+                        // Paper start
+                        com.destroystokyo.paper.profile.PlayerProfile profile = org.bukkit.Bukkit.createProfile(uniqueId, playerName);
+                        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId, profile);
                         server.getPluginManager().callEvent(asyncEvent);
+                        profile = asyncEvent.getPlayerProfile();
+                        profile.complete();
+                        gameProfile = com.destroystokyo.paper.profile.CraftPlayerProfile.asAuthlibCopy(profile);
+                        playerName = gameProfile.getName();
+                        uniqueId = gameProfile.getId();
+                        // Paper end
 
                         if (PlayerPreLoginEvent.getHandlerList().getRegisteredListeners().length != 0) {
                             final PlayerPreLoginEvent event = new PlayerPreLoginEvent(playerName, address, uniqueId);
