@@ -82,6 +82,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.border.BorderChangeListener;
 import net.minecraft.world.level.saveddata.maps.MapDecoration;
@@ -284,11 +285,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     @Override
     public boolean isOnline() {
         return server.getPlayer(getUniqueId()) != null;
-    }
-
-    @Override
-    public PlayerProfile getPlayerProfile() {
-        return new CraftPlayerProfile(this.getProfile());
     }
 
     @Override
@@ -1677,8 +1673,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
     private void untrackAndHideEntity(org.bukkit.entity.Entity entity) {
         // Remove this entity from the hidden player's EntityTrackerEntry
-        ChunkMap tracker = ((ServerLevel) this.getHandle().level).getChunkSource().chunkMap;
+        // Paper start
         Entity other = ((CraftEntity) entity).getHandle();
+        unregisterEntity(other);
+
+        server.getPluginManager().callEvent(new PlayerHideEntityEvent(this, entity));
+    }
+    private void unregisterEntity(Entity other) {
+        // Paper end
+        ChunkMap tracker = ((ServerLevel) this.getHandle().level).getChunkSource().chunkMap;
         ChunkMap.TrackedEntity entry = tracker.entityMap.get(other.getId());
         if (entry != null) {
             entry.removePlayer(this.getHandle());
@@ -1691,8 +1694,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
                 this.getHandle().connection.send(new ClientboundPlayerInfoRemovePacket(List.of(otherPlayer.getUUID())));
             }
         }
-
-        server.getPluginManager().callEvent(new PlayerHideEntityEvent(this, entity));
     }
 
     void resetAndHideEntity(org.bukkit.entity.Entity entity) {
@@ -1769,8 +1770,38 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         if (entry != null && !entry.seenBy.contains(this.getHandle().connection)) {
             entry.updatePlayer(this.getHandle());
         }
+        server.getPluginManager().callEvent(new PlayerShowEntityEvent(this, entity)); // Paper
+    }
+    // Paper start
+    @Override
+    public void setPlayerProfile(com.destroystokyo.paper.profile.PlayerProfile profile) {
+        ServerPlayer self = this.getHandle();
+        GameProfile gameProfile = com.destroystokyo.paper.profile.CraftPlayerProfile.asAuthlibCopy(profile);
+        if (!self.sentListPacket) {
+            self.gameProfile = gameProfile;
+            return;
+        }
+        List<ServerPlayer> players = this.server.getServer().getPlayerList().players;
+        // First unregister the player for all players with the OLD game profile
+        for (ServerPlayer player : players) {
+            CraftPlayer bukkitPlayer = player.getBukkitEntity();
+            if (bukkitPlayer.canSee(this)) {
+                bukkitPlayer.unregisterEntity(self);
+            }
+        }
 
-        server.getPluginManager().callEvent(new PlayerShowEntityEvent(this, entity));
+        // Set the game profile here, we should have unregistered the entity via iterating all player entities above.
+        self.gameProfile = gameProfile;
+
+        // Re-register the game profile for all players
+        for (ServerPlayer player : players) {
+            CraftPlayer bukkitPlayer = player.getBukkitEntity();
+            if (bukkitPlayer.canSee(this)) {
+                bukkitPlayer.trackAndShowEntity(self.getBukkitEntity());
+            }
+        }
+        // Refresh misc player things AFTER sending game profile
+        this.refreshPlayer();
     }
 
     void resetAndShowEntity(org.bukkit.entity.Entity entity) {
@@ -1783,6 +1814,36 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
             this.trackAndShowEntity(entity);
         }
     }
+    // Paper start
+    public com.destroystokyo.paper.profile.PlayerProfile getPlayerProfile() {
+        return new com.destroystokyo.paper.profile.CraftPlayerProfile(this).clone();
+    }
+
+    private void refreshPlayer() {
+        ServerPlayer handle = this.getHandle();
+        Location loc = this.getLocation();
+
+        ServerGamePacketListenerImpl connection = handle.connection;
+
+        //Respawn the player then update their position and selected slot
+        ServerLevel worldserver = handle.getLevel();
+        connection.send(new net.minecraft.network.protocol.game.ClientboundRespawnPacket(worldserver.dimensionTypeId(), worldserver.dimension(), net.minecraft.world.level.biome.BiomeManager.obfuscateSeed(worldserver.getSeed()), handle.gameMode.getGameModeForPlayer(), handle.gameMode.getPreviousGameModeForPlayer(), worldserver.isDebug(), worldserver.isFlat(), net.minecraft.network.protocol.game.ClientboundRespawnPacket.KEEP_ALL_DATA, this.getHandle().getLastDeathLocation()));
+        handle.onUpdateAbilities();
+        connection.internalTeleport(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), java.util.Collections.emptySet());
+        net.minecraft.server.MinecraftServer.getServer().getPlayerList().sendAllPlayerInfo(handle);
+
+        // Resend their XP and effects because the respawn packet resets it
+        connection.send(new net.minecraft.network.protocol.game.ClientboundSetExperiencePacket(handle.experienceProgress, handle.totalExperience, handle.experienceLevel));
+        for (net.minecraft.world.effect.MobEffectInstance mobEffect : handle.getActiveEffects()) {
+            connection.send(new net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket(handle.getId(), mobEffect));
+        }
+
+        if (this.isOp()) {
+            this.setOp(false);
+            this.setOp(true);
+        }
+    }
+    // Paper end
 
     public void onEntityRemove(Entity entity) {
         this.invertedVisibilityEntities.remove(entity.getUUID());

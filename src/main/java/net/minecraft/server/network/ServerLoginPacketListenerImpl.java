@@ -330,11 +330,11 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                         final org.bukkit.craftbukkit.CraftServer server = ServerLoginPacketListenerImpl.this.server.server;
 
                         // Paper start
-                        com.destroystokyo.paper.profile.PlayerProfile profile = org.bukkit.Bukkit.createProfile(uniqueId, playerName);
+                        com.destroystokyo.paper.profile.PlayerProfile profile = com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitMirror(ServerLoginPacketListenerImpl.this.gameProfile);
                         AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId, profile);
                         server.getPluginManager().callEvent(asyncEvent);
                         profile = asyncEvent.getPlayerProfile();
-                        profile.complete();
+                        profile.complete(true); // Paper - setPlayerProfileAPI
                         gameProfile = com.destroystokyo.paper.profile.CraftPlayerProfile.asAuthlibCopy(profile);
                         playerName = gameProfile.getName();
                         uniqueId = gameProfile.getId();
