@@ -117,15 +117,15 @@ public class CraftSign<T extends SignBlockEntity> extends CraftBlockEntityState<
         }
     }
 
-    public static void openSign(Sign sign, Player player) {
+    public static void openSign(Sign sign, org.bukkit.entity.HumanEntity player) { // Paper - change move open sign to HumanEntity
         Preconditions.checkArgument(sign != null, "sign == null");
-        Preconditions.checkArgument(sign.isPlaced(), "Sign must be placed");
+        // Preconditions.checkArgument(sign.isPlaced(), "Sign must be placed"); // Paper - don't require placed
         Preconditions.checkArgument(sign.getWorld() == player.getWorld(), "Sign must be in same world as Player");
 
         SignBlockEntity handle = ((CraftSign<?>) sign).getTileEntity();
         handle.isEditable = true;
 
-        ((CraftPlayer) player).getHandle().openTextEdit(handle);
+        ((org.bukkit.craftbukkit.entity.CraftHumanEntity) player).getHandle().openTextEdit(handle); // Paper - change move open sign to HumanEntity
     }
 
     // Paper start
