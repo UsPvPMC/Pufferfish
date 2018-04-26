@@ -3152,9 +3152,9 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                 FilteredText filteredtext = (FilteredText) signText.get(i);
 
                 if (this.player.isTextFilteringEnabled()) {
-                    lines.add(net.kyori.adventure.text.Component.text(filteredtext.filteredOrEmpty())); // Paper - adventure
+                    lines.add(net.kyori.adventure.text.Component.text(SharedConstants.filterText(filteredtext.filteredOrEmpty()))); // Paper - adventure
                 } else {
-                    lines.add(net.kyori.adventure.text.Component.text(filteredtext.raw())); // Paper - adventure
+                    lines.add(net.kyori.adventure.text.Component.text(SharedConstants.filterText(filteredtext.raw()))); // Paper - adventure
                 }
             }
             SignChangeEvent event = new SignChangeEvent((org.bukkit.craftbukkit.block.CraftBlock) player.getWorld().getBlockAt(x, y, z), this.player.getBukkitEntity(), lines);
