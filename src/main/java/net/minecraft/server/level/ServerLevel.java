@@ -2178,6 +2178,12 @@ public class ServerLevel extends Level implements WorldGenLevel {
 
         public void onTickingEnd(Entity entity) {
             ServerLevel.this.entityTickList.remove(entity);
+            // Paper start - Reset pearls when they stop being ticked
+            if (paperConfig().fixes.disableUnloadedChunkEnderpearlExploit && entity instanceof net.minecraft.world.entity.projectile.ThrownEnderpearl pearl) {
+                pearl.cachedOwner = null;
+                pearl.ownerUUID = null;
+            }
+            // Paper end
         }
 
         public void onTrackingStart(Entity entity) {
