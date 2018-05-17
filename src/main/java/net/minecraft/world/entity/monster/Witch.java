@@ -124,7 +124,11 @@ public class Witch extends Raider implements RangedAttackMob {
 
                     this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                     if (itemstack.is(Items.POTION)) {
-                        List<MobEffectInstance> list = PotionUtils.getMobEffects(itemstack);
+                        // Paper start
+                        com.destroystokyo.paper.event.entity.WitchConsumePotionEvent event = new com.destroystokyo.paper.event.entity.WitchConsumePotionEvent((org.bukkit.entity.Witch) this.getBukkitEntity(), org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(itemstack));
+
+                        List<MobEffectInstance> list = event.callEvent() ? PotionUtils.getMobEffects(org.bukkit.craftbukkit.inventory.CraftItemStack.asNMSCopy(event.getPotion())) : null;
+                        // Paper end
 
                         if (list != null) {
                             Iterator iterator = list.iterator();
