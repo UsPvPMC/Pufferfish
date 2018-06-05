@@ -572,6 +572,10 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
                 entity = net.minecraft.world.entity.EntityType.BOAT.create(world);
             }
             entity.moveTo(x, y, z, yaw, pitch);
+            // Paper start
+        } else if (org.bukkit.entity.Item.class.isAssignableFrom(clazz)) {
+            entity = new net.minecraft.world.entity.item.ItemEntity(world, x, y, z, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Item.byBlock(net.minecraft.world.level.block.Blocks.DIRT)));
+            // Paper end
         } else if (FallingBlock.class.isAssignableFrom(clazz)) {
             BlockPos pos = BlockPos.containing(x, y, z);
             entity = FallingBlockEntity.fall(world, pos, this.getHandle().getBlockState(pos));
