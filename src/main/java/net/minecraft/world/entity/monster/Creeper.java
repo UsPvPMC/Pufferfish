@@ -276,6 +276,7 @@ public class Creeper extends Monster implements PowerableMob {
                 this.spawnLingeringCloud();
             } else {
                 this.swell = 0;
+                this.entityData.set(DATA_IS_IGNITED, Boolean.valueOf(false)); // Paper
             }
             // CraftBukkit end
         }
