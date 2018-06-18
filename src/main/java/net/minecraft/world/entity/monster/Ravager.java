@@ -274,7 +274,7 @@ public class Ravager extends Raider {
         double d1 = entity.getZ() - this.getZ();
         double d2 = Math.max(d0 * d0 + d1 * d1, 0.001D);
 
-        entity.push(d0 / d2 * 4.0D, 0.2D, d1 / d2 * 4.0D);
+        entity.push(d0 / d2 * 4.0D, 0.2D, d1 / d2 * 4.0D, this); // Paper
     }
 
     @Override

@@ -401,7 +401,7 @@ public abstract class AbstractArrow extends Projectile {
                     Vec3 vec3d = this.getDeltaMovement().multiply(1.0D, 0.0D, 1.0D).normalize().scale((double) this.knockback * 0.6D * d0);
 
                     if (vec3d.lengthSqr() > 0.0D) {
-                        entityliving.push(vec3d.x, 0.1D, vec3d.z);
+                        entityliving.push(vec3d.x, 0.1D, vec3d.z, this); // Paper
                     }
                 }
 

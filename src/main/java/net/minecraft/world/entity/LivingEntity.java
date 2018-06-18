@@ -1445,7 +1445,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
                         d0 = (Math.random() - Math.random()) * 0.01D;
                     }
 
-                    this.knockback(0.4000000059604645D, d0, d1);
+                    this.knockback(0.4000000059604645D, d0, d1, entity1); // Paper
                     if (!flag) {
                         this.indicateDamage(d0, d1);
                     }
@@ -1494,7 +1494,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
     }
 
     protected void blockedByShield(LivingEntity target) {
-        target.knockback(0.5D, target.getX() - this.getX(), target.getZ() - this.getZ());
+        target.knockback(0.5D, target.getX() - this.getX(), target.getZ() - this.getZ(), this); // Paper
     }
 
     private boolean checkTotemDeathProtection(DamageSource source) {
@@ -1750,6 +1750,11 @@ public abstract class LivingEntity extends Entity implements Attackable {
     }
 
     public void knockback(double strength, double x, double z) {
+        // Paper start - add knockbacking entity parameter
+        this.knockback(strength, x, z, null);
+    }
+    public void knockback(double strength, double x, double z, Entity knockingBackEntity) {
+        // Paper end - add knockbacking entity parameter
         strength *= 1.0D - this.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE);
         if (strength > 0.0D) {
             this.hasImpulse = true;
@@ -1757,6 +1762,15 @@ public abstract class LivingEntity extends Entity implements Attackable {
             Vec3 vec3d1 = (new Vec3(x, 0.0D, z)).normalize().scale(strength);
 
             this.setDeltaMovement(vec3d.x / 2.0D - vec3d1.x, this.onGround ? Math.min(0.4D, vec3d.y / 2.0D + strength) : vec3d.y, vec3d.z / 2.0D - vec3d1.z);
+            // Paper start - call EntityKnockbackByEntityEvent
+            Vec3 currentMovement = this.getDeltaMovement();
+            org.bukkit.util.Vector delta = new org.bukkit.util.Vector(currentMovement.x - vec3d.x, currentMovement.y - vec3d.y, currentMovement.z - vec3d.z);
+            // Restore old velocity to be able to access it in the event
+            this.setDeltaMovement(vec3d);
+            if (knockingBackEntity == null || new com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent((org.bukkit.entity.LivingEntity) getBukkitEntity(), knockingBackEntity.getBukkitEntity(), (float) strength, delta).callEvent()) {
+                this.setDeltaMovement(vec3d.x + delta.getX(), vec3d.y + delta.getY(), vec3d.z + delta.getZ());
+            }
+            // Paper end
         }
     }
 

@@ -1774,8 +1774,17 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     }
 
     public void push(double deltaX, double deltaY, double deltaZ) {
-        this.setDeltaMovement(this.getDeltaMovement().add(deltaX, deltaY, deltaZ));
-        this.hasImpulse = true;
+        // Paper start - call EntityPushedByEntityEvent
+        this.push(deltaX, deltaY, deltaZ, null);
+    }
+
+    public void push(double deltaX, double deltaY, double deltaZ, @org.jetbrains.annotations.Nullable Entity pushingEntity) {
+        org.bukkit.util.Vector delta = new org.bukkit.util.Vector(deltaX, deltaY, deltaZ);
+        if (pushingEntity == null || new io.papermc.paper.event.entity.EntityPushedByEntityAttackEvent(getBukkitEntity(), pushingEntity.getBukkitEntity(), delta).callEvent()) {
+            this.setDeltaMovement(this.getDeltaMovement().add(delta.getX(), delta.getY(), delta.getZ()));
+            this.hasImpulse = true;
+        }
+        // Paper end - call EntityPushedByEntityEvent
     }
 
     protected void markHurt() {

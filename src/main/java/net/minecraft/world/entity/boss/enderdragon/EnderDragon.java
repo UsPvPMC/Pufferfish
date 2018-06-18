@@ -434,7 +434,7 @@ public class EnderDragon extends Mob implements Enemy {
                 double d3 = entity.getZ() - d1;
                 double d4 = Math.max(d2 * d2 + d3 * d3, 0.1D);
 
-                entity.push(d2 / d4 * 4.0D, 0.20000000298023224D, d3 / d4 * 4.0D);
+                entity.push(d2 / d4 * 4.0D, 0.20000000298023224D, d3 / d4 * 4.0D, this); // Paper
                 if (!this.phaseManager.getCurrentPhase().isSitting() && ((LivingEntity) entity).getLastHurtByMobTimestamp() < entity.tickCount - 2) {
                     entity.hurt(this.damageSources().mobAttack(this), 5.0F);
                     this.doEnchantDamageEffects(this, entity);
