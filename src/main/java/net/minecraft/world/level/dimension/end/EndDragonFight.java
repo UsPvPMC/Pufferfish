@@ -90,6 +90,10 @@ public class EndDragonFight {
     private List<EndCrystal> respawnCrystals;
 
     public EndDragonFight(ServerLevel world, long gatewaysSeed, CompoundTag nbt) {
+        // Paper start
+        this.needsStateScanning = world.paperConfig().entities.spawning.scanForLegacyEnderDragon;
+        if (!this.needsStateScanning) this.dragonKilled = true;
+        // Paper end
         this.level = world;
         if (nbt.contains("NeedsStateScanning")) {
             this.needsStateScanning = nbt.getBoolean("NeedsStateScanning");
