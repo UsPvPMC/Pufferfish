@@ -5,7 +5,7 @@ import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Snowman;
 
-public class CraftSnowman extends CraftGolem implements Snowman {
+public class CraftSnowman extends CraftGolem implements Snowman, com.destroystokyo.paper.entity.CraftRangedEntity<SnowGolem> { // Paper
     public CraftSnowman(CraftServer server, SnowGolem entity) {
         super(server, entity);
     }
