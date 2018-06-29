@@ -801,5 +801,30 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     public void setShieldBlockingDelay(int delay) {
         getHandle().setShieldBlockingDelay(delay);
     }
+
+    @Override
+    public ItemStack getActiveItem() {
+        return getHandle().getUseItem().asBukkitMirror();
+    }
+
+    @Override
+    public int getItemUseRemainingTime() {
+        return getHandle().getUseItemRemainingTicks();
+    }
+
+    @Override
+    public int getHandRaisedTime() {
+        return getHandle().getTicksUsingItem();
+    }
+
+    @Override
+    public boolean isHandRaised() {
+        return getHandle().isUsingItem();
+    }
+
+    @Override
+    public org.bukkit.inventory.EquipmentSlot getHandRaised() {
+        return getHandle().getUsedItemHand() == net.minecraft.world.InteractionHand.MAIN_HAND ? org.bukkit.inventory.EquipmentSlot.HAND : org.bukkit.inventory.EquipmentSlot.OFF_HAND;
+    }
     // Paper end
 }
