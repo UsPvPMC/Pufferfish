@@ -639,7 +639,7 @@ public class ServerPlayer extends Player {
         }
         // Paper end
         if (!this.level.isClientSide && !this.containerMenu.stillValid(this)) {
-            this.closeContainer();
+            this.closeContainer(org.bukkit.event.inventory.InventoryCloseEvent.Reason.CANT_USE); // Paper
             this.containerMenu = this.inventoryMenu;
         }
 
@@ -832,7 +832,7 @@ public class ServerPlayer extends Player {
 
         // SPIGOT-943 - only call if they have an inventory open
         if (this.containerMenu != this.inventoryMenu) {
-            this.closeContainer();
+            this.closeContainer(org.bukkit.event.inventory.InventoryCloseEvent.Reason.DEATH); // Paper
         }
 
         net.kyori.adventure.text.Component deathMessage = event.deathMessage() != null ? event.deathMessage() : net.kyori.adventure.text.Component.empty(); // Paper - Adventure
@@ -1451,7 +1451,7 @@ public class ServerPlayer extends Player {
         }
         // CraftBukkit end
         if (this.containerMenu != this.inventoryMenu) {
-            this.closeContainer();
+            this.closeContainer(org.bukkit.event.inventory.InventoryCloseEvent.Reason.OPEN_NEW); // Paper
         }
 
         // this.nextContainerCounter(); // CraftBukkit - moved up
@@ -1479,7 +1479,13 @@ public class ServerPlayer extends Player {
 
     @Override
     public void closeContainer() {
-        CraftEventFactory.handleInventoryCloseEvent(this); // CraftBukkit
+        // Paper start
+        this.closeContainer(org.bukkit.event.inventory.InventoryCloseEvent.Reason.UNKNOWN);
+    }
+    @Override
+    public void closeContainer(org.bukkit.event.inventory.InventoryCloseEvent.Reason reason) {
+        CraftEventFactory.handleInventoryCloseEvent(this, reason); // CraftBukkit
+        // Paper end
         this.connection.send(new ClientboundContainerClosePacket(this.containerMenu.containerId));
         this.doCloseContainer();
     }

@@ -219,6 +219,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent; // Paper
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.inventory.SmithItemEvent;
@@ -2673,10 +2674,15 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
     @Override
     public void handleContainerClose(ServerboundContainerClosePacket packet) {
+        // Paper start
+        handleContainerClose(packet, InventoryCloseEvent.Reason.PLAYER);
+    }
+    public void handleContainerClose(ServerboundContainerClosePacket packet, InventoryCloseEvent.Reason reason) {
+        // Paper end
         PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
 
         if (this.player.isImmobile()) return; // CraftBukkit
-        CraftEventFactory.handleInventoryCloseEvent(this.player); // CraftBukkit
+        CraftEventFactory.handleInventoryCloseEvent(this.player, reason); // CraftBukkit // Paper
 
         this.player.doCloseContainer();
     }
