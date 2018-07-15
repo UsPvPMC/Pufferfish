@@ -534,6 +534,11 @@ public class EnderDragon extends Mob implements Enemy {
                     });
                     craftBlock.getNMS().spawnAfterBreak((ServerLevel) level, blockposition, ItemStack.EMPTY, false);
                 }
+                // Paper start - TNTPrimeEvent
+                org.bukkit.block.Block tntBlock = level.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
+                if(!new com.destroystokyo.paper.event.block.TNTPrimeEvent(tntBlock, com.destroystokyo.paper.event.block.TNTPrimeEvent.PrimeReason.EXPLOSION, explosionSource.getIndirectSourceEntity().getBukkitEntity()).callEvent())
+                    continue;
+                // Paper end
                 nmsBlock.wasExploded(level, blockposition, explosionSource);
 
                 this.level.removeBlock(blockposition, false);
