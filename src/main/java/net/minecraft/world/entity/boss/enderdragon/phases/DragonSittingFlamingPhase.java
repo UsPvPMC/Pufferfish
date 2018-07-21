@@ -83,7 +83,13 @@ public class DragonSittingFlamingPhase extends AbstractDragonSittingPhase {
             this.flame.setDuration(200);
             this.flame.setParticle(ParticleTypes.DRAGON_BREATH);
             this.flame.addEffect(new MobEffectInstance(MobEffects.HARM));
+            if (new com.destroystokyo.paper.event.entity.EnderDragonFlameEvent((org.bukkit.entity.EnderDragon) this.dragon.getBukkitEntity(), (org.bukkit.entity.AreaEffectCloud) this.flame.getBukkitEntity()).callEvent()) { // Paper
             this.dragon.level.addFreshEntity(this.flame);
+            // Paper start
+            } else {
+                this.end();
+            }
+            // Paper end
         }
 
     }

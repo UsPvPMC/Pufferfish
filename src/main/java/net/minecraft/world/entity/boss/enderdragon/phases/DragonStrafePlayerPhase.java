@@ -74,7 +74,9 @@ public class DragonStrafePlayerPhase extends AbstractDragonPhaseInstance {
 
                         DragonFireball dragonFireball = new DragonFireball(this.dragon.level, this.dragon, r, s, t);
                         dragonFireball.moveTo(o, p, q, 0.0F, 0.0F);
+                        if (new com.destroystokyo.paper.event.entity.EnderDragonShootFireballEvent((org.bukkit.entity.EnderDragon) dragon.getBukkitEntity(), (org.bukkit.entity.DragonFireball) dragonFireball.getBukkitEntity()).callEvent()) // Paper
                         this.dragon.level.addFreshEntity(dragonFireball);
+                        else dragonFireball.discard(); // Paper
                         this.fireballCharge = 0;
                         if (this.currentPath != null) {
                             while(!this.currentPath.isDone()) {
