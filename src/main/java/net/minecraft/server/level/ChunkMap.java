@@ -537,6 +537,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
                     entity.discard();
                     needsRemoval = true;
                 }
+                checkDupeUUID(world, entity); // Paper
                 return !needsRemoval;
             }));
             // CraftBukkit end
@@ -548,6 +549,49 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
         throw new UnsupportedOperationException(); // Paper - rewrite chunk system
     }
 
+    // Paper start
+    // rets true if to prevent the entity from being added
+    public static boolean checkDupeUUID(ServerLevel level, Entity entity) {
+        io.papermc.paper.configuration.WorldConfiguration.Entities.Spawning.DuplicateUUID.DuplicateUUIDMode mode = level.paperConfig().entities.spawning.duplicateUuid.mode;
+        if (mode != io.papermc.paper.configuration.WorldConfiguration.Entities.Spawning.DuplicateUUID.DuplicateUUIDMode.WARN
+            && mode != io.papermc.paper.configuration.WorldConfiguration.Entities.Spawning.DuplicateUUID.DuplicateUUIDMode.DELETE
+            && mode != io.papermc.paper.configuration.WorldConfiguration.Entities.Spawning.DuplicateUUID.DuplicateUUIDMode.SAFE_REGEN) {
+            return false;
+        }
+        Entity other = level.getEntity(entity.getUUID());
+
+        if (other == null || other == entity) {
+            return false;
+        }
+
+        if (mode == io.papermc.paper.configuration.WorldConfiguration.Entities.Spawning.DuplicateUUID.DuplicateUUIDMode.SAFE_REGEN && other != null && !other.isRemoved()
+            && Objects.equals(other.getEncodeId(), entity.getEncodeId())
+            && entity.getBukkitEntity().getLocation().distance(other.getBukkitEntity().getLocation()) < level.paperConfig().entities.spawning.duplicateUuid.safeRegenDeleteRange
+        ) {
+            if (ServerLevel.DEBUG_ENTITIES) LOGGER.warn("[DUPE-UUID] Duplicate UUID found used by " + other + ", deleted entity " + entity + " because it was near the duplicate and likely an actual duplicate. See https://github.com/PaperMC/Paper/issues/1223 for discussion on what this is about.");
+            entity.discard();
+            return true;
+        }
+        if (other != null && !other.isRemoved()) {
+            switch (mode) {
+                case SAFE_REGEN: {
+                    entity.setUUID(java.util.UUID.randomUUID());
+                    if (ServerLevel.DEBUG_ENTITIES) LOGGER.warn("[DUPE-UUID] Duplicate UUID found used by " + other + ", regenerated UUID for " + entity + ". See https://github.com/PaperMC/Paper/issues/1223 for discussion on what this is about.");
+                    break;
+                }
+                case DELETE: {
+                    if (ServerLevel.DEBUG_ENTITIES) LOGGER.warn("[DUPE-UUID] Duplicate UUID found used by " + other + ", deleted entity " + entity + ". See https://github.com/PaperMC/Paper/issues/1223 for discussion on what this is about.");
+                    entity.discard();
+                    return true;
+                }
+                default:
+                    if (ServerLevel.DEBUG_ENTITIES) LOGGER.warn("[DUPE-UUID] Duplicate UUID found used by " + other + ", doing nothing to " + entity + ". See https://github.com/PaperMC/Paper/issues/1223 for discussion on what this is about.");
+                    break;
+            }
+        }
+        return false;
+    }
+    // Paper end
     public CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> prepareTickingChunk(ChunkHolder holder) {
         throw new UnsupportedOperationException(); // Paper - rewrite chunk system
     }
