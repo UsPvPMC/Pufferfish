@@ -105,6 +105,16 @@ public class AnvilMenu extends ItemCombinerMenu {
             if (!player.getAbilities().instabuild && iblockdata.is(BlockTags.ANVIL) && player.getRandom().nextFloat() < 0.12F) {
                 BlockState iblockdata1 = AnvilBlock.damage(iblockdata);
 
+                // Paper start
+                com.destroystokyo.paper.event.block.AnvilDamagedEvent event = new com.destroystokyo.paper.event.block.AnvilDamagedEvent(getBukkitView(), iblockdata1 != null ? org.bukkit.craftbukkit.block.data.CraftBlockData.fromData(iblockdata1) : null);
+                if (!event.callEvent()) {
+                    return;
+                } else if (event.getDamageState() == com.destroystokyo.paper.event.block.AnvilDamagedEvent.DamageState.BROKEN) {
+                    iblockdata1 = null;
+                } else {
+                    iblockdata1 = ((org.bukkit.craftbukkit.block.data.CraftBlockData) event.getDamageState().getMaterial().createBlockData()).getState().setValue(AnvilBlock.FACING, iblockdata.getValue(AnvilBlock.FACING));
+                }
+                // Paper end
                 if (iblockdata1 == null) {
                     world.removeBlock(blockposition, false);
                     world.levelEvent(1029, blockposition, 0);
