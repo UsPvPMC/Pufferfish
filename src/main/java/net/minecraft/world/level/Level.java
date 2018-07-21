@@ -151,6 +151,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     public boolean pvpMode;
     public boolean keepSpawnInMemory = true;
     public org.bukkit.generator.ChunkGenerator generator;
+    public static final boolean DEBUG_ENTITIES = Boolean.getBoolean("debug.entities"); // Paper
 
     public boolean preventPoiUpdated = false; // CraftBukkit - SPIGOT-5710
     public boolean captureBlockStates = false;
