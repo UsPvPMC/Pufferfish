@@ -25,21 +25,33 @@ public class EggItem extends Item {
 
             entityegg.setItem(itemstack);
             entityegg.shootFromRotation(user, user.getXRot(), user.getYRot(), 0.0F, 1.5F, 1.0F);
-            // CraftBukkit start
-            if (!world.addFreshEntity(entityegg)) {
+            // Paper start
+            com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent event = new com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent((org.bukkit.entity.Player) user.getBukkitEntity(), org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(itemstack), (org.bukkit.entity.Projectile) entityegg.getBukkitEntity());
+            if (event.callEvent() && world.addFreshEntity(entityegg)) {
+                if (event.shouldConsume() && !user.getAbilities().instabuild) {
+                    itemstack.shrink(1);
+                } else if (user instanceof net.minecraft.server.level.ServerPlayer) {
+                    ((net.minecraft.server.level.ServerPlayer) user).getBukkitEntity().updateInventory();
+                }
+
+                world.playSound((Player) null, user.getX(), user.getY(), user.getZ(), net.minecraft.sounds.SoundEvents.EGG_THROW, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 0.4F / (net.minecraft.world.entity.Entity.SHARED_RANDOM.nextFloat() * 0.4F + 0.8F));
+                user.awardStat(Stats.ITEM_USED.get(this));
+            } else {
                 if (user instanceof net.minecraft.server.level.ServerPlayer) {
                     ((net.minecraft.server.level.ServerPlayer) user).getBukkitEntity().updateInventory();
                 }
                 return InteractionResultHolder.fail(itemstack);
             }
-            // CraftBukkit end
+            // Paper end
         }
         world.playSound((Player) null, user.getX(), user.getY(), user.getZ(), SoundEvents.EGG_THROW, SoundSource.PLAYERS, 0.5F, 0.4F / (world.getRandom().nextFloat() * 0.4F + 0.8F));
 
+        /* // Paper start - moved up
         user.awardStat(Stats.ITEM_USED.get(this));
         if (!user.getAbilities().instabuild) {
             itemstack.shrink(1);
         }
+        */ // Paper end
 
         return InteractionResultHolder.sidedSuccess(itemstack, world.isClientSide());
     }
