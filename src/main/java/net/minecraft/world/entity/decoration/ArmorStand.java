@@ -337,6 +337,7 @@ public class ArmorStand extends LivingEntity {
 
     @Override
     protected void pushEntities() {
+        if (!level.paperConfig().entities.armorStands.doCollisionEntityLookups) return; // Paper
         List<Entity> list = this.level.getEntities((Entity) this, this.getBoundingBox(), ArmorStand.RIDABLE_MINECARTS);
 
         for (int i = 0; i < list.size(); ++i) {
