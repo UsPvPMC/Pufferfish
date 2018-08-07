@@ -13,6 +13,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType; // Paper
+import java.lang.reflect.Type; // Paper
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
@@ -30,7 +32,22 @@ public abstract class StoredUserList<K, V extends StoredUserEntry<K>> {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().create();
     private final File file;
-    private final Map<String, V> map = Maps.newHashMap();
+    // Paper - replace HashMap is ConcurrentHashMap
+    private final Map<String, V> map = Maps.newConcurrentMap();
+    private boolean e = true;
+    private static final ParameterizedType f = new ParameterizedType() {
+        public Type[] getActualTypeArguments() {
+            return new Type[]{StoredUserEntry.class};
+        }
+
+        public Type getRawType() {
+            return List.class;
+        }
+
+        public Type getOwnerType() {
+            return null;
+        }
+    };
 
     public StoredUserList(File file) {
         this.file = file;
@@ -53,8 +70,13 @@ public abstract class StoredUserList<K, V extends StoredUserEntry<K>> {
 
     @Nullable
     public V get(K key) {
-        this.removeExpired();
-        return (V) this.map.get(this.getKeyForUser(key)); // CraftBukkit - fix decompile error
+        // Paper start
+        // this.g();
+        // return (V) this.d.get(this.a(k0)); // CraftBukkit - fix decompile error
+        return (V) this.map.computeIfPresent(this.getKeyForUser(key), (k, v) -> {
+            return v.hasExpired() ? null : v;
+        });
+        // Paper end
     }
 
     public void remove(K key) {
@@ -83,7 +105,8 @@ public abstract class StoredUserList<K, V extends StoredUserEntry<K>> {
     // CraftBukkit end
 
     public boolean isEmpty() {
-        return this.map.size() < 1;
+        // return this.d.size() < 1; // Paper
+        return this.map.isEmpty(); // Paper - readability is the goal. As an aside, isEmpty() uses only sumCount() and a comparison. size() uses sumCount(), casts, and boolean logic
     }
 
     protected String getKeyForUser(K profile) {
@@ -95,14 +118,14 @@ public abstract class StoredUserList<K, V extends StoredUserEntry<K>> {
     }
 
     private void removeExpired() {
-        List<K> list = Lists.newArrayList();
-        Iterator iterator = this.map.values().iterator();
+        /*List<K> list = Lists.newArrayList();
+        Iterator iterator = this.d.values().iterator();
 
         while (iterator.hasNext()) {
             V v0 = (V) iterator.next(); // CraftBukkit - decompile error
 
             if (v0.hasExpired()) {
-                list.add(v0.getUser());
+                list.add(v0.getKey());
             }
         }
 
@@ -111,9 +134,11 @@ public abstract class StoredUserList<K, V extends StoredUserEntry<K>> {
         while (iterator.hasNext()) {
             K k0 = (K) iterator.next(); // CraftBukkit - decompile error
 
-            this.map.remove(this.getKeyForUser(k0));
-        }
+            this.d.remove(this.a(k0));
+        }*/
 
+        this.map.values().removeIf(StoredUserEntry::hasExpired);
+        // Paper end
     }
 
     protected abstract StoredUserEntry<K> createEntry(JsonObject json);
@@ -123,6 +148,7 @@ public abstract class StoredUserList<K, V extends StoredUserEntry<K>> {
     }
 
     public void save() throws IOException {
+        this.removeExpired(); // Paper - remove expired values before saving
         JsonArray jsonarray = new JsonArray();
         Stream<JsonObject> stream = this.map.values().stream().map((jsonlistentry) -> { // CraftBukkit - decompile error
             JsonObject jsonobject = new JsonObject();
