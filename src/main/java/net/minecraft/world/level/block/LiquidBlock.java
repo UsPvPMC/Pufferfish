@@ -106,10 +106,26 @@ public class LiquidBlock extends Block implements BucketPickup {
     @Override
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean notify) {
         if (this.shouldSpreadLiquid(world, pos, state)) {
-            world.scheduleTick(pos, state.getFluidState().getType(), this.fluid.getTickDelay(world));
+            world.scheduleTick(pos, state.getFluidState().getType(), this.getFlowSpeed(world, pos)); // Paper
         }
 
     }
+
+    // Paper start - Get flow speed. Throttle if its water and flowing adjacent to lava
+    public int getFlowSpeed(Level world, BlockPos blockposition) {
+        if (this.material == net.minecraft.world.level.material.Material.WATER) {
+            if (
+                world.getMaterialIfLoaded(blockposition.north(1)) == net.minecraft.world.level.material.Material.LAVA ||
+                world.getMaterialIfLoaded(blockposition.south(1)) == net.minecraft.world.level.material.Material.LAVA ||
+                world.getMaterialIfLoaded(blockposition.west(1)) == net.minecraft.world.level.material.Material.LAVA ||
+                world.getMaterialIfLoaded(blockposition.east(1)) == net.minecraft.world.level.material.Material.LAVA
+            ) {
+                return world.paperConfig().environment.waterOverLavaFlowSpeed;
+            }
+        }
+        return this.fluid.getTickDelay(world);
+    }
+    // Paper end
 
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor world, BlockPos pos, BlockPos neighborPos) {
@@ -123,7 +139,7 @@ public class LiquidBlock extends Block implements BucketPickup {
     @Override
     public void neighborChanged(BlockState state, Level world, BlockPos pos, Block sourceBlock, BlockPos sourcePos, boolean notify) {
         if (this.shouldSpreadLiquid(world, pos, state)) {
-            world.scheduleTick(pos, state.getFluidState().getType(), this.fluid.getTickDelay(world));
+            world.scheduleTick(pos, state.getFluidState().getType(), this.getFlowSpeed(world, pos)); // Paper
         }
 
     }
