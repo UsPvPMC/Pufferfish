@@ -93,9 +93,16 @@ public class ArmorStand extends LivingEntity {
     public Rotations leftLegPose;
     public Rotations rightLegPose;
     public boolean canMove = true; // Paper
+    // Paper start - Allow ArmorStands not to tick
+    public boolean canTick = true;
+    public boolean canTickSetByAPI = false;
+    private boolean noTickPoseDirty = false;
+    private boolean noTickEquipmentDirty = false;
+    // Paper end
 
     public ArmorStand(EntityType<? extends ArmorStand> type, Level world) {
         super(type, world);
+        if (world != null) this.canTick = world.paperConfig().entities.armorStands.tick; // Paper - armour stand ticking
         this.handItems = NonNullList.withSize(2, ItemStack.EMPTY);
         this.armorItems = NonNullList.withSize(4, ItemStack.EMPTY);
         this.headPose = ArmorStand.DEFAULT_HEAD_POSE;
@@ -190,6 +197,7 @@ public class ArmorStand extends LivingEntity {
                 this.onEquipItem(enumitemslot, (ItemStack) this.armorItems.set(enumitemslot.getIndex(), itemstack), itemstack, silent); // CraftBukkit
         }
 
+        this.noTickEquipmentDirty = true; // Paper - Allow equipment to be updated even when tick disabled
     }
 
     @Override
@@ -240,6 +248,7 @@ public class ArmorStand extends LivingEntity {
         }
 
         nbt.put("Pose", this.writePose());
+        if (this.canTickSetByAPI) nbt.putBoolean("Paper.CanTickOverride", this.canTick); // Paper - persist no tick setting
     }
 
     @Override
@@ -271,6 +280,12 @@ public class ArmorStand extends LivingEntity {
         this.setNoBasePlate(nbt.getBoolean("NoBasePlate"));
         this.setMarker(nbt.getBoolean("Marker"));
         this.noPhysics = !this.hasPhysics();
+        // Paper start - persist no tick
+        if (nbt.contains("Paper.CanTickOverride")) {
+            this.canTick = nbt.getBoolean("Paper.CanTickOverride");
+            this.canTickSetByAPI = true;
+        }
+        // Paper end
         CompoundTag nbttagcompound1 = nbt.getCompound("Pose");
 
         this.readPose(nbttagcompound1);
@@ -669,7 +684,29 @@ public class ArmorStand extends LivingEntity {
 
     @Override
     public void tick() {
+        // Paper start
+        if (!this.canTick) {
+            if (this.noTickPoseDirty) {
+                this.noTickPoseDirty = false;
+                this.updatePose();
+            }
+
+            if (this.noTickEquipmentDirty) {
+                this.noTickEquipmentDirty = false;
+                this.detectEquipmentUpdates();
+            }
+
+            return;
+        }
+        // Paper end
+
         super.tick();
+        // Paper start - Split into separate method
+        updatePose();
+    }
+
+    public void updatePose() {
+        // Paper end
         Rotations vector3f = (Rotations) this.entityData.get(ArmorStand.DATA_HEAD_POSE);
 
         if (!this.headPose.equals(vector3f)) {
@@ -793,31 +830,37 @@ public class ArmorStand extends LivingEntity {
     public void setHeadPose(Rotations angle) {
         this.headPose = angle;
         this.entityData.set(ArmorStand.DATA_HEAD_POSE, angle);
+        this.noTickPoseDirty = true; // Paper - Allow updates when not ticking
     }
 
     public void setBodyPose(Rotations angle) {
         this.bodyPose = angle;
         this.entityData.set(ArmorStand.DATA_BODY_POSE, angle);
+        this.noTickPoseDirty = true; // Paper - Allow updates when not ticking
     }
 
     public void setLeftArmPose(Rotations angle) {
         this.leftArmPose = angle;
         this.entityData.set(ArmorStand.DATA_LEFT_ARM_POSE, angle);
+        this.noTickPoseDirty = true; // Paper - Allow updates when not ticking
     }
 
     public void setRightArmPose(Rotations angle) {
         this.rightArmPose = angle;
         this.entityData.set(ArmorStand.DATA_RIGHT_ARM_POSE, angle);
+        this.noTickPoseDirty = true; // Paper - Allow updates when not ticking
     }
 
     public void setLeftLegPose(Rotations angle) {
         this.leftLegPose = angle;
         this.entityData.set(ArmorStand.DATA_LEFT_LEG_POSE, angle);
+        this.noTickPoseDirty = true; // Paper - Allow updates when not ticking
     }
 
     public void setRightLegPose(Rotations angle) {
         this.rightLegPose = angle;
         this.entityData.set(ArmorStand.DATA_RIGHT_LEG_POSE, angle);
+        this.noTickPoseDirty = true; // Paper - Allow updates when not ticking
     }
 
     public Rotations getHeadPose() {
