@@ -706,15 +706,25 @@ public class Fox extends Animal implements VariantHolder<Fox.Type> {
     }
 
     @Override
-    protected void dropAllDeathLoot(DamageSource source) {
-        ItemStack itemstack = this.getItemBySlot(EquipmentSlot.MAINHAND);
+    // Paper start - Cancellable death event
+    protected org.bukkit.event.entity.EntityDeathEvent dropAllDeathLoot(DamageSource source) {
+        ItemStack itemstack = this.getItemBySlot(EquipmentSlot.MAINHAND).copy(); // Paper - modified by supercall
+
+        org.bukkit.event.entity.EntityDeathEvent deathEvent = super.dropAllDeathLoot(source);
+
+        // Below is code to drop
+
+        if (deathEvent == null || deathEvent.isCancelled()) {
+            return deathEvent;
+        }
+        // Paper end
 
         if (!itemstack.isEmpty()) {
             this.spawnAtLocation(itemstack);
             this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
         }
 
-        super.dropAllDeathLoot(source);
+        return deathEvent; // Paper
     }
 
     public static boolean isPathClear(Fox fox, LivingEntity chasedEntity) {

@@ -241,6 +241,10 @@ public class ServerPlayer extends Player {
     public int latency;
     public boolean wonGame;
     private int containerUpdateDelay; // Paper
+    // Paper start - cancellable death event
+    public boolean queueHealthUpdatePacket = false;
+    public net.minecraft.network.protocol.game.ClientboundSetHealthPacket queuedHealthUpdatePacket;
+    // Paper end
 
     // CraftBukkit start
     public String displayName;
@@ -829,6 +833,15 @@ public class ServerPlayer extends Player {
         String deathmessage = defaultMessage.getString();
         this.keepLevel = keepInventory; // SPIGOT-2222: pre-set keepLevel
         org.bukkit.event.entity.PlayerDeathEvent event = CraftEventFactory.callPlayerDeathEvent(this, loot, PaperAdventure.asAdventure(defaultMessage), defaultMessage.getString(), keepInventory); // Paper - Adventure
+        // Paper start - cancellable death event
+        if (event.isCancelled()) {
+            // make compatible with plugins that might have already set the health in an event listener
+            if (this.getHealth() <= 0) {
+                this.setHealth((float) event.getReviveHealth());
+            }
+            return;
+        }
+        // Paper end
 
         // SPIGOT-943 - only call if they have an inventory open
         if (this.containerMenu != this.inventoryMenu) {
@@ -980,8 +993,17 @@ public class ServerPlayer extends Player {
                         }
                     }
                 }
-
-                return super.hurt(source, amount);
+                // Paper start - cancellable death events
+                //return super.hurt(source, amount);
+                this.queueHealthUpdatePacket = true;
+                boolean damaged = super.hurt(source, amount);
+                this.queueHealthUpdatePacket = false;
+                if (this.queuedHealthUpdatePacket != null) {
+                    this.connection.send(this.queuedHealthUpdatePacket);
+                    this.queuedHealthUpdatePacket = null;
+                }
+                return damaged;
+                // Paper end
             }
         }
     }

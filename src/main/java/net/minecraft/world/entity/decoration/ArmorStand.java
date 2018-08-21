@@ -542,8 +542,9 @@ public class ArmorStand extends LivingEntity {
                                 this.gameEvent(GameEvent.ENTITY_DAMAGE, source.getEntity());
                                 this.lastHit = i;
                             } else {
-                                this.brokenByPlayer(source);
+                                org.bukkit.event.entity.EntityDeathEvent event = this.brokenByPlayer(source); // Paper
                                 this.showBreakingParticles();
+                                if (!event.isCancelled()) // Paper
                                 this.discard(); // CraftBukkit - SPIGOT-4890: remain as this.discard() since above damagesource method will call death event
                             }
 
@@ -605,7 +606,7 @@ public class ArmorStand extends LivingEntity {
 
     }
 
-    private void brokenByPlayer(DamageSource damageSource) {
+    private org.bukkit.event.entity.EntityDeathEvent brokenByPlayer(DamageSource damageSource) { // Paper
         ItemStack itemstack = new ItemStack(Items.ARMOR_STAND);
 
         if (this.hasCustomName()) {
@@ -613,10 +614,10 @@ public class ArmorStand extends LivingEntity {
         }
 
         drops.add(org.bukkit.craftbukkit.inventory.CraftItemStack.asBukkitCopy(itemstack)); // CraftBukkit - add to drops
-        this.brokenByAnything(damageSource);
+        return this.brokenByAnything(damageSource); // Paper
     }
 
-    private void brokenByAnything(DamageSource damageSource) {
+    private org.bukkit.event.entity.EntityDeathEvent brokenByAnything(DamageSource damageSource) { // Paper
         this.playBrokenSound();
         // this.dropAllDeathLoot(damagesource); // CraftBukkit - moved down
 
@@ -638,7 +639,7 @@ public class ArmorStand extends LivingEntity {
                 this.armorItems.set(i, ItemStack.EMPTY);
             }
         }
-        this.dropAllDeathLoot(damageSource); // CraftBukkit - moved from above
+        return this.dropAllDeathLoot(damageSource); // CraftBukkit - moved from above // Paper
 
     }
 
@@ -770,7 +771,8 @@ public class ArmorStand extends LivingEntity {
 
     @Override
     public void kill() {
-        org.bukkit.craftbukkit.event.CraftEventFactory.callEntityDeathEvent(this, drops); // CraftBukkit - call event
+        org.bukkit.event.entity.EntityDeathEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callEntityDeathEvent(this, drops); // CraftBukkit - call event // Paper - make cancellable
+        if (event.isCancelled()) return; // Paper - make cancellable
         this.remove(Entity.RemovalReason.KILLED);
         this.gameEvent(GameEvent.ENTITY_DIE);
     }

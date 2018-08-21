@@ -1065,7 +1065,13 @@ public abstract class Mob extends LivingEntity implements Targeting {
                 }
 
                 this.spawnAtLocation(itemstack);
+                if (this.clearEquipmentSlots) { // Paper
                 this.setItemSlot(enumitemslot, ItemStack.EMPTY);
+                // Paper start
+                } else {
+                    this.clearedEquipmentSlots.add(enumitemslot);
+                }
+                // Paper end
             }
         }
 

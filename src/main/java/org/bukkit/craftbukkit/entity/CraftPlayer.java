@@ -2312,7 +2312,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void sendHealthUpdate() {
-        this.getHandle().connection.send(new ClientboundSetHealthPacket(this.getScaledHealth(), this.getHandle().getFoodData().getFoodLevel(), this.getHandle().getFoodData().getSaturationLevel()));
+        // Paper start - cancellable death event
+        ClientboundSetHealthPacket packet = new ClientboundSetHealthPacket(this.getScaledHealth(), this.getHandle().getFoodData().getFoodLevel(), this.getHandle().getFoodData().getSaturationLevel());
+        if (this.getHandle().queueHealthUpdatePacket) {
+            this.getHandle().queuedHealthUpdatePacket = packet;
+        } else {
+            this.getHandle().connection.send(packet);
+        }
+        // Paper end
     }
 
     public void injectScaledMaxHealth(Collection<AttributeInstance> collection, boolean force) {
