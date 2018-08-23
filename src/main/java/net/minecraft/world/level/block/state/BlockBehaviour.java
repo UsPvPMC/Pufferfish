@@ -753,6 +753,14 @@ public abstract class BlockBehaviour implements FeatureElement {
             this.spawnParticlesOnBreak = blockbase_info.spawnParticlesOnBreak;
             this.conditionallyFullOpaque = this.isOpaque() & this.isTransparentOnSomeFaces(); // Paper
         }
+        // Paper start - impl cached craft block data, lazy load to fix issue with loading at the wrong time
+        private org.bukkit.craftbukkit.block.data.CraftBlockData cachedCraftBlockData;
+
+        public org.bukkit.craftbukkit.block.data.CraftBlockData createCraftBlockData() {
+            if (cachedCraftBlockData == null) cachedCraftBlockData = org.bukkit.craftbukkit.block.data.CraftBlockData.createData(asState());
+            return (org.bukkit.craftbukkit.block.data.CraftBlockData) cachedCraftBlockData.clone();
+        }
+        // Paper end
 
         // Paper start
         protected boolean shapeExceedsCube = true;
