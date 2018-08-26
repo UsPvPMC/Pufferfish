@@ -3,6 +3,7 @@ package net.minecraft.world.level.levelgen;
 import java.util.Iterator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.ServerStatsCounter;
@@ -71,9 +72,19 @@ public class PhantomSpawner implements CustomSpawner {
                                             int k = 1 + randomsource.nextInt(difficultydamagescaler.getDifficulty().getId() + 1);
 
                                             for (int l = 0; l < k; ++l) {
+                                                // Paper start
+                                                com.destroystokyo.paper.event.entity.PhantomPreSpawnEvent event = new com.destroystokyo.paper.event.entity.PhantomPreSpawnEvent(MCUtil.toLocation(world, blockposition1), ((ServerPlayer) entityhuman).getBukkitEntity(), org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL);
+                                                if (!event.callEvent()) {
+                                                    if (event.shouldAbortSpawn()) {
+                                                        break;
+                                                    }
+                                                    continue;
+                                                }
+                                                // Paper end
                                                 Phantom entityphantom = (Phantom) EntityType.PHANTOM.create(world);
 
                                                 if (entityphantom != null) {
+                                                    entityphantom.setSpawningEntity(entityhuman.getUUID()); // Paper
                                                     entityphantom.moveTo(blockposition1, 0.0F, 0.0F);
                                                     groupdataentity = entityphantom.finalizeSpawn(world, difficultydamagescaler, MobSpawnType.NATURAL, groupdataentity, (CompoundTag) null);
                                                     world.addFreshEntityWithPassengers(entityphantom, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL); // CraftBukkit

@@ -171,6 +171,11 @@ public class Phantom extends FlyingMob implements Enemy {
         }
 
         this.setPhantomSize(nbt.getInt("Size"));
+        // Paper start
+        if (nbt.hasUUID("Paper.SpawningEntity")) {
+            this.spawningEntity = nbt.getUUID("Paper.SpawningEntity");
+        }
+        // Paper end
     }
 
     @Override
@@ -180,6 +185,11 @@ public class Phantom extends FlyingMob implements Enemy {
         nbt.putInt("AY", this.anchorPoint.getY());
         nbt.putInt("AZ", this.anchorPoint.getZ());
         nbt.putInt("Size", this.getPhantomSize());
+        // Paper start
+        if (this.spawningEntity != null) {
+            nbt.putUUID("Paper.SpawningEntity", this.spawningEntity);
+        }
+        // Paper end
     }
 
     @Override
@@ -236,6 +246,14 @@ public class Phantom extends FlyingMob implements Enemy {
         return (double) this.getEyeHeight();
     }
 
+    // Paper start
+    java.util.UUID spawningEntity;
+
+    public java.util.UUID getSpawningEntity() {
+        return spawningEntity;
+    }
+    public void setSpawningEntity(java.util.UUID entity) { this.spawningEntity = entity; }
+    // Paper end
     private static enum AttackPhase {
 
         CIRCLE, SWOOP;
