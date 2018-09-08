@@ -372,6 +372,7 @@ public final class ItemStack {
                     enuminteractionresult = InteractionResult.FAIL; // cancel placement
                     // PAIL: Remove this when MC-99075 fixed
                     placeEvent.getPlayer().updateInventory();
+                    world.capturedTileEntities.clear(); // Paper - clear out tile entities as chests and such will pop loot
                     // revert back all captured blocks
                     world.preventPoiUpdated = true; // CraftBukkit - SPIGOT-5710
                     for (BlockState blockstate : blocks) {
