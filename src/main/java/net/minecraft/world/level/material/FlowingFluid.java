@@ -174,7 +174,8 @@ public abstract class FlowingFluid extends Fluid {
                 Direction enumdirection = (Direction) entry.getKey();
                 FluidState fluid1 = (FluidState) entry.getValue();
                 BlockPos blockposition1 = pos.relative(enumdirection);
-                BlockState iblockdata1 = world.getBlockState(blockposition1);
+                BlockState iblockdata1 = world.getBlockStateIfLoaded(blockposition1); // Paper
+                if (iblockdata1 == null) continue; // Paper
 
                 if (this.canSpreadTo(world, pos, blockState, enumdirection, blockposition1, iblockdata1, world.getFluidState(blockposition1), fluid1.getType())) {
                     // CraftBukkit start
@@ -201,7 +202,9 @@ public abstract class FlowingFluid extends Fluid {
         while (iterator.hasNext()) {
             Direction enumdirection = (Direction) iterator.next();
             BlockPos blockposition1 = pos.relative(enumdirection);
-            BlockState iblockdata1 = world.getBlockState(blockposition1);
+
+            BlockState iblockdata1 = world.getBlockStateIfLoaded(blockposition1); // Paper
+            if (iblockdata1 == null) continue; // Paper
             FluidState fluid = iblockdata1.getFluidState();
 
             if (fluid.getType().isSame(this) && this.canPassThroughWall(enumdirection, world, pos, state, blockposition1, iblockdata1)) {
@@ -318,11 +321,18 @@ public abstract class FlowingFluid extends Fluid {
             if (enumdirection1 != enumdirection) {
                 BlockPos blockposition2 = blockposition.relative(enumdirection1);
                 short short0 = FlowingFluid.getCacheKey(blockposition1, blockposition2);
-                Pair<BlockState, FluidState> pair = (Pair) short2objectmap.computeIfAbsent(short0, (short1) -> {
-                    BlockState iblockdata1 = world.getBlockState(blockposition2);
+                // Paper start - avoid loading chunks
+                Pair<BlockState, FluidState> pair = short2objectmap.get(short0);
+                if (pair == null) {
+                    BlockState iblockdatax = world.getBlockStateIfLoaded(blockposition2);
+                    if (iblockdatax == null) {
+                        continue;
+                    }
 
-                    return Pair.of(iblockdata1, iblockdata1.getFluidState());
-                });
+                    pair = Pair.of(iblockdatax, iblockdatax.getFluidState());
+                    short2objectmap.put(short0, pair);
+                }
+                // Paper end
                 BlockState iblockdata1 = (BlockState) pair.getFirst();
                 FluidState fluid = (FluidState) pair.getSecond();
 
@@ -394,11 +404,16 @@ public abstract class FlowingFluid extends Fluid {
             Direction enumdirection = (Direction) iterator.next();
             BlockPos blockposition1 = pos.relative(enumdirection);
             short short0 = FlowingFluid.getCacheKey(pos, blockposition1);
-            Pair<BlockState, FluidState> pair = (Pair) short2objectmap.computeIfAbsent(short0, (short1) -> {
-                BlockState iblockdata1 = world.getBlockState(blockposition1);
+            // Paper start
+            Pair pair = (Pair) short2objectmap.get(short0);
+            if (pair == null) {
+                BlockState iblockdatax = world.getBlockStateIfLoaded(blockposition1);
+                if (iblockdatax == null) continue;
 
-                return Pair.of(iblockdata1, iblockdata1.getFluidState());
-            });
+                pair = Pair.of(iblockdatax, iblockdatax.getFluidState());
+                short2objectmap.put(short0, pair);
+            }
+            // Paper end
             BlockState iblockdata1 = (BlockState) pair.getFirst();
             FluidState fluid = (FluidState) pair.getSecond();
             FluidState fluid1 = this.getNewLiquid(world, blockposition1, iblockdata1);
