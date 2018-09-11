@@ -129,7 +129,9 @@ public class RemoveBlockGoal extends MoveToBlockGoal {
 
     @Nullable
     private BlockPos getPosWithBlock(BlockPos pos, BlockGetter world) {
-        if (world.getBlockState(pos).is(this.blockToRemove)) {
+        net.minecraft.world.level.block.state.BlockState block = world.getBlockStateIfLoaded(pos); // Paper
+        if (block == null) return null; // Paper
+        if (block.is(this.blockToRemove)) { // Paper
             return pos;
         } else {
             BlockPos[] ablockposition = new BlockPos[]{pos.below(), pos.west(), pos.east(), pos.north(), pos.south(), pos.below().below()};
@@ -139,7 +141,8 @@ public class RemoveBlockGoal extends MoveToBlockGoal {
             for (int j = 0; j < i; ++j) {
                 BlockPos blockposition1 = ablockposition1[j];
 
-                if (world.getBlockState(blockposition1).is(this.blockToRemove)) {
+                net.minecraft.world.level.block.state.BlockState block2 = world.getBlockStateIfLoaded(blockposition1); // Paper
+                if (block2 != null && block2.is(this.blockToRemove)) { // Paper
                     return blockposition1;
                 }
             }
@@ -150,7 +153,7 @@ public class RemoveBlockGoal extends MoveToBlockGoal {
 
     @Override
     protected boolean isValidTarget(LevelReader world, BlockPos pos) {
-        ChunkAccess ichunkaccess = world.getChunk(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()), ChunkStatus.FULL, false);
+        ChunkAccess ichunkaccess = world.getChunkIfLoadedImmediately(pos.getX() >> 4, pos.getZ() >> 4); // Paper
 
         return ichunkaccess == null ? false : ichunkaccess.getBlockState(pos).is(this.blockToRemove) && ichunkaccess.getBlockState(pos.above()).isAir() && ichunkaccess.getBlockState(pos.above(2)).isAir();
     }
