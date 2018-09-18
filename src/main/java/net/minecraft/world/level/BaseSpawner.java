@@ -134,11 +134,11 @@ public abstract class BaseSpawner {
 
                         org.bukkit.entity.EntityType type = org.bukkit.entity.EntityType.fromName(key);
                         if (type != null) {
-                            com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent event;
-                            event = new com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent(
+                            com.destroystokyo.paper.event.entity.PreSpawnerSpawnEvent event;
+                            event = new com.destroystokyo.paper.event.entity.PreSpawnerSpawnEvent(
                                 io.papermc.paper.util.MCUtil.toLocation(world, d0, d1, d2),
                                 type,
-                                org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER
+                                io.papermc.paper.util.MCUtil.toLocation(world, pos)
                             );
                             if (!event.callEvent()) {
                                 flag = true;
