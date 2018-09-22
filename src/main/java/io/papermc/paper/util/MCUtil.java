@@ -15,6 +15,8 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.DistanceManager;
@@ -532,6 +534,21 @@ public final class MCUtil {
             default:
                 return null;
         }
+    }
+
+    @Nullable
+    public static Component getBaseComponentFromNbt(String key, CompoundTag compound) {
+        if (!compound.contains(key)) {
+            return null;
+        }
+        String string = compound.getString(key);
+        try {
+            return Component.Serializer.fromJson(string);
+        } catch (com.google.gson.JsonParseException e) {
+            org.bukkit.Bukkit.getLogger().warning("Unable to parse " + key + " from " + compound +": " + e.getMessage());
+        }
+
+        return null;
     }
 
     public static ChunkStatus getChunkStatus(ChunkHolder chunk) {

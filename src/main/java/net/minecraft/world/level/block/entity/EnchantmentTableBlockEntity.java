@@ -42,7 +42,7 @@ public class EnchantmentTableBlockEntity extends BlockEntity implements Nameable
     public void load(CompoundTag nbt) {
         super.load(nbt);
         if (nbt.contains("CustomName", 8)) {
-            this.name = Component.Serializer.fromJson(nbt.getString("CustomName"));
+            this.name = io.papermc.paper.util.MCUtil.getBaseComponentFromNbt("CustomName", nbt); // Paper - Catch ParseException
         }
 
     }

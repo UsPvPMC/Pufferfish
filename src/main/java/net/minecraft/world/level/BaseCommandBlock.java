@@ -72,7 +72,7 @@ public abstract class BaseCommandBlock implements CommandSource {
         this.command = nbt.getString("Command");
         this.successCount = nbt.getInt("SuccessCount");
         if (nbt.contains("CustomName", 8)) {
-            this.setName(Component.Serializer.fromJson(nbt.getString("CustomName")));
+            this.setName(io.papermc.paper.util.MCUtil.getBaseComponentFromNbt("CustomName", nbt)); // Paper - Catch ParseException
         }
 
         if (nbt.contains("TrackOutput", 1)) {
