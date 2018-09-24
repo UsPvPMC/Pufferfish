@@ -299,6 +299,7 @@ public class BeehiveBlockEntity extends BlockEntity {
     }
 
     private static void setBeeReleaseData(int ticks, Bee bee) {
+        if (!bee.ageLocked) { // Paper - respect age lock
         int j = bee.getAge();
 
         if (j < 0) {
@@ -306,6 +307,7 @@ public class BeehiveBlockEntity extends BlockEntity {
         } else if (j > 0) {
             bee.setAge(Math.max(0, j - ticks));
         }
+        } // Paper - respect age lock
 
         bee.setInLoveTime(Math.max(0, bee.getInLoveTime() - ticks));
     }
