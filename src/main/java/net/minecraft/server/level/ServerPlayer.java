@@ -1931,6 +1931,19 @@ public class ServerPlayer extends Player {
 
         this.camera = (Entity) (entity == null ? this : entity);
         if (entity1 != this.camera) {
+            // Paper start - Add PlayerStartSpectatingEntityEvent and PlayerStopSpectatingEntity Event
+            if (this.camera == this) {
+                com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent playerStopSpectatingEntityEvent = new com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent(this.getBukkitEntity(), entity1.getBukkitEntity());
+                if (!playerStopSpectatingEntityEvent.callEvent()) {
+                    return;
+                }
+            } else {
+                com.destroystokyo.paper.event.player.PlayerStartSpectatingEntityEvent playerStartSpectatingEntityEvent = new com.destroystokyo.paper.event.player.PlayerStartSpectatingEntityEvent(this.getBukkitEntity(), entity1.getBukkitEntity(), entity.getBukkitEntity());
+                if (!playerStartSpectatingEntityEvent.callEvent()) {
+                    return;
+                }
+            }
+            // Paper end
             Level world = this.camera.getLevel();
 
             if (world instanceof ServerLevel) {
@@ -1946,7 +1959,6 @@ public class ServerPlayer extends Player {
             this.connection.send(new ClientboundSetCameraPacket(this.camera));
             this.connection.resetPosition();
         }
-
     }
 
     @Override
