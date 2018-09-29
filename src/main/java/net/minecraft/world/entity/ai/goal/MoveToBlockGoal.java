@@ -14,7 +14,7 @@ public abstract class MoveToBlockGoal extends Goal {
     protected int nextStartTick;
     protected int tryTicks;
     private int maxStayTicks;
-    protected BlockPos blockPos = BlockPos.ZERO;
+    protected BlockPos blockPos = BlockPos.ZERO; @Deprecated public final BlockPos getTargetPosition() { return this.blockPos; } // Paper - OBFHELPER
     private boolean reachedTarget;
     private final int searchRange;
     private final int verticalSearchRange;

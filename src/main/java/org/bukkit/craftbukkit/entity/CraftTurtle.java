@@ -34,4 +34,31 @@ public class CraftTurtle extends CraftAnimals implements Turtle {
     public boolean isLayingEgg() {
         return this.getHandle().isLayingEgg();
     }
+
+    // Paper start
+    @Override
+    public org.bukkit.Location getHome() {
+        return io.papermc.paper.util.MCUtil.toLocation(getHandle().getLevel(), getHandle().getHomePos());
+    }
+
+    @Override
+    public void setHome(org.bukkit.Location location) {
+        getHandle().setHomePos(io.papermc.paper.util.MCUtil.toBlockPosition(location));
+    }
+
+    @Override
+    public boolean isGoingHome() {
+        return getHandle().isGoingHome();
+    }
+
+    @Override
+    public boolean isDigging() {
+        return getHandle().isLayingEgg();
+    }
+
+    @Override
+    public void setHasEgg(boolean hasEgg) {
+        getHandle().setHasEgg(hasEgg);
+    }
+    // Paper end
 }
