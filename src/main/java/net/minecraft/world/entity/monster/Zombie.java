@@ -95,6 +95,7 @@ public class Zombie extends Monster {
     private int inWaterTime;
     public int conversionTime;
     private int lastTick = MinecraftServer.currentTick; // CraftBukkit - add field
+    private boolean shouldBurnInDay = true; // Paper
 
     public Zombie(EntityType<? extends Zombie> type, Level world) {
         super(type, world);
@@ -263,6 +264,12 @@ public class Zombie extends Monster {
         super.aiStep();
     }
 
+    // Paper start
+    public void stopDrowning() {
+        this.conversionTime = -1;
+        this.getEntityData().set(Zombie.DATA_DROWNED_CONVERSION_ID, false);
+    }
+    // Paper end
     public void startUnderWaterConversion(int ticksUntilWaterConversion) {
         this.lastTick = MinecraftServer.currentTick; // CraftBukkit
         this.conversionTime = ticksUntilWaterConversion;
@@ -292,8 +299,14 @@ public class Zombie extends Monster {
     }
 
     public boolean isSunSensitive() {
-        return true;
+        return this.shouldBurnInDay; // Paper - use api value instead
     }
+
+    // Paper start
+    public void setShouldBurnInDay(boolean shouldBurnInDay) {
+        this.shouldBurnInDay = shouldBurnInDay;
+    }
+    // Paper end
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
@@ -414,6 +427,7 @@ public class Zombie extends Monster {
         nbt.putBoolean("CanBreakDoors", this.canBreakDoors());
         nbt.putInt("InWaterTime", this.isInWater() ? this.inWaterTime : -1);
         nbt.putInt("DrownedConversionTime", this.isUnderWaterConverting() ? this.conversionTime : -1);
+        nbt.putBoolean("Paper.ShouldBurnInDay", this.shouldBurnInDay); // Paper
     }
 
     @Override
@@ -425,6 +439,11 @@ public class Zombie extends Monster {
         if (nbt.contains("DrownedConversionTime", 99) && nbt.getInt("DrownedConversionTime") > -1) {
             this.startUnderWaterConversion(nbt.getInt("DrownedConversionTime"));
         }
+        // Paper start
+        if (nbt.contains("Paper.ShouldBurnInDay")) {
+            this.shouldBurnInDay = nbt.getBoolean("Paper.ShouldBurnInDay");
+        }
+        // Paper end
 
     }
 
