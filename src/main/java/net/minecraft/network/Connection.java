@@ -487,6 +487,26 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
                     this.getPacketListener().onDisconnect(Component.translatable("multiplayer.disconnect.generic"));
                 }
                 this.queue.clear(); // Free up packet queue.
+                // Paper start - Add PlayerConnectionCloseEvent
+                final PacketListener packetListener = this.getPacketListener();
+                if (packetListener instanceof net.minecraft.server.network.ServerGamePacketListenerImpl) {
+                    /* Player was logged in */
+                    final net.minecraft.server.network.ServerGamePacketListenerImpl playerConnection = (net.minecraft.server.network.ServerGamePacketListenerImpl) packetListener;
+                    new com.destroystokyo.paper.event.player.PlayerConnectionCloseEvent(playerConnection.player.getUUID(),
+                        playerConnection.player.getScoreboardName(), ((java.net.InetSocketAddress)address).getAddress(), false).callEvent();
+                } else if (packetListener instanceof net.minecraft.server.network.ServerLoginPacketListenerImpl) {
+                    /* Player is login stage */
+                    final net.minecraft.server.network.ServerLoginPacketListenerImpl loginListener = (net.minecraft.server.network.ServerLoginPacketListenerImpl) packetListener;
+                    switch (loginListener.state) {
+                        case READY_TO_ACCEPT:
+                        case DELAY_ACCEPT:
+                        case ACCEPTED:
+                            final com.mojang.authlib.GameProfile profile = loginListener.gameProfile; /* Should be non-null at this stage */
+                            new com.destroystokyo.paper.event.player.PlayerConnectionCloseEvent(profile.getId(), profile.getName(),
+                                ((java.net.InetSocketAddress)address).getAddress(), false).callEvent();
+                    }
+                }
+                // Paper end
             }
 
         }
