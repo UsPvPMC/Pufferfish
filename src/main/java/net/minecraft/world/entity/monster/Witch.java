@@ -157,21 +157,24 @@ public class Witch extends Raider implements RangedAttackMob {
                 }
 
                 if (potionregistry != null) {
-                    // Paper start
                     ItemStack potion = PotionUtils.setPotion(new ItemStack(Items.POTION), potionregistry);
-                    org.bukkit.inventory.ItemStack bukkitStack = com.destroystokyo.paper.event.entity.WitchReadyPotionEvent.process((org.bukkit.entity.Witch) this.getBukkitEntity(), org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(potion));
-                    this.setItemSlot(EquipmentSlot.MAINHAND, org.bukkit.craftbukkit.inventory.CraftItemStack.asNMSCopy(bukkitStack));
+                    // Paper start - logic moved into setDrinkingPotion, copy exact impl into the method and then comment out
+                    this.setDrinkingPotion(potion);
+//                    org.bukkit.inventory.ItemStack bukkitStack = com.destroystokyo.paper.event.entity.WitchReadyPotionEvent.process((org.bukkit.entity.Witch) this.getBukkitEntity(), org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(potion));
+//                    this.setSlot(EnumItemSlot.MAINHAND, org.bukkit.craftbukkit.inventory.CraftItemStack.asNMSCopy(bukkitStack));
+//                    // Paper end
+//                    this.bq = this.getItemInMainHand().k();
+//                    this.v(true);
+//                    if (!this.isSilent()) {
+//                        this.world.playSound((EntityHuman) null, this.locX(), this.locY(), this.locZ(), SoundEffects.ENTITY_WITCH_DRINK, this.getSoundCategory(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
+//                    }
+//
+//                    AttributeModifiable attributemodifiable = this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED);
+//
+//                    attributemodifiable.removeModifier(EntityWitch.bo);
+//                    attributemodifiable.b(EntityWitch.bo);
                     // Paper end
-                    this.usingTime = this.getMainHandItem().getUseDuration();
-                    this.setUsingItem(true);
-                    if (!this.isSilent()) {
-                        this.level.playSound((Player) null, this.getX(), this.getY(), this.getZ(), SoundEvents.WITCH_DRINK, this.getSoundSource(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
-                    }
 
-                    AttributeInstance attributemodifiable = this.getAttribute(Attributes.MOVEMENT_SPEED);
-
-                    attributemodifiable.removeModifier(Witch.SPEED_MODIFIER_DRINKING);
-                    attributemodifiable.addTransientModifier(Witch.SPEED_MODIFIER_DRINKING);
                 }
             }
 
@@ -182,6 +185,24 @@ public class Witch extends Raider implements RangedAttackMob {
 
         super.aiStep();
     }
+
+    // Paper start - moved to its own method
+    public void setDrinkingPotion(ItemStack potion) {
+        org.bukkit.inventory.ItemStack bukkitStack = com.destroystokyo.paper.event.entity.WitchReadyPotionEvent.process((org.bukkit.entity.Witch) this.getBukkitEntity(), org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(potion));
+        this.setItemSlot(EquipmentSlot.MAINHAND, org.bukkit.craftbukkit.inventory.CraftItemStack.asNMSCopy(bukkitStack));
+        // Paper end
+        this.usingTime = this.getMainHandItem().getUseDuration();
+        this.setUsingItem(true);
+        if (!this.isSilent()) {
+            this.level.playSound((Player) null, this.getX(), this.getY(), this.getZ(), SoundEvents.WITCH_DRINK, this.getSoundSource(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
+        }
+
+        AttributeInstance attributemodifiable = this.getAttribute(Attributes.MOVEMENT_SPEED);
+
+        attributemodifiable.removeModifier(Witch.SPEED_MODIFIER_DRINKING);
+        attributemodifiable.addTransientModifier(Witch.SPEED_MODIFIER_DRINKING);
+    }
+    // Paper end
 
     @Override
     public SoundEvent getCelebrateSound() {
