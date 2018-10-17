@@ -60,6 +60,18 @@ public abstract class Projectile extends Entity implements TraceableEntity {
             return this.cachedOwner;
         } else if (this.ownerUUID != null && this.level instanceof ServerLevel) {
             this.cachedOwner = ((ServerLevel) this.level).getEntity(this.ownerUUID);
+            // Paper start - check all worlds
+            if (this.cachedOwner == null) {
+                for (final ServerLevel level : this.level.getServer().getAllLevels()) {
+                    if (level == this.level) continue;
+                    final Entity entity = level.getEntity(this.ownerUUID);
+                    if (entity != null) {
+                        this.cachedOwner = entity;
+                        break;
+                    }
+                }
+            }
+            // Paper end
             return this.cachedOwner;
         } else {
             return null;
