@@ -2341,6 +2341,7 @@ public class ServerPlayer extends Player {
 
         this.setHealth(this.getMaxHealth());
         this.stopUsingItem(); // CraftBukkit - SPIGOT-6682: Clear active item on reset
+        this.setAirSupply(this.getMaxAirSupply()); // Paper
         this.remainingFireTicks = 0;
         this.fallDistance = 0;
         this.foodData = new FoodData(this);
