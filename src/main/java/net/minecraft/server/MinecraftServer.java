@@ -321,6 +321,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         S s0 = serverFactory.apply(thread); // CraftBukkit - decompile error
 
         atomicreference.set(s0);
+        thread.setPriority(Thread.NORM_PRIORITY+2); // Paper - boost priority
         thread.start();
         return s0;
     }

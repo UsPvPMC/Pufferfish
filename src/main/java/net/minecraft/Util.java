@@ -80,7 +80,7 @@ public class Util {
     private static final int DEFAULT_MAX_THREADS = 255;
     private static final String MAX_THREADS_SYSTEM_PROPERTY = "max.bg.threads";
     private static final AtomicInteger WORKER_COUNT = new AtomicInteger(1);
-    private static final ExecutorService BACKGROUND_EXECUTOR = makeExecutor("Main");
+    private static final ExecutorService BACKGROUND_EXECUTOR = makeExecutor("Main", -1); // Paper - add -1 priority
     // Paper start - don't submit BLOCKING PROFILE LOOKUPS to the world gen thread
     public static final ExecutorService PROFILE_EXECUTOR = Executors.newFixedThreadPool(2, new java.util.concurrent.ThreadFactory() {
 
@@ -143,14 +143,18 @@ public class Util {
         return FILENAME_DATE_TIME_FORMATTER.format(ZonedDateTime.now());
     }
 
-    private static ExecutorService makeExecutor(String name) {
-        int i = Mth.clamp(Runtime.getRuntime().availableProcessors() - 1, 1, getMaxThreads());
+    private static ExecutorService makeExecutor(String s, int priorityModifier) { // Paper - add priority
+        // Paper start - use simpler thread pool that allows 1 thread
+        int i = Math.min(8, Math.max(Runtime.getRuntime().availableProcessors() - 2, 1));
+        i = Integer.getInteger("Paper.WorkerThreadCount", i);
         ExecutorService executorService;
+
         if (i <= 0) {
             executorService = MoreExecutors.newDirectExecutorService();
         } else {
-            executorService = new ForkJoinPool(i, (forkJoinPool) -> {
-                ForkJoinWorkerThread forkJoinWorkerThread = new ForkJoinWorkerThread(forkJoinPool) {
+            executorService = new java.util.concurrent.ThreadPoolExecutor(i, i,0L, TimeUnit.MILLISECONDS, new java.util.concurrent.LinkedBlockingQueue<Runnable>(), target -> new io.papermc.paper.util.ServerWorkerThread(target, s, priorityModifier));
+        }
+        /*
                     @Override
                     protected void onTermination(Throwable throwable) {
                         if (throwable != null) {
@@ -166,6 +170,7 @@ public class Util {
                 return forkJoinWorkerThread;
             }, Util::onThreadException, true);
         }
+        }*/ // Paper end
 
         return executorService;
     }
