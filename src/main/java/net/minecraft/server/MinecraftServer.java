@@ -1391,12 +1391,24 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
         MinecraftTimings.timeUpdateTimer.startTiming(); // Spigot // Paper
         // Send time updates to everyone, it will get the right time from the world the player is in.
-        if (this.tickCount % 20 == 0) {
-            for (int i = 0; i < this.getPlayerList().players.size(); ++i) {
-                ServerPlayer entityplayer = (ServerPlayer) this.getPlayerList().players.get(i);
-                entityplayer.connection.send(new ClientboundSetTimePacket(entityplayer.level.getGameTime(), entityplayer.getPlayerTime(), entityplayer.level.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT))); // Add support for per player time
+        // Paper start - optimize time updates
+        for (final ServerLevel world : this.getAllLevels()) {
+            final boolean doDaylight = world.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT);
+            final long dayTime = world.getDayTime();
+            long worldTime = world.getGameTime();
+            final ClientboundSetTimePacket worldPacket = new ClientboundSetTimePacket(worldTime, dayTime, doDaylight);
+            for (Player entityhuman : world.players()) {
+                if (!(entityhuman instanceof ServerPlayer) || (tickCount + entityhuman.getId()) % 20 != 0) {
+                    continue;
+                }
+                ServerPlayer entityplayer = (ServerPlayer) entityhuman;
+                long playerTime = entityplayer.getPlayerTime();
+                ClientboundSetTimePacket packet = (playerTime == dayTime) ? worldPacket :
+                    new ClientboundSetTimePacket(worldTime, playerTime, doDaylight);
+                entityplayer.connection.send(packet); // Add support for per player time
             }
         }
+        // Paper end
         MinecraftTimings.timeUpdateTimer.stopTiming(); // Spigot // Paper
 
         while (iterator.hasNext()) {
