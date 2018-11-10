@@ -129,8 +129,11 @@ public class SpongeBlock extends Block {
                         // NOP
                     } else if (material == Material.WATER_PLANT || material == Material.REPLACEABLE_WATER_PLANT) {
                         BlockEntity tileentity = iblockdata.hasBlockEntity() ? world.getBlockEntity(blockposition2) : null;
-
-                        dropResources(iblockdata, world, blockposition2, tileentity);
+                        // Paper start
+                        if (block.getHandle().getMaterial() == Material.AIR) {
+                            dropResources(iblockdata, world, blockposition2, tileentity);
+                        }
+                        // Paper end
                     }
                 }
                 world.setBlock(blockposition2, block.getHandle(), block.getFlag());
