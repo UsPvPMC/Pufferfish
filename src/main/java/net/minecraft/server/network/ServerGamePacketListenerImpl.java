@@ -1659,6 +1659,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             case START_DESTROY_BLOCK:
             case ABORT_DESTROY_BLOCK:
             case STOP_DESTROY_BLOCK:
+                // Paper start - Don't allow digging in unloaded chunks
+                if (this.player.level.getChunkIfLoadedImmediately(blockposition.getX() >> 4, blockposition.getZ() >> 4) == null) {
+                    this.player.connection.ackBlockChangesUpTo(packet.getSequence());
+                    return;
+                }
+                // Paper end - Don't allow digging in unloaded chunks
                 this.player.gameMode.handleBlockBreakAction(blockposition, packetplayinblockdig_enumplayerdigtype, packet.getDirection(), this.player.level.getMaxBuildHeight(), packet.getSequence());
                 this.player.connection.ackBlockChangesUpTo(packet.getSequence());
                 return;
