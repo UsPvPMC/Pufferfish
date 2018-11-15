@@ -1147,7 +1147,13 @@ public abstract class Player extends LivingEntity {
 
     @Override
     public void removeVehicle() {
-        super.removeVehicle();
+        // Paper start
+        stopRiding(false);
+    }
+    @Override
+    public void stopRiding(boolean suppressCancellation) {
+        // Paper end
+        super.stopRiding(suppressCancellation); // Paper - suppress
         this.boardingCooldown = 0;
     }
 
