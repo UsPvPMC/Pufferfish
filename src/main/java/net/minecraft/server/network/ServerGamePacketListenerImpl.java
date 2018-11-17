@@ -1119,6 +1119,45 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
     @Override
     public void handleEditBook(ServerboundEditBookPacket packet) {
+        // Paper start
+        if (!this.cserver.isPrimaryThread()) {
+            List<String> pageList = packet.getPages();
+            long byteTotal = 0;
+            int maxBookPageSize = io.papermc.paper.configuration.GlobalConfiguration.get().itemValidation.bookSize.pageMax;
+            double multiplier = Math.max(0.3D, Math.min(1D, io.papermc.paper.configuration.GlobalConfiguration.get().itemValidation.bookSize.totalMultiplier));
+            long byteAllowed = maxBookPageSize;
+            for (String testString : pageList) {
+                int byteLength = testString.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+                if (byteLength > 256 * 4) {
+                    ServerGamePacketListenerImpl.LOGGER.warn(this.player.getScoreboardName() + " tried to send a book with with a page too large!");
+                    server.scheduleOnMain(() -> this.disconnect("Book too large!"));
+                    return;
+                }
+                byteTotal += byteLength;
+                int length = testString.length();
+                int multibytes = 0;
+                if (byteLength != length) {
+                    for (char c : testString.toCharArray()) {
+                        if (c > 127) {
+                            multibytes++;
+                        }
+                    }
+                }
+                byteAllowed += (maxBookPageSize * Math.min(1, Math.max(0.1D, (double) length / 255D))) * multiplier;
+
+                if (multibytes > 1) {
+                    // penalize MB
+                    byteAllowed -= multibytes;
+                }
+            }
+
+            if (byteTotal > byteAllowed) {
+                ServerGamePacketListenerImpl.LOGGER.warn(this.player.getScoreboardName() + " tried to send too large of a book. Book Size: " + byteTotal + " - Allowed:  "+ byteAllowed + " - Pages: " + pageList.size());
+                server.scheduleOnMain(() -> this.disconnect("Book too large!"));
+                return;
+            }
+        }
+        // Paper end
         // CraftBukkit start
         if (this.lastBookTick + 20 > MinecraftServer.currentTick) {
             this.disconnect("Book edited too quickly!");
