@@ -31,6 +31,16 @@ public class ClientboundContainerSetContentPacket implements Packet<ClientGamePa
         this.carriedItem = buf.readItem();
     }
 
+    // Paper start
+    @Override
+    public boolean packetTooLarge(net.minecraft.network.Connection manager) {
+        for (int i = 0 ; i < this.items.size() ; i++) {
+            manager.send(new ClientboundContainerSetSlotPacket(this.containerId, this.stateId, i, this.items.get(i)));
+        }
+        return true;
+    }
+    // Paper end
+
     @Override
     public void write(FriendlyByteBuf buf) {
         buf.writeByte(this.containerId);

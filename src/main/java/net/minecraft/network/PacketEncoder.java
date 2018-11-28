@@ -54,7 +54,31 @@ public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
                         throw var10;
                     }
                 }
+
+                // Paper start
+                int packetLength = friendlyByteBuf.readableBytes();
+                if (packetLength > MAX_PACKET_SIZE) {
+                    throw new PacketTooLargeException(packet, packetLength);
+                }
+                // Paper end
             }
         }
     }
+
+    // Paper start
+    private static int MAX_PACKET_SIZE = 2097152;
+
+    public static class PacketTooLargeException extends RuntimeException {
+        private final Packet<?> packet;
+
+        PacketTooLargeException(Packet<?> packet, int packetLength) {
+            super("PacketTooLarge - " + packet.getClass().getSimpleName() + " is " + packetLength + ". Max is " + MAX_PACKET_SIZE);
+            this.packet = packet;
+        }
+
+        public Packet<?> getPacket() {
+            return packet;
+        }
+    }
+    // Paper end
 }
