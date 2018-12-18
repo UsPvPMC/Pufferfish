@@ -506,7 +506,8 @@ public class EnderMan extends Monster implements NeutralMob {
             int j = Mth.floor(this.enderman.getY() + randomsource.nextDouble() * 2.0D);
             int k = Mth.floor(this.enderman.getZ() - 1.0D + randomsource.nextDouble() * 2.0D);
             BlockPos blockposition = new BlockPos(i, j, k);
-            BlockState iblockdata = world.getBlockState(blockposition);
+            BlockState iblockdata = world.getBlockStateIfLoaded(blockposition); // Paper
+            if (iblockdata == null) return; // Paper
             BlockPos blockposition1 = blockposition.below();
             BlockState iblockdata1 = world.getBlockState(blockposition1);
             BlockState iblockdata2 = this.enderman.getCarriedBlock();
@@ -552,7 +553,8 @@ public class EnderMan extends Monster implements NeutralMob {
             int j = Mth.floor(this.enderman.getY() + randomsource.nextDouble() * 3.0D);
             int k = Mth.floor(this.enderman.getZ() - 2.0D + randomsource.nextDouble() * 4.0D);
             BlockPos blockposition = new BlockPos(i, j, k);
-            BlockState iblockdata = world.getBlockState(blockposition);
+            BlockState iblockdata = world.getBlockStateIfLoaded(blockposition); // Paper
+            if (iblockdata == null) return; // Paper
             Vec3 vec3d = new Vec3((double) this.enderman.getBlockX() + 0.5D, (double) j + 0.5D, (double) this.enderman.getBlockZ() + 0.5D);
             Vec3 vec3d1 = new Vec3((double) i + 0.5D, (double) j + 0.5D, (double) k + 0.5D);
             BlockHitResult movingobjectpositionblock = world.clip(new ClipContext(vec3d, vec3d1, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, this.enderman));
