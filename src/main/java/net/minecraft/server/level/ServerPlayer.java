@@ -241,6 +241,7 @@ public class ServerPlayer extends Player {
     public int latency;
     public boolean wonGame;
     private int containerUpdateDelay; // Paper
+    public long loginTime; // Paper
     // Paper start - cancellable death event
     public boolean queueHealthUpdatePacket = false;
     public net.minecraft.network.protocol.game.ClientboundSetHealthPacket queuedHealthUpdatePacket;
