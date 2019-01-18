@@ -85,16 +85,49 @@ public class ShapelessRecipe implements CraftingRecipe {
         StackedContents autorecipestackmanager = new StackedContents();
         int i = 0;
 
+        // Paper start
+        java.util.List<ItemStack> providedItems = new java.util.ArrayList<>();
+        co.aikar.util.Counter<ItemStack> matchedProvided = new co.aikar.util.Counter<>();
+        co.aikar.util.Counter<Ingredient> matchedIngredients = new co.aikar.util.Counter<>();
+        // Paper end
         for (int j = 0; j < inventory.getContainerSize(); ++j) {
             ItemStack itemstack = inventory.getItem(j);
 
             if (!itemstack.isEmpty()) {
-                ++i;
-                autorecipestackmanager.accountStack(itemstack, 1);
+                // Paper start
+                itemstack = itemstack.copy();
+                providedItems.add(itemstack);
+                for (Ingredient ingredient : ingredients) {
+                    if (ingredient.test(itemstack)) {
+                        matchedProvided.increment(itemstack);
+                        matchedIngredients.increment(ingredient);
+                    }
+                }
+                // Paper end
             }
         }
 
-        return i == this.ingredients.size() && autorecipestackmanager.canCraft(this, (IntList) null);
+        // Paper start
+        if (matchedProvided.isEmpty() || matchedIngredients.isEmpty()) {
+            return false;
+        }
+        java.util.List<Ingredient> ingredients = new java.util.ArrayList<>(this.ingredients);
+        providedItems.sort(java.util.Comparator.comparingInt((ItemStack c) -> (int) matchedProvided.getCount(c)).reversed());
+        ingredients.sort(java.util.Comparator.comparingInt((Ingredient c) -> (int) matchedIngredients.getCount(c)));
+
+        PROVIDED:
+        for (ItemStack provided : providedItems) {
+            for (Iterator<Ingredient> itIngredient = ingredients.iterator(); itIngredient.hasNext(); ) {
+                Ingredient ingredient = itIngredient.next();
+                if (ingredient.test(provided)) {
+                    itIngredient.remove();
+                    continue PROVIDED;
+                }
+            }
+            return false;
+        }
+        return ingredients.isEmpty();
+        // Paper end
     }
 
     public ItemStack assemble(CraftingContainer inventory, RegistryAccess registryManager) {
