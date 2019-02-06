@@ -30,6 +30,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
@@ -589,8 +590,21 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
             return false;
         } else {
             FluidState fluid = this.getFluidState(pos);
+            // Paper start - while the above setAir method is named same and looks very similar
+            // they are NOT used with same intent and the above should not fire this event. The above method is more of a BlockSetToAirEvent,
+            // it doesn't imply destruction of a block that plays a sound effect / drops an item.
+            boolean playEffect = true;
+            if (com.destroystokyo.paper.event.block.BlockDestroyEvent.getHandlerList().getRegisteredListeners().length > 0) {
+                com.destroystokyo.paper.event.block.BlockDestroyEvent event = new com.destroystokyo.paper.event.block.BlockDestroyEvent(MCUtil.toBukkitBlock(this, pos), fluid.createLegacyBlock().createCraftBlockData(), drop);
+                if (!event.callEvent()) {
+                    return false;
+                }
+                playEffect = event.playEffect();
+                drop = event.willDrop();
+            }
+            // Paper end
 
-            if (!(iblockdata.getBlock() instanceof BaseFireBlock)) {
+            if (playEffect && !(iblockdata.getBlock() instanceof BaseFireBlock)) { // Paper
                 this.levelEvent(2001, pos, Block.getId(iblockdata));
             }
 
