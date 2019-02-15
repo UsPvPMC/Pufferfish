@@ -18,8 +18,12 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.zip.InflaterInputStream; // Paper
+
 import javax.annotation.Nullable;
 import net.minecraft.Util;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.world.level.ChunkPos;
 import org.slf4j.Logger;
 
@@ -45,6 +49,7 @@ public class RegionFile implements AutoCloseable {
     @VisibleForTesting
     protected final RegionBitmap usedSectors;
     public final java.util.concurrent.locks.ReentrantLock fileLock = new java.util.concurrent.locks.ReentrantLock(true); // Paper
+    public final Path regionFile; // Paper
 
     public RegionFile(Path file, Path directory, boolean dsync) throws IOException {
         this(file, directory, RegionFileVersion.VERSION_DEFLATE, dsync);
@@ -52,6 +57,8 @@ public class RegionFile implements AutoCloseable {
 
     public RegionFile(Path file, Path directory, RegionFileVersion outputChunkStreamVersion, boolean dsync) throws IOException {
         this.header = ByteBuffer.allocateDirect(8192);
+        this.regionFile = file; // Paper
+        initOversizedState(); // Paper
         this.usedSectors = new RegionBitmap();
         this.version = outputChunkStreamVersion;
         if (!Files.isDirectory(directory, new LinkOption[0])) {
@@ -430,6 +437,74 @@ public class RegionFile implements AutoCloseable {
 
     }
 
+    // Paper start
+    private final byte[] oversized = new byte[1024];
+    private int oversizedCount = 0;
+
+    private synchronized void initOversizedState() throws IOException {
+        Path metaFile = getOversizedMetaFile();
+        if (Files.exists(metaFile)) {
+            final byte[] read = java.nio.file.Files.readAllBytes(metaFile);
+            System.arraycopy(read, 0, oversized, 0, oversized.length);
+            for (byte temp : oversized) {
+                oversizedCount += temp;
+            }
+        }
+    }
+
+    private static int getChunkIndex(int x, int z) {
+        return (x & 31) + (z & 31) * 32;
+    }
+    synchronized boolean isOversized(int x, int z) {
+        return this.oversized[getChunkIndex(x, z)] == 1;
+    }
+    synchronized void setOversized(int x, int z, boolean oversized) throws IOException {
+        final int offset = getChunkIndex(x, z);
+        boolean previous = this.oversized[offset] == 1;
+        this.oversized[offset] = (byte) (oversized ? 1 : 0);
+        if (!previous && oversized) {
+            oversizedCount++;
+        } else if (!oversized && previous) {
+            oversizedCount--;
+        }
+        if (previous && !oversized) {
+            Path oversizedFile = getOversizedFile(x, z);
+            if (Files.exists(oversizedFile)) {
+                Files.delete(oversizedFile);
+            }
+        }
+        if (oversizedCount > 0) {
+            if (previous != oversized) {
+                writeOversizedMeta();
+            }
+        } else if (previous) {
+            Path oversizedMetaFile = getOversizedMetaFile();
+            if (Files.exists(oversizedMetaFile)) {
+                Files.delete(oversizedMetaFile);
+            }
+        }
+    }
+
+    private void writeOversizedMeta() throws IOException {
+        java.nio.file.Files.write(getOversizedMetaFile(), oversized);
+    }
+
+    private Path getOversizedMetaFile() {
+        return this.regionFile.getParent().resolve(this.regionFile.getFileName().toString().replaceAll("\\.mca$", "") + ".oversized.nbt");
+    }
+
+    private Path getOversizedFile(int x, int z) {
+        return this.regionFile.getParent().resolve(this.regionFile.getFileName().toString().replaceAll("\\.mca$", "") + "_oversized_" + x + "_" + z + ".nbt");
+    }
+
+    synchronized CompoundTag getOversizedData(int x, int z) throws IOException {
+        Path file = getOversizedFile(x, z);
+        try (DataInputStream out = new DataInputStream(new java.io.BufferedInputStream(new InflaterInputStream(Files.newInputStream(file))))) {
+            return NbtIo.read((java.io.DataInput) out);
+        }
+
+    }
+    // Paper end
     private class ChunkBuffer extends ByteArrayOutputStream {
 
         private final ChunkPos pos;
