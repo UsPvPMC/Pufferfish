@@ -56,8 +56,8 @@ public class ItemDebugStick extends Item {
         return EnumInteractionResult.sidedSuccess(world.isClientSide);
     }
 
-    private boolean handleInteraction(EntityHuman entityhuman, IBlockData iblockdata, GeneratorAccess generatoraccess, BlockPosition blockposition, boolean flag, ItemStack itemstack) {
-        if (!entityhuman.canUseGameMasterBlocks()) {
+    public boolean handleInteraction(EntityHuman entityhuman, IBlockData iblockdata, GeneratorAccess generatoraccess, BlockPosition blockposition, boolean flag, ItemStack itemstack) { // PAIL private -> public
+        if (!entityhuman.canUseGameMasterBlocks() && !(entityhuman.getAbilities().instabuild && entityhuman.getBukkitEntity().hasPermission("minecraft.debugstick")) && !entityhuman.getBukkitEntity().hasPermission("minecraft.debugstick.always")) { // Spigot
             return false;
         } else {
             Block block = iblockdata.getBlock();
