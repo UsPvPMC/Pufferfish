@@ -299,6 +299,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     private final MessageSignatureCache messageSignatureCache;
     private final FutureChain chatMessageChain;
     private static final long KEEPALIVE_LIMIT = Long.getLong("paper.playerconnection.keepalive", 30) * 1000; // Paper - provide property to set keepalive limit
+    private static final int MAX_SIGN_LINE_LENGTH = Integer.getInteger("Paper.maxSignLength", 80); // Paper
 
     public ServerGamePacketListenerImpl(MinecraftServer server, Connection connection, ServerPlayer player) {
         this.lastChatTimeStamp = new AtomicReference(Instant.EPOCH);
@@ -3192,7 +3193,19 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
     @Override
     public void handleSignUpdate(ServerboundSignUpdatePacket packet) {
-        List<String> list = (List) Stream.of(packet.getLines()).map(ChatFormatting::stripFormatting).collect(Collectors.toList());
+        // Paper start - cap line length - modified clients can send longer data than normal
+        String[] lines = packet.getLines();
+        for (int i = 0; i < lines.length; ++i) {
+            if (MAX_SIGN_LINE_LENGTH > 0 && lines[i].length() > MAX_SIGN_LINE_LENGTH) {
+                // This handles multibyte characters as 1
+                int offset = lines[i].codePoints().limit(MAX_SIGN_LINE_LENGTH).map(Character::charCount).sum();
+                if (offset < lines[i].length()) {
+                    lines[i] = lines[i].substring(0, offset); // this will break any filtering, but filtering is NYI as of 1.17
+                }
+            }
+        }
+        List<String> list = (List) Stream.of(lines).map(ChatFormatting::stripFormatting).collect(Collectors.toList());
+        // Paper end
 
         this.filterTextPacket(list).thenAcceptAsync((list1) -> {
             this.updateSignText(packet, list1);
