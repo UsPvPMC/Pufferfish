@@ -9,7 +9,7 @@ public class AsyncCatcher
 
     public static void catchOp(String reason)
     {
-        if ( AsyncCatcher.enabled && Thread.currentThread() != MinecraftServer.getServer().serverThread )
+        if ( (AsyncCatcher.enabled || io.papermc.paper.util.TickThread.STRICT_THREAD_CHECKS) && Thread.currentThread() != MinecraftServer.getServer().serverThread ) // Paper
         {
             throw new IllegalStateException( "Asynchronous " + reason + "!" );
         }
