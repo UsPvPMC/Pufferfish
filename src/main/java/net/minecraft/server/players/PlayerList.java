@@ -224,6 +224,11 @@ public abstract class PlayerList {
             worldserver1 = worldserver;
         }
 
+        // Paper start
+        if (nbttagcompound == null) {
+            player.spawnReason = org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.DEFAULT; // set Player SpawnReason to DEFAULT on first login
+        }
+        // Paper end
         player.setLevel(worldserver1);
         String s1 = "local";
 
@@ -364,7 +369,7 @@ public abstract class PlayerList {
             // CraftBukkit start
             ServerLevel finalWorldServer = worldserver1;
             Entity entity = EntityType.loadEntityRecursive(nbttagcompound1.getCompound("Entity"), finalWorldServer, (entity1) -> {
-                return !finalWorldServer.addWithUUID(entity1) ? null : entity1;
+                return !finalWorldServer.addWithUUID(entity1, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.MOUNT) ? null : entity1; // Paper
                 // CraftBukkit end
             });
 
