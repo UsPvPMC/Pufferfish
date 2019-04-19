@@ -129,4 +129,28 @@ public class CraftCreatureSpawner extends CraftBlockEntityState<SpawnerBlockEnti
     public void setSpawnRange(int spawnRange) {
         this.getSnapshot().getSpawner().spawnRange = spawnRange;
     }
+
+    // Paper start
+    @Override
+    public boolean isActivated() {
+        this.requirePlaced();
+        return this.getSnapshot().getSpawner().isNearPlayer(this.world.getHandle(), this.getPosition());
+    }
+
+    @Override
+    public void resetTimer() {
+        this.requirePlaced();
+        this.getSnapshot().getSpawner().delay(this.world.getHandle(), this.getPosition());
+    }
+
+    @Override
+    public void setSpawnedItem(org.bukkit.inventory.ItemStack itemStack) {
+        Preconditions.checkArgument(itemStack != null && !itemStack.getType().isAir(), "spawners cannot spawn air");
+        net.minecraft.world.item.ItemStack item = org.bukkit.craftbukkit.inventory.CraftItemStack.asNMSCopy(itemStack);
+        net.minecraft.nbt.CompoundTag entity = new net.minecraft.nbt.CompoundTag();
+        entity.putString("id", net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(net.minecraft.world.entity.EntityType.ITEM).toString());
+        entity.put("Item", item.save(new net.minecraft.nbt.CompoundTag()));
+        this.getSnapshot().getSpawner().setNextSpawnData(this.isPlaced() ? this.world.getHandle() : null, this.getPosition(), new net.minecraft.world.level.SpawnData(entity, java.util.Optional.empty()));
+    }
+    // Paper end
 }
