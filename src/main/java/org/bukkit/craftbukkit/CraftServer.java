@@ -2671,5 +2671,10 @@ public final class CraftServer implements Server {
         profile.getProperties().putAll(((CraftPlayer)player).getHandle().getGameProfile().getProperties());
         return new com.destroystokyo.paper.profile.CraftPlayerProfile(profile);
     }
+
+    @Override
+    public int getCurrentTick() {
+        return net.minecraft.server.MinecraftServer.currentTick;
+    }
     // Paper end
 }
