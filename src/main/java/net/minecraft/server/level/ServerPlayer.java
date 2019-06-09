@@ -187,6 +187,7 @@ import org.bukkit.inventory.MainHand;
 public class ServerPlayer extends Player {
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    public long lastSave = MinecraftServer.currentTick; // Paper
     private static final int NEUTRAL_MOB_DEATH_NOTIFICATION_RADII_XZ = 32;
     private static final int NEUTRAL_MOB_DEATH_NOTIFICATION_RADII_Y = 10;
     public ServerGamePacketListenerImpl connection;
