@@ -18,6 +18,7 @@ public class CraftBlockEntityState<T extends BlockEntity> extends CraftBlockStat
 
         this.tileEntity = tileEntity;
 
+        try { // Paper - show location on failure
         // Paper start
         this.snapshotDisabled = DISABLE_SNAPSHOT;
         if (DISABLE_SNAPSHOT) {
@@ -28,6 +29,14 @@ public class CraftBlockEntityState<T extends BlockEntity> extends CraftBlockStat
         // copy tile entity data:
         if (this.snapshot != null) {
             this.load(this.snapshot);
+        }
+        // Paper end
+        // Paper start - show location on failure
+        } catch (Throwable thr) {
+            if (thr instanceof ThreadDeath) {
+                throw (ThreadDeath)thr;
+            }
+            throw new RuntimeException("Failed to read BlockState at: world: " + this.getWorld().getName() + " location: (" + this.getX() + ", " + this.getY() + ", " + this.getZ() + ")", thr);
         }
         // Paper end
     }
