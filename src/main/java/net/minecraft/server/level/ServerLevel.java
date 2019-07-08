@@ -225,7 +225,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     }
 
     @Override public LevelChunk getChunkIfLoaded(int x, int z) { // Paper - this was added in world too but keeping here for NMS ABI
-        return this.chunkSource.getChunk(x, z, false);
+        return this.chunkSource.getChunkAtIfLoadedImmediately(x, z); // Paper
     }
 
     @Override

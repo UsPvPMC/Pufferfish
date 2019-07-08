@@ -202,6 +202,13 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         return (CraftServer) Bukkit.getServer();
     }
 
+    // Paper start
+    @Override
+    public boolean hasChunk(int chunkX, int chunkZ) {
+        return this.getChunkIfLoaded(chunkX, chunkZ) != null;
+    }
+    // Paper end
+
     public abstract ResourceKey<LevelStem> getTypeKey();
 
     protected Level(WritableLevelData worlddatamutable, ResourceKey<Level> resourcekey, RegistryAccess iregistrycustom, Holder<DimensionType> holder, Supplier<ProfilerFiller> supplier, boolean flag, boolean flag1, long i, int j, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env, java.util.function.Function<org.spigotmc.SpigotWorldConfig, io.papermc.paper.configuration.WorldConfiguration> paperWorldConfigCreator, java.util.concurrent.Executor executor) { // Paper - Async-Anti-Xray - Pass executor
