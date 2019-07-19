@@ -422,6 +422,12 @@ public class ServerLevel extends Level implements WorldGenLevel {
         return this.entityLookup;
     }
     // Paper end - rewrite chunk system
+    // Paper start
+    @Override
+    public boolean hasChunk(int chunkX, int chunkZ) {
+        return this.getChunkSource().getChunkAtIfLoadedImmediately(chunkX, chunkZ) != null;
+    }
+    // Paper end
 
     // Paper start - optimise getPlayerByUUID
     @Nullable
