@@ -128,8 +128,21 @@ public class ChunkSerializer {
         return holder.protoChunk;
     }
 
+    // Paper start
+    private static final int CURRENT_DATA_VERSION = net.minecraft.SharedConstants.getCurrentVersion().getDataVersion().getVersion();
+    private static final boolean JUST_CORRUPT_IT = Boolean.getBoolean("Paper.ignoreWorldDataVersion");
+    // Paper end
     public static InProgressChunkHolder loadChunk(ServerLevel world, PoiManager poiStorage, ChunkPos chunkPos, CompoundTag nbt, boolean distinguish) {
         java.util.ArrayDeque<Runnable> tasksToExecuteOnMain = new java.util.ArrayDeque<>();
+        // Paper end
+        // Paper start - Do NOT attempt to load chunks saved with newer versions
+        if (nbt.contains("DataVersion", 99)) {
+            int dataVersion = nbt.getInt("DataVersion");
+            if (!JUST_CORRUPT_IT && dataVersion > CURRENT_DATA_VERSION) {
+                new RuntimeException("Server attempted to load chunk saved with newer version of minecraft! " + dataVersion + " > " + CURRENT_DATA_VERSION).printStackTrace();
+                System.exit(1);
+            }
+        }
         // Paper end
         ChunkPos chunkcoordintpair1 = new ChunkPos(nbt.getInt("xPos"), nbt.getInt("zPos")); // Paper - diff on change, see ChunkSerializer#getChunkCoordinate
 
