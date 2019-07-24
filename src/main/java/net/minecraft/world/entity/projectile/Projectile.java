@@ -164,7 +164,7 @@ public abstract class Projectile extends Entity implements TraceableEntity {
         this.shoot((double) f5, (double) f6, (double) f7, speed, divergence);
         Vec3 vec3d = shooter.getDeltaMovement();
 
-        this.setDeltaMovement(this.getDeltaMovement().add(vec3d.x, shooter.isOnGround() ? 0.0D : vec3d.y, vec3d.z));
+        if (!shooter.level.paperConfig().misc.disableRelativeProjectileVelocity) this.setDeltaMovement(this.getDeltaMovement().add(vec3d.x, shooter.isOnGround() ? 0.0D : vec3d.y, vec3d.z)); // Paper - allow disabling relative velocity
     }
 
     // CraftBukkit start - call projectile hit event
