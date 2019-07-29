@@ -39,7 +39,7 @@ public abstract class HangingEntity extends Entity {
     protected static final Predicate<Entity> HANGING_ENTITY = (entity) -> {
         return entity instanceof HangingEntity;
     };
-    private int checkInterval;
+    private int checkInterval; { this.checkInterval = this.getId() % this.level.spigotConfig.hangingTickFrequency; } // Paper
     public BlockPos pos;
     protected Direction direction;
 
