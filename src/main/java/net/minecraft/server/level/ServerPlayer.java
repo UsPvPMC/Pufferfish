@@ -246,6 +246,11 @@ public class ServerPlayer extends Player {
     public boolean queueHealthUpdatePacket = false;
     public net.minecraft.network.protocol.game.ClientboundSetHealthPacket queuedHealthUpdatePacket;
     // Paper end
+    // Paper start - mob spawning rework
+    public static final int MOBCATEGORY_TOTAL_ENUMS = net.minecraft.world.entity.MobCategory.values().length;
+    public final int[] mobCounts = new int[MOBCATEGORY_TOTAL_ENUMS]; // Paper
+    public final com.destroystokyo.paper.util.PooledHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> cachedSingleMobDistanceMap;
+    // Paper end
 
     // CraftBukkit start
     public String displayName;
@@ -337,6 +342,7 @@ public class ServerPlayer extends Player {
         this.adventure$displayName = net.kyori.adventure.text.Component.text(this.getScoreboardName()); // Paper
         this.bukkitPickUpLoot = true;
         this.maxHealthCache = this.getMaxHealth();
+        this.cachedSingleMobDistanceMap = new com.destroystokyo.paper.util.PooledHashSets.PooledObjectLinkedOpenHashSet<>(this); // Paper
     }
 
     // Yes, this doesn't match Vanilla, but it's the best we can do for now.

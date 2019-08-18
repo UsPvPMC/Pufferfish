@@ -152,6 +152,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
     private final Long2LongMap chunkSaveCooldowns;
     private final Queue<Runnable> unloadQueue;
     int viewDistance;
+    public final com.destroystokyo.paper.util.misc.PlayerAreaMap playerMobDistanceMap; // Paper
 
     // Paper - rewrite chunk system
 
@@ -164,11 +165,21 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
         int chunkX = MCUtil.getChunkCoordinate(player.getX());
         int chunkZ = MCUtil.getChunkCoordinate(player.getZ());
         // Note: players need to be explicitly added to distance maps before they can be updated
+        // Paper start - per player mob spawning
+        if (this.playerMobDistanceMap != null) {
+            this.playerMobDistanceMap.add(player, chunkX, chunkZ, io.papermc.paper.chunk.system.ChunkSystem.getTickViewDistance(player));
+        }
+        // Paper end - per player mob spawning
     }
 
     void removePlayerFromDistanceMaps(ServerPlayer player) {
         this.playerChunkManager.removePlayer(player); // Paper - replace chunk loader
 
+        // Paper start - per player mob spawning
+        if (this.playerMobDistanceMap != null) {
+            this.playerMobDistanceMap.remove(player);
+        }
+        // Paper end - per player mob spawning
     }
 
     void updateMaps(ServerPlayer player) {
@@ -176,6 +187,11 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
         int chunkZ = MCUtil.getChunkCoordinate(player.getZ());
         // Note: players need to be explicitly added to distance maps before they can be updated
         this.playerChunkManager.updatePlayer(player); // Paper - replace chunk loader
+        // Paper start - per player mob spawning
+        if (this.playerMobDistanceMap != null) {
+            this.playerMobDistanceMap.update(player, chunkX, chunkZ, io.papermc.paper.chunk.system.ChunkSystem.getTickViewDistance(player));
+        }
+        // Paper end - per player mob spawning
     }
     // Paper end
     // Paper start
@@ -261,6 +277,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
         this.dataRegionManager = new io.papermc.paper.chunk.SingleThreadChunkRegionManager(this.level, 2, (1.0 / 3.0), 1, 6, "Data", DataRegionData::new, DataRegionSectionData::new);
         this.regionManagers.add(this.dataRegionManager);
         // Paper end
+        this.playerMobDistanceMap = this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new com.destroystokyo.paper.util.misc.PlayerAreaMap(this.pooledLinkedPlayerHashSets) : null; // Paper
     }
 
     protected ChunkGenerator generator() {
@@ -285,6 +302,31 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
             this.generator = chunkgenerator;
         });
     }
+
+    // Paper start
+    public void updatePlayerMobTypeMap(Entity entity) {
+        if (!this.level.paperConfig().entities.spawning.perPlayerMobSpawns) {
+            return;
+        }
+        int index = entity.getType().getCategory().ordinal();
+
+        final com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> inRange = this.playerMobDistanceMap.getObjectsInRange(entity.chunkPosition());
+        if (inRange == null) {
+            return;
+        }
+        final Object[] backingSet = inRange.getBackingSet();
+        for (int i = 0; i < backingSet.length; i++) {
+            if (!(backingSet[i] instanceof final ServerPlayer player)) {
+                continue;
+            }
+            ++player.mobCounts[index];
+        }
+    }
+
+    public int getMobCountNear(ServerPlayer entityPlayer, net.minecraft.world.entity.MobCategory mobCategory) {
+        return entityPlayer.mobCounts[mobCategory.ordinal()];
+    }
+    // Paper end
 
     private static double euclideanDistanceSquared(ChunkPos pos, Entity entity) {
         double d0 = (double) SectionPos.sectionToBlockCoord(pos.x, 8);
