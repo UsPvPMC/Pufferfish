@@ -924,7 +924,7 @@ public class ServerPlayer extends Player {
             this.tellNeutralMobsThatIDied();
         }
         // SPIGOT-5478 must be called manually now
-        this.dropExperience();
+        if (event.shouldDropExperience()) this.dropExperience(); // Paper - tie to event
         // we clean the player's inventory after the EntityDeathEvent is called so plugins can get the exact state of the inventory.
         if (!event.getKeepInventory()) {
             // Paper start - replace logic
