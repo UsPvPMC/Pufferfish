@@ -178,6 +178,13 @@ public class ChunkStorage implements AutoCloseable {
 
     // Paper start - async chunk io
     public void write(ChunkPos chunkPos, CompoundTag nbt) throws IOException {
+        // Paper start
+        if (!chunkPos.equals(ChunkSerializer.getChunkCoordinate(nbt))) {
+            String world = (this instanceof net.minecraft.server.level.ChunkMap) ? ((net.minecraft.server.level.ChunkMap)this).level.getWorld().getName() : null;
+            throw new IllegalArgumentException("Chunk coordinate and serialized data do not have matching coordinates, trying to serialize coordinate " + chunkPos.toString()
+                + " but compound says coordinate is " + ChunkSerializer.getChunkCoordinate(nbt).toString() + (world == null ? " for an unknown world" : (" for world: " + world)));
+        }
+        // Paper end
         this.regionFileCache.write(chunkPos, nbt);
         // Paper end - Async chunk loading
         if (this.legacyStructureHandler != null) {
