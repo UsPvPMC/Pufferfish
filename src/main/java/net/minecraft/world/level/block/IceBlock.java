@@ -25,6 +25,11 @@ public class IceBlock extends HalfTransparentBlock {
     @Override
     public void playerDestroy(Level world, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
         super.playerDestroy(world, player, pos, state, blockEntity, tool);
+        // Paper start
+        this.afterDestroy(world, pos, tool);
+    }
+    public void afterDestroy(Level world, BlockPos pos, ItemStack tool) {
+        // Paper end
         if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, tool) == 0) {
             if (world.dimensionType().ultraWarm()) {
                 world.removeBlock(pos, false);
