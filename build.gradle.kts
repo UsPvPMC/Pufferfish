@@ -36,6 +36,7 @@ dependencies {
     runtimeOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.7.3")
     runtimeOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.7.3")
 
+    testImplementation("io.github.classgraph:classgraph:4.8.47") // Paper - mob goal test
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.hamcrest:hamcrest-library:1.3")
 
