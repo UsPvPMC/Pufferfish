@@ -54,7 +54,7 @@ public class LevelChunkSection {
     }
 
     public FluidState getFluidState(int x, int y, int z) {
-        return ((BlockState) this.states.get(x, y, z)).getFluidState();
+        return this.states.get(x, y, z).getFluidState(); // Paper - diff on change - we expect this to be effectively just getType(x, y, z).getFluid(). If this changes we need to check other patches that use IBlockData#getFluid.
     }
 
     public void acquire() {

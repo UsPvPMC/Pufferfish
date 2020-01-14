@@ -420,18 +420,20 @@ public class LevelChunk extends ChunkAccess {
     }
 
     public FluidState getFluidState(int x, int y, int z) {
-        try {
-            int l = this.getSectionIndex(y);
-
-            if (l >= 0 && l < this.sections.length) {
-                LevelChunkSection chunksection = this.sections[l];
+        // try {  // Paper - remove try catch
+        // Paper start - reduce the number of ops in this call
+        int index = this.getSectionIndex(y);
+            if (index >= 0 && index < this.sections.length) {
+                LevelChunkSection chunksection = this.sections[index];
 
                 if (!chunksection.hasOnlyAir()) {
-                    return chunksection.getFluidState(x & 15, y & 15, z & 15);
+                    return chunksection.states.get((y & 15) << 8 | (z & 15) << 4 | x & 15).getFluidState();
+                    // Paper end
                 }
             }
 
             return Fluids.EMPTY.defaultFluidState();
+        /* // Paper - remove try catch
         } catch (Throwable throwable) {
             CrashReport crashreport = CrashReport.forThrowable(throwable, "Getting fluid state");
             CrashReportCategory crashreportsystemdetails = crashreport.addCategory("Block being got");
@@ -441,6 +443,7 @@ public class LevelChunk extends ChunkAccess {
             });
             throw new ReportedException(crashreport);
         }
+         */  // Paper - remove try catch
     }
 
     // CraftBukkit start
