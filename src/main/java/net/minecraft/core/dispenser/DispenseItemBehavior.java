@@ -515,7 +515,7 @@ public interface DispenseItemBehavior {
                 }
 
                 itemstack1 = CraftItemStack.asNMSCopy(event.getItem());
-                FireworkRocketEntity entityfireworks = new FireworkRocketEntity(pointer.getLevel(), stack, pointer.x(), pointer.y(), pointer.x(), true);
+                FireworkRocketEntity entityfireworks = new FireworkRocketEntity(pointer.getLevel(), itemstack1, pointer.x(), pointer.y(), pointer.x(), true); // Paper - GH-2871 - fix last firework in stack having no effects when dispensed
 
                 DispenseItemBehavior.setEntityPokingOutOfBlock(pointer, entityfireworks, enumdirection);
                 entityfireworks.shoot((double) enumdirection.getStepX(), (double) enumdirection.getStepY(), (double) enumdirection.getStepZ(), 0.5F, 1.0F);
