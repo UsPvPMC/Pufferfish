@@ -1902,9 +1902,24 @@ public class ServerPlayer extends Player {
         }
     }
 
+    // Paper start - Client option API
+    private java.util.Map<com.destroystokyo.paper.ClientOption<?>, ?> getClientOptionMap(String locale, int viewDistance, com.destroystokyo.paper.ClientOption.ChatVisibility chatVisibility, boolean chatColors, com.destroystokyo.paper.PaperSkinParts skinParts, org.bukkit.inventory.MainHand mainHand, boolean allowsServerListing, boolean textFilteringEnabled) {
+        java.util.Map<com.destroystokyo.paper.ClientOption<?>, Object> map = new java.util.HashMap<>();
+        map.put(com.destroystokyo.paper.ClientOption.LOCALE, locale);
+        map.put(com.destroystokyo.paper.ClientOption.VIEW_DISTANCE, viewDistance);
+        map.put(com.destroystokyo.paper.ClientOption.CHAT_VISIBILITY, chatVisibility);
+        map.put(com.destroystokyo.paper.ClientOption.CHAT_COLORS_ENABLED, chatColors);
+        map.put(com.destroystokyo.paper.ClientOption.SKIN_PARTS, skinParts);
+        map.put(com.destroystokyo.paper.ClientOption.MAIN_HAND, mainHand);
+        map.put(com.destroystokyo.paper.ClientOption.ALLOW_SERVER_LISTINGS, allowsServerListing);
+        map.put(com.destroystokyo.paper.ClientOption.TEXT_FILTERING_ENABLED, textFilteringEnabled);
+        return map;
+    }
+    // Paper end
     public String locale = null; // CraftBukkit - add, lowercase // Paper - default to null
     public java.util.Locale adventure$locale = java.util.Locale.US; // Paper
     public void updateOptions(ServerboundClientInformationPacket packet) {
+        new com.destroystokyo.paper.event.player.PlayerClientOptionsChangeEvent(getBukkitEntity(), getClientOptionMap(packet.language, packet.viewDistance, com.destroystokyo.paper.ClientOption.ChatVisibility.valueOf(packet.chatVisibility().name()), packet.chatColors(), new com.destroystokyo.paper.PaperSkinParts(packet.modelCustomisation()), packet.mainHand() == HumanoidArm.LEFT ? MainHand.LEFT : MainHand.RIGHT, packet.allowsListing(), packet.textFilteringEnabled())).callEvent(); // Paper - settings event
         // CraftBukkit start
         if (getMainArm() != packet.mainHand()) {
             PlayerChangedMainHandEvent event = new PlayerChangedMainHandEvent(this.getBukkitEntity(), getMainArm() == HumanoidArm.LEFT ? MainHand.LEFT : MainHand.RIGHT);
