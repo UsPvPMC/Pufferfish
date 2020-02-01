@@ -242,6 +242,7 @@ public class ServerPlayer extends Player {
     public boolean wonGame;
     private int containerUpdateDelay; // Paper
     public long loginTime; // Paper
+    public int patrolSpawnDelay; // Paper - per player patrol spawns
     // Paper start - cancellable death event
     public boolean queueHealthUpdatePacket = false;
     public net.minecraft.network.protocol.game.ClientboundSetHealthPacket queuedHealthUpdatePacket;
