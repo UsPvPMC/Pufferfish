@@ -26,7 +26,15 @@ public class RegionFileStorage implements AutoCloseable {
     private final Path folder;
     private final boolean sync;
 
+    private final boolean isChunkData; // Paper
+
     protected RegionFileStorage(Path directory, boolean dsync) { // Paper - protected constructor
+        // Paper start - add isChunkData param
+        this(directory, dsync, false);
+    }
+    RegionFileStorage(Path directory, boolean dsync, boolean isChunkData) {
+        this.isChunkData = isChunkData;
+        // Paper end - add isChunkData param
         this.folder = directory;
         this.sync = dsync;
     }
@@ -88,9 +96,9 @@ public class RegionFileStorage implements AutoCloseable {
             FileUtil.createDirectoriesSafe(this.folder);
             Path path = this.folder;
             int j = chunkcoordintpair.getRegionX();
-            Path path1 = path.resolve("r." + j + "." + chunkcoordintpair.getRegionZ() + ".mca");
+            Path path1 = path.resolve("r." + j + "." + chunkcoordintpair.getRegionZ() + ".mca"); // Paper - diff on change
             if (existingOnly && !java.nio.file.Files.exists(path1)) return null; // CraftBukkit
-            RegionFile regionfile1 = new RegionFile(path1, this.folder, this.sync);
+            RegionFile regionfile1 = new RegionFile(path1, this.folder, this.sync, this.isChunkData); // Paper - allow for chunk regionfiles to regen header
 
             this.regionCache.putAndMoveToFirst(i, regionfile1);
             // Paper start
@@ -175,6 +183,13 @@ public class RegionFileStorage implements AutoCloseable {
         if (regionfile == null) {
             return null;
         }
+        // Paper start - Add regionfile parameter
+        return this.read(pos, regionfile);
+    }
+    public CompoundTag read(ChunkPos pos, RegionFile regionfile) throws IOException {
+        // We add the regionfile parameter to avoid the potential deadlock (on fileLock) if we went back to obtain a regionfile
+        // if we decide to re-read
+        // Paper end
         // CraftBukkit end
         try { // Paper
         DataInputStream datainputstream = regionfile.getChunkDataInputStream(pos);
@@ -191,6 +206,20 @@ public class RegionFileStorage implements AutoCloseable {
             try {
                 if (datainputstream != null) {
                     nbttagcompound = NbtIo.read((DataInput) datainputstream);
+                    // Paper start - recover from corrupt regionfile header
+                    if (this.isChunkData) {
+                        ChunkPos chunkPos = ChunkSerializer.getChunkCoordinate(nbttagcompound);
+                        if (!chunkPos.equals(pos)) {
+                            net.minecraft.server.MinecraftServer.LOGGER.error("Attempting to read chunk data at " + pos + " but got chunk data for " + chunkPos + " instead! Attempting regionfile recalculation for regionfile " + regionfile.regionFile.toAbsolutePath());
+                            if (regionfile.recalculateHeader()) {
+                                regionfile.fileLock.lock(); // otherwise we will unlock twice and only lock once.
+                                return this.read(pos, regionfile);
+                            }
+                            net.minecraft.server.MinecraftServer.LOGGER.error("Can't recalculate regionfile header, regenerating chunk " + pos + " for " + regionfile.regionFile.toAbsolutePath());
+                            return null;
+                        }
+                    }
+                    // Paper end - recover from corrupt regionfile header
                     break label43;
                 }
 

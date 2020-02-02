@@ -70,6 +70,18 @@ import net.minecraft.world.ticks.ProtoChunkTicks;
 import org.slf4j.Logger;
 
 public class ChunkSerializer {
+    // Paper start
+    // TODO: Check on update
+    public static long getLastWorldSaveTime(CompoundTag chunkData) {
+        final int dataVersion = ChunkStorage.getVersion(chunkData);
+        if (dataVersion < 2842) { // Level tag is removed after this version
+            final CompoundTag levelData = chunkData.getCompound("Level");
+            return levelData.getLong("LastUpdate");
+        } else {
+            return chunkData.getLong("LastUpdate");
+        }
+    }
+    // Paper end
 
     public static final Codec<PalettedContainer<BlockState>> BLOCK_STATE_CODEC = PalettedContainer.codecRW(Block.BLOCK_STATE_REGISTRY, BlockState.CODEC, PalettedContainer.Strategy.SECTION_STATES, Blocks.AIR.defaultBlockState(), null); // Paper - Anti-Xray - Add preset block states
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -485,7 +497,7 @@ public class ChunkSerializer {
         nbttagcompound.putInt("xPos", chunkcoordintpair.x);
         nbttagcompound.putInt("yPos", chunk.getMinSection());
         nbttagcompound.putInt("zPos", chunkcoordintpair.z);
-        nbttagcompound.putLong("LastUpdate", asyncsavedata != null ? asyncsavedata.worldTime : world.getGameTime()); // Paper - async chunk unloading
+        nbttagcompound.putLong("LastUpdate", asyncsavedata != null ? asyncsavedata.worldTime : world.getGameTime()); // Paper - async chunk unloading // Paper - diff on change
         nbttagcompound.putLong("InhabitedTime", chunk.getInhabitedTime());
         nbttagcompound.putString("Status", chunk.getStatus().getName());
         BlendingData blendingdata = chunk.getBlendingData();

@@ -41,7 +41,7 @@ public class ChunkStorage implements AutoCloseable {
         this.fixerUpper = dataFixer;
         // Paper start - async chunk io
         // remove IO worker
-        this.regionFileCache = new RegionFileStorage(directory, dsync); // Paper - nuke IOWorker
+        this.regionFileCache = new RegionFileStorage(directory, dsync, true); // Paper - nuke IOWorker // Paper
         // Paper end - async chunk io
     }
 
