@@ -3224,8 +3224,10 @@ public abstract class LivingEntity extends Entity implements Attackable {
             } else if (this.isInLava() && (!this.onGround || d7 > d8)) {
                 this.jumpInLiquid(FluidTags.LAVA);
             } else if ((this.onGround || flag && d7 <= d8) && this.noJumpDelay == 0) {
+                if (new com.destroystokyo.paper.event.entity.EntityJumpEvent(getBukkitLivingEntity()).callEvent()) { // Paper
                 this.jumpFromGround();
                 this.noJumpDelay = 10;
+                } else { this.setJumping(false); } // Paper - setJumping(false) stops a potential loop
             }
         } else {
             this.noJumpDelay = 0;

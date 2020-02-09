@@ -887,5 +887,19 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     public org.bukkit.inventory.EquipmentSlot getHandRaised() {
         return getHandle().getUsedItemHand() == net.minecraft.world.InteractionHand.MAIN_HAND ? org.bukkit.inventory.EquipmentSlot.HAND : org.bukkit.inventory.EquipmentSlot.OFF_HAND;
     }
+
+    @Override
+    public boolean isJumping() {
+        return getHandle().jumping;
+    }
+
+    @Override
+    public void setJumping(boolean jumping) {
+        getHandle().setJumping(jumping);
+        if (jumping && getHandle() instanceof Mob) {
+            // this is needed to actually make a mob jump
+            ((Mob) getHandle()).getJumpControl().jump();
+        }
+    }
     // Paper end
 }

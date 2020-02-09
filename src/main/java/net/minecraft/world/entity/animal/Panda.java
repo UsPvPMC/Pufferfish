@@ -521,7 +521,9 @@ public class Panda extends Animal {
             Panda entitypanda = (Panda) iterator.next();
 
             if (!entitypanda.isBaby() && entitypanda.onGround && !entitypanda.isInWater() && entitypanda.canPerformAction()) {
+                if (new com.destroystokyo.paper.event.entity.EntityJumpEvent(getBukkitLivingEntity()).callEvent()) { // Paper
                 entitypanda.jumpFromGround();
+                } else { this.setJumping(false); } // Paper - setJumping(false) stops a potential loop
             }
         }
 
