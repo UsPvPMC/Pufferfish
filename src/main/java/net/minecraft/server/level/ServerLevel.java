@@ -217,6 +217,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     public final LevelStorageSource.LevelStorageAccess convertable;
     public final UUID uuid;
     public boolean hasPhysicsEvent = true; // Paper
+    public boolean hasEntityMoveEvent = false; // Paper
     public static Throwable getAddToWorldStackTrace(Entity entity) {
         final Throwable thr = new Throwable(entity + " Added to world at " + new java.util.Date());
         io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(thr);
