@@ -175,6 +175,7 @@ public class TripWireHookBlock extends Block {
 
         this.emitState(world, pos, flag4, flag5, flag2, flag3);
         if (!beingRemoved) {
+            if (world.getBlockState(pos).getBlock() == Blocks.TRIPWIRE_HOOK) // Paper - validate
             world.setBlock(pos, (BlockState) iblockdata3.setValue(TripWireHookBlock.FACING, enumdirection), 3);
             if (flag1) {
                 this.notifyNeighbors(world, pos, enumdirection);
