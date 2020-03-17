@@ -409,6 +409,7 @@ public class Bee extends Animal implements NeutralMob, FlyingAnimal {
         if (this.hivePos == null) {
             return false;
         } else {
+            if (!this.level.isLoadedAndInBounds(hivePos)) return false; // Paper
             BlockEntity tileentity = this.level.getBlockEntity(this.hivePos);
 
             return tileentity instanceof BeehiveBlockEntity && ((BeehiveBlockEntity) tileentity).isFireNearby();
@@ -442,6 +443,7 @@ public class Bee extends Animal implements NeutralMob, FlyingAnimal {
     }
 
     private boolean doesHiveHaveSpace(BlockPos pos) {
+        if (!this.level.isLoadedAndInBounds(pos)) return false; // Paper
         BlockEntity tileentity = this.level.getBlockEntity(pos);
 
         return tileentity instanceof BeehiveBlockEntity ? !((BeehiveBlockEntity) tileentity).isFull() : false;
@@ -919,6 +921,7 @@ public class Bee extends Animal implements NeutralMob, FlyingAnimal {
         @Override
         public boolean canBeeUse() {
             if (Bee.this.hasHive() && Bee.this.wantsToEnterHive() && Bee.this.hivePos.closerToCenterThan(Bee.this.position(), 2.0D)) {
+                if (!Bee.this.level.isLoadedAndInBounds(Bee.this.hivePos)) return false; // Paper
                 BlockEntity tileentity = Bee.this.level.getBlockEntity(Bee.this.hivePos);
 
                 if (tileentity instanceof BeehiveBlockEntity) {
@@ -942,6 +945,7 @@ public class Bee extends Animal implements NeutralMob, FlyingAnimal {
 
         @Override
         public void start() {
+            if (!Bee.this.level.isLoadedAndInBounds(Bee.this.hivePos)) return; // Paper
             BlockEntity tileentity = Bee.this.level.getBlockEntity(Bee.this.hivePos);
 
             if (tileentity instanceof BeehiveBlockEntity) {
