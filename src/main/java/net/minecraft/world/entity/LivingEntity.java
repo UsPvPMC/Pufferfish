@@ -2126,7 +2126,16 @@ public abstract class LivingEntity extends Entity implements Attackable {
 
             EntityDamageEvent event = CraftEventFactory.handleLivingEntityDamageEvent(this, damagesource, originalDamage, hardHatModifier, blockingModifier, armorModifier, resistanceModifier, magicModifier, absorptionModifier, hardHat, blocking, armor, resistance, magic, absorption);
             if (damagesource.getEntity() instanceof net.minecraft.world.entity.player.Player) {
-                ((net.minecraft.world.entity.player.Player) damagesource.getEntity()).resetAttackStrengthTicker(); // Moved from EntityHuman in order to make the cooldown reset get called after the damage event is fired
+                // Paper start - PlayerAttackEntityCooldownResetEvent
+                if (damagesource.getEntity() instanceof ServerPlayer) {
+                    ServerPlayer player = (ServerPlayer) damagesource.getEntity();
+                    if (new com.destroystokyo.paper.event.player.PlayerAttackEntityCooldownResetEvent(player.getBukkitEntity(), this.getBukkitEntity(), player.getAttackStrengthScale(0F)).callEvent()) {
+                        player.resetAttackStrengthTicker();
+                    }
+                } else {
+                    ((net.minecraft.world.entity.player.Player) damagesource.getEntity()).resetAttackStrengthTicker();
+                }
+                // Paper end
             }
             if (event.isCancelled()) {
                 return false;
