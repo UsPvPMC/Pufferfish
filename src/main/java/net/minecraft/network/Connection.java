@@ -519,7 +519,13 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
             if (!(this.packetListener instanceof net.minecraft.server.network.ServerLoginPacketListenerImpl loginPacketListener)
                 || loginPacketListener.state != net.minecraft.server.network.ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT
                 || Connection.joinAttemptsThisTick++ < MAX_PER_TICK) {
+            // Paper start - detailed watchdog information
+            net.minecraft.network.protocol.PacketUtils.packetProcessing.push(this.packetListener);
+            try { // Paper end - detailed watchdog information
             tickablepacketlistener.tick();
+            } finally { // Paper start - detailed watchdog information
+                net.minecraft.network.protocol.PacketUtils.packetProcessing.pop();
+            } // Paper end - detailed watchdog information
             }
             // Paper end
         }

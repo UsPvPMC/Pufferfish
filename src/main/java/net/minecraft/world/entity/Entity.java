@@ -972,7 +972,42 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
         return this.onGround;
     }
 
+    // Paper start - detailed watchdog information
+    public final Object posLock = new Object(); // Paper - log detailed entity tick information
+
+    private Vec3 moveVector;
+    private double moveStartX;
+    private double moveStartY;
+    private double moveStartZ;
+
+    public final Vec3 getMoveVector() {
+        return this.moveVector;
+    }
+
+    public final double getMoveStartX() {
+        return this.moveStartX;
+    }
+
+    public final double getMoveStartY() {
+        return this.moveStartY;
+    }
+
+    public final double getMoveStartZ() {
+        return this.moveStartZ;
+    }
+    // Paper end - detailed watchdog information
+
     public void move(MoverType movementType, Vec3 movement) {
+        // Paper start - detailed watchdog information
+        io.papermc.paper.util.TickThread.ensureTickThread("Cannot move an entity off-main");
+        synchronized (this.posLock) {
+            this.moveStartX = this.getX();
+            this.moveStartY = this.getY();
+            this.moveStartZ = this.getZ();
+            this.moveVector = movement;
+        }
+        try {
+        // Paper end - detailed watchdog information
         if (this.noPhysics) {
             this.setPos(this.getX() + movement.x, this.getY() + movement.y, this.getZ() + movement.z);
         } else {
@@ -1145,6 +1180,13 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                 this.level.getProfiler().pop();
             }
         }
+        // Paper start - detailed watchdog information
+        } finally {
+            synchronized (this.posLock) { // Paper
+                this.moveVector = null;
+            } // Paper
+        }
+        // Paper end - detailed watchdog information
     }
 
     protected boolean isHorizontalCollisionMinor(Vec3 adjustedMovement) {
@@ -4097,7 +4139,9 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     }
 
     public void setDeltaMovement(Vec3 velocity) {
+        synchronized (this.posLock) { // Paper
         this.deltaMovement = velocity;
+        } // Paper
     }
 
     public void addDeltaMovement(Vec3 velocity) {
@@ -4183,7 +4227,9 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
         }
         // Paper end - fix MC-4
         if (this.position.x != x || this.position.y != y || this.position.z != z) {
+            synchronized (this.posLock) { // Paper
             this.position = new Vec3(x, y, z);
+            } // Paper
             int i = Mth.floor(x);
             int j = Mth.floor(y);
             int k = Mth.floor(z);
