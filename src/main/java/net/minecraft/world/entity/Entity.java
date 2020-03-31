@@ -2199,9 +2199,11 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                     bworld = server.getWorld(worldName);
                 }
 
-                if (bworld == null) {
-                    bworld = ((org.bukkit.craftbukkit.CraftServer) server).getServer().getLevel(Level.OVERWORLD).getWorld();
-                }
+                // Paper start - Move player to spawn point if spawn in unloaded world
+//                if (bworld == null) {
+//                    bworld = ((org.bukkit.craftbukkit.CraftServer) server).getServer().getWorldServer(World.OVERWORLD).getWorld();
+//                }
+                // Paper end - Move player to spawn point if spawn in unloaded world
 
                 ((ServerPlayer) this).setLevel(bworld == null ? null : ((CraftWorld) bworld).getHandle());
             }
