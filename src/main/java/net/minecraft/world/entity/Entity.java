@@ -236,6 +236,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     public org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason spawnReason; // Paper
 
     public com.destroystokyo.paper.loottable.PaperLootableInventoryData lootableData; // Paper
+    public boolean collisionLoadChunks = false; // Paper
     private CraftEntity bukkitEntity;
 
     public @org.jetbrains.annotations.Nullable net.minecraft.server.level.ChunkMap.TrackedEntity tracker; // Paper
