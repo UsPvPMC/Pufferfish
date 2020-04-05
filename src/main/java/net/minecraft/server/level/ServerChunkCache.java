@@ -805,7 +805,24 @@ public class ServerChunkCache extends ChunkSource {
             this.level.timings.broadcastChunkUpdates.stopTiming(); // Paper - timing
             gameprofilerfiller.pop();
             // Paper end - use set of chunks requiring updates, rather than iterating every single one loaded
+            // Paper start - controlled flush for entity tracker packets
+            List<net.minecraft.network.Connection> disabledFlushes = new java.util.ArrayList<>(this.level.players.size());
+            for (ServerPlayer player : this.level.players) {
+                net.minecraft.server.network.ServerGamePacketListenerImpl connection = player.connection;
+                if (connection != null) {
+                    connection.connection.disableAutomaticFlush();
+                    disabledFlushes.add(connection.connection);
+                }
+            }
+            try { // Paper end - controlled flush for entity tracker packets
             this.chunkMap.tick();
+            // Paper start - controlled flush for entity tracker packets
+            } finally {
+                for (net.minecraft.network.Connection networkManager : disabledFlushes) {
+                    networkManager.enableAutomaticFlush();
+                }
+            }
+            // Paper end - controlled flush for entity tracker packets
         }
     }
 
