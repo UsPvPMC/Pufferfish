@@ -253,6 +253,11 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     @Nullable private net.kyori.adventure.text.Component cachedMotd; // Paper
     private int playerIdleTimeout;
     public final long[] tickTimes;
+    // Paper start
+    public final TickTimes tickTimes5s = new TickTimes(100);
+    public final TickTimes tickTimes10s = new TickTimes(200);
+    public final TickTimes tickTimes60s = new TickTimes(1200);
+    // Paper end
     @Nullable
     private KeyPair keyPair;
     @Nullable
@@ -1345,6 +1350,11 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         this.averageTickTime = this.averageTickTime * 0.8F + (float) j / 1000000.0F * 0.19999999F;
         long k = Util.getNanos();
 
+        // Paper start
+        tickTimes5s.add(this.tickCount, j);
+        tickTimes10s.add(this.tickCount, j);
+        tickTimes60s.add(this.tickCount, j);
+        // Paper end
         this.frameTimer.logFrameDuration(k - i);
         this.profiler.pop();
         org.spigotmc.WatchdogThread.tick(); // Spigot
@@ -2581,4 +2591,30 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     public static record ServerResourcePackInfo(String url, String hash, boolean isRequired, @Nullable Component prompt) {
 
     }
+
+    // Paper start
+    public static class TickTimes {
+        private final long[] times;
+
+        public TickTimes(int length) {
+            times = new long[length];
+        }
+
+        void add(int index, long time) {
+            times[index % times.length] = time;
+        }
+
+        public long[] getTimes() {
+            return times.clone();
+        }
+
+        public double getAverage() {
+            long total = 0L;
+            for (long value : times) {
+                total += value;
+            }
+            return ((double) total / (double) times.length) * 1.0E-6D;
+        }
+    }
+    // Paper end
 }
