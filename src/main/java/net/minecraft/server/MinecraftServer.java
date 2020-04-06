@@ -1306,6 +1306,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     private boolean pollTaskInternal() {
         if (super.pollTask()) {
+            this.executeMidTickTasks(); // Paper - execute chunk tasks mid tick
             return true;
         } else {
             if (this.haveTime()) {
@@ -2715,4 +2716,74 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         }
     }
     // Paper end
+
+    // Paper start - execute chunk tasks mid tick
+    static final long CHUNK_TASK_QUEUE_BACKOFF_MIN_TIME = 25L * 1000L; // 25us
+    static final long MAX_CHUNK_EXEC_TIME = 1000L; // 1us
+
+    static final long TASK_EXECUTION_FAILURE_BACKOFF = 5L * 1000L; // 5us
+
+    private static long lastMidTickExecute;
+    private static long lastMidTickExecuteFailure;
+
+    private boolean tickMidTickTasks() {
+        // give all worlds a fair chance at by targetting them all.
+        // if we execute too many tasks, that's fine - we have logic to correctly handle overuse of allocated time.
+        boolean executed = false;
+        for (ServerLevel world : this.getAllLevels()) {
+            long currTime = System.nanoTime();
+            if (currTime - world.lastMidTickExecuteFailure <= TASK_EXECUTION_FAILURE_BACKOFF) {
+                continue;
+            }
+            if (!world.getChunkSource().pollTask()) {
+                // we need to back off if this fails
+                world.lastMidTickExecuteFailure = currTime;
+            } else {
+                executed = true;
+            }
+        }
+
+        return executed;
+    }
+
+    public final void executeMidTickTasks() {
+        org.spigotmc.AsyncCatcher.catchOp("mid tick chunk task execution");
+        long startTime = System.nanoTime();
+        if ((startTime - lastMidTickExecute) <= CHUNK_TASK_QUEUE_BACKOFF_MIN_TIME || (startTime - lastMidTickExecuteFailure) <= TASK_EXECUTION_FAILURE_BACKOFF) {
+            // it's shown to be bad to constantly hit the queue (chunk loads slow to a crawl), even if no tasks are executed.
+            // so, backoff to prevent this
+            return;
+        }
+
+        co.aikar.timings.MinecraftTimings.midTickChunkTasks.startTiming();
+        try {
+            for (;;) {
+                boolean moreTasks = this.tickMidTickTasks();
+                long currTime = System.nanoTime();
+                long diff = currTime - startTime;
+
+                if (!moreTasks || diff >= MAX_CHUNK_EXEC_TIME) {
+                    if (!moreTasks) {
+                        lastMidTickExecuteFailure = currTime;
+                    }
+
+                    // note: negative values reduce the time
+                    long overuse = diff - MAX_CHUNK_EXEC_TIME;
+                    if (overuse >= (10L * 1000L * 1000L)) { // 10ms
+                        // make sure something like a GC or dumb plugin doesn't screw us over...
+                        overuse = 10L * 1000L * 1000L; // 10ms
+                    }
+
+                    double overuseCount = (double)overuse/(double)MAX_CHUNK_EXEC_TIME;
+                    long extraSleep = (long)Math.round(overuseCount*CHUNK_TASK_QUEUE_BACKOFF_MIN_TIME);
+
+                    lastMidTickExecute = currTime + extraSleep;
+                    return;
+                }
+            }
+        } finally {
+            co.aikar.timings.MinecraftTimings.midTickChunkTasks.stopTiming();
+        }
+    }
+    // Paper end - execute chunk tasks mid tick
 }

@@ -212,6 +212,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     private final StructureManager structureManager;
     private final StructureCheck structureCheck;
     private final boolean tickTime;
+    public long lastMidTickExecuteFailure; // Paper - execute chunk tasks mid tick
 
     // CraftBukkit start
     public final LevelStorageSource.LevelStorageAccess convertable;
@@ -1044,6 +1045,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
         if (fluid1.is(fluid)) {
             fluid1.tick(this, pos);
         }
+        MinecraftServer.getServer().executeMidTickTasks(); // Paper - exec chunk tasks during world tick
 
     }
 
@@ -1053,6 +1055,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
         if (iblockdata.is(block)) {
             iblockdata.tick(this, pos, this.random);
         }
+        MinecraftServer.getServer().executeMidTickTasks(); // Paper - exec chunk tasks during world tick
 
     }
 
