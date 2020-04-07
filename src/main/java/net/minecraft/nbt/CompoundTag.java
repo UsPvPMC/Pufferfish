@@ -36,7 +36,7 @@ public class CompoundTag implements Tag {
             if (i > 512) {
                 throw new RuntimeException("Tried to read NBT tag with too high complexity, depth > 512");
             } else {
-                Map<String, Tag> map = Maps.newHashMap();
+                it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap<String, Tag> map = new it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap<>(8, 0.8f); // Paper - reduce memory footprint of NBTTagCompound
 
                 byte b;
                 while((b = CompoundTag.readNamedTagType(dataInput, nbtAccounter)) != 0) {
@@ -130,7 +130,7 @@ public class CompoundTag implements Tag {
     }
 
     public CompoundTag() {
-        this(Maps.newHashMap());
+        this(new it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap<>(8, 0.8f)); // Paper - reduce memory footprint of NBTTagCompound
     }
 
     @Override
@@ -449,8 +449,16 @@ public class CompoundTag implements Tag {
 
     @Override
     public CompoundTag copy() {
-        Map<String, Tag> map = Maps.newHashMap(Maps.transformValues(this.tags, Tag::copy));
-        return new CompoundTag(map);
+        // Paper start - reduce memory footprint of NBTTagCompound
+        it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap<String, Tag> ret = new it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap<>(this.tags.size(), 0.8f);
+        java.util.Iterator<java.util.Map.Entry<String, Tag>> iterator = (this.tags instanceof it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap) ? ((it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap)this.tags).object2ObjectEntrySet().fastIterator() : this.tags.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Tag> entry = iterator.next();
+            ret.put(entry.getKey(), entry.getValue().copy());
+        }
+
+        return new CompoundTag(ret);
+        // Paper end - reduce memory footprint of NBTTagCompound
     }
 
     @Override
