@@ -791,7 +791,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         this.executeModerately();
         // CraftBukkit end
         if (worldserver.getWorld().getKeepSpawnInMemory()) worldloadlistener.stop(); // Paper
-        chunkproviderserver.getLightEngine().setTaskPerBatch(5);
+        chunkproviderserver.getLightEngine().setTaskPerBatch(worldserver.paperConfig().misc.lightQueueSize); // Paper - increase light queue size
         // CraftBukkit start
         // this.updateMobSpawningFlags();
         worldserver.setSpawnSettings(this.isSpawningMonsters(), this.isSpawningAnimals());
