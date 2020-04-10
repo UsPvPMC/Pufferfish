@@ -227,6 +227,7 @@ public abstract class PlayerList {
         // Paper start
         if (nbttagcompound == null) {
             player.spawnReason = org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.DEFAULT; // set Player SpawnReason to DEFAULT on first login
+            player.fudgeSpawnLocation(worldserver1); // only move to spawn on first login, otherwise, stay where you are....
         }
         // Paper end
         player.setLevel(worldserver1);
