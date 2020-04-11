@@ -301,6 +301,8 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     private static final long KEEPALIVE_LIMIT = Long.getLong("paper.playerconnection.keepalive", 30) * 1000; // Paper - provide property to set keepalive limit
     private static final int MAX_SIGN_LINE_LENGTH = Integer.getInteger("Paper.maxSignLength", 80); // Paper
 
+    private String clientBrandName = null; // Paper - Brand name
+
     public ServerGamePacketListenerImpl(MinecraftServer server, Connection connection, ServerPlayer player) {
         this.lastChatTimeStamp = new AtomicReference(Instant.EPOCH);
         this.lastSeenMessages = new LastSeenMessagesValidator(20);
@@ -3338,6 +3340,8 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     private static final ResourceLocation CUSTOM_REGISTER = new ResourceLocation("register");
     private static final ResourceLocation CUSTOM_UNREGISTER = new ResourceLocation("unregister");
 
+    private static final ResourceLocation MINECRAFT_BRAND = new ResourceLocation("brand"); // Paper - Brand support
+
     @Override
     public void handleCustomPayload(ServerboundCustomPayloadPacket packet) {
         PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
@@ -3365,6 +3369,15 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             try {
                 byte[] data = new byte[packet.data.readableBytes()];
                 packet.data.readBytes(data);
+                // Paper start - Brand support
+                if (packet.identifier.equals(MINECRAFT_BRAND)) {
+                    try {
+                        this.clientBrandName = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.copiedBuffer(data)).readUtf(256);
+                    } catch (StringIndexOutOfBoundsException ex) {
+                        this.clientBrandName = "illegal";
+                    }
+                }
+                // Paper end
                 this.cserver.getMessenger().dispatchIncomingMessage(this.player.getBukkitEntity(), packet.identifier.toString(), data);
             } catch (Exception ex) {
                 ServerGamePacketListenerImpl.LOGGER.error("Couldn\'t dispatch custom payload", ex);
@@ -3373,6 +3386,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
 
     }
+
+    // Paper start - brand support
+    public String getClientBrandName() {
+        return clientBrandName;
+    }
+    // Paper end
 
     public final boolean isDisconnected() {
         return (!this.player.joining && !this.connection.isConnected()) || this.processedDisconnect; // Paper

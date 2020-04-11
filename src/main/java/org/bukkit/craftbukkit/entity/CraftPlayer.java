@@ -2983,6 +2983,13 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         // Paper end
     };
 
+    // Paper start - brand support
+    @Override
+    public String getClientBrandName() {
+        return getHandle().connection != null ? getHandle().connection.getClientBrandName() : null;
+    }
+    // Paper end
+
     public Player.Spigot spigot()
     {
         return this.spigot;
