@@ -538,7 +538,7 @@ public abstract class PlayerList {
         this.cserver.getPluginManager().callEvent(playerQuitEvent);
         entityplayer.getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());
 
-        entityplayer.doTick(); // SPIGOT-924
+        if (server.isSameThread()) entityplayer.doTick(); // SPIGOT-924 // Paper - don't tick during emergency shutdowns (Watchdog)
         // CraftBukkit end
 
         // Paper start - Remove from collideRule team if needed

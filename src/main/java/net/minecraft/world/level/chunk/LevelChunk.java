@@ -1225,6 +1225,7 @@ public class LevelChunk extends ChunkAccess {
 
                         gameprofilerfiller.pop();
                     } catch (Throwable throwable) {
+                        if (throwable instanceof ThreadDeath) throw throwable; // Paper
                         // Paper start - Prevent tile entity and entity crashes
                         final String msg = String.format("BlockEntity threw exception at %s:%s,%s,%s", LevelChunk.this.getLevel().getWorld().getName(), this.getPos().getX(), this.getPos().getY(), this.getPos().getZ());
                         net.minecraft.server.MinecraftServer.LOGGER.error(msg, throwable);

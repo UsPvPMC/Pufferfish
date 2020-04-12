@@ -299,7 +299,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<Runnable>();
     public int autosavePeriod;
     public Commands vanillaCommandDispatcher;
-    private boolean forceTicks;
+    public boolean forceTicks; // Paper
     // CraftBukkit end
     // Spigot start
     public static final int TPS = 20;
@@ -309,6 +309,9 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     // Spigot end
     public final io.papermc.paper.configuration.PaperConfigurations paperConfigurations;
     public static long currentTickLong = 0L; // Paper
+
+    public volatile Thread shutdownThread; // Paper
+    public volatile boolean abnormalExit = false; // Paper
 
     public static <S extends MinecraftServer> S spin(Function<Thread, S> serverFactory) {
         AtomicReference<S> atomicreference = new AtomicReference();
@@ -888,6 +891,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     // CraftBukkit start
     private boolean hasStopped = false;
+    public volatile boolean hasFullyShutdown = false; // Paper
     private final Object stopLock = new Object();
     public final boolean hasStopped() {
         synchronized (this.stopLock) {
@@ -902,6 +906,19 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             if (this.hasStopped) return;
             this.hasStopped = true;
         }
+        // Paper start - kill main thread, and kill it hard
+        shutdownThread = Thread.currentThread();
+        org.spigotmc.WatchdogThread.doStop(); // Paper
+        if (!isSameThread()) {
+            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO PAPER)");
+            while (this.getRunningThread().isAlive()) {
+                this.getRunningThread().stop();
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {}
+            }
+        }
+        // Paper end
         // CraftBukkit end
         if (this.metricsRecorder.isRecording()) {
             this.cancelRecordingMetrics();
@@ -958,7 +975,18 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             this.getProfileCache().save(false); // Paper
         }
         // Spigot end
+        // Paper start - move final shutdown items here
+        LOGGER.info("Flushing Chunk IO");
         io.papermc.paper.chunk.system.io.RegionFileIOThread.close(true); // Paper // Paper - rewrite chunk system
+        LOGGER.info("Closing Thread Pool");
+        Util.shutdownExecutors(); // Paper
+        LOGGER.info("Closing Server");
+        try {
+            net.minecrell.terminalconsole.TerminalConsoleAppender.close(); // Paper - Use TerminalConsoleAppender
+        } catch (Exception e) {
+        }
+        this.onServerExit();
+        // Paper end
     }
 
     public String getLocalIp() {
@@ -1053,6 +1081,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     protected void runServer() {
         try {
+            long serverStartTime = Util.getNanos(); // Paper
             if (!this.initServer()) {
                 throw new IllegalStateException("Failed to initialize server");
             }
@@ -1062,6 +1091,18 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             this.status = this.buildServerStatus();
 
             // Spigot start
+            // Paper start - move done tracking
+            LOGGER.info("Running delayed init tasks");
+            this.server.getScheduler().mainThreadHeartbeat(this.tickCount); // run all 1 tick delay tasks during init,
+            // this is going to be the first thing the tick process does anyways, so move done and run it after
+            // everything is init before watchdog tick.
+            // anything at 3+ won't be caught here but also will trip watchdog....
+            // tasks are default scheduled at -1 + delay, and first tick will tick at 1
+            String doneTime = String.format(java.util.Locale.ROOT, "%.3fs", (double) (Util.getNanos() - serverStartTime) / 1.0E9D);
+            LOGGER.info("Done ({})! For help, type \"help\"", doneTime);
+            // Paper end
+
+            org.spigotmc.WatchdogThread.tick(); // Paper
             org.spigotmc.WatchdogThread.hasStarted = true; // Paper
             Arrays.fill( recentTps, 20 );
             long start = System.nanoTime(), curTime, tickSection = start; // Paper - Further improve server tick loop
@@ -1122,6 +1163,12 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                 JvmProfiler.INSTANCE.onServerTick(this.averageTickTime);
             }
         } catch (Throwable throwable) {
+            // Paper start
+            if (throwable instanceof ThreadDeath) {
+                MinecraftServer.LOGGER.error("Main thread terminated by WatchDog due to hard crash", throwable);
+                return;
+            }
+            // Paper end
             MinecraftServer.LOGGER.error("Encountered an unexpected exception", throwable);
             // Spigot Start
             if ( throwable.getCause() != null )
@@ -1152,14 +1199,14 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                     this.services.profileCache().clearExecutor();
                 }
 
-                org.spigotmc.WatchdogThread.doStop(); // Spigot
+                //org.spigotmc.WatchdogThread.doStop(); // Spigot // Paper - move into stop
                 // CraftBukkit start - Restore terminal to original settings
                 try {
-                    net.minecrell.terminalconsole.TerminalConsoleAppender.close(); // Paper - Use TerminalConsoleAppender
+                    //net.minecrell.terminalconsole.TerminalConsoleAppender.close(); // Paper - Move into stop
                 } catch (Exception ignored) {
                 }
                 // CraftBukkit end
-                this.onServerExit();
+                //this.onServerExit(); // Paper - moved into stop
             }
 
         }
@@ -1228,6 +1275,12 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     @Override
     public TickTask wrapRunnable(Runnable runnable) {
+        // Paper start - anything that does try to post to main during watchdog crash, run on watchdog
+        if (this.hasStopped && Thread.currentThread().equals(shutdownThread)) {
+            runnable.run();
+            runnable = () -> {};
+        }
+        // Paper end
         return new TickTask(this.tickCount, runnable);
     }
 
@@ -1463,6 +1516,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                 try {
                     crashreport = CrashReport.forThrowable(throwable, "Exception ticking world");
                 } catch (Throwable t) {
+                    if (throwable instanceof ThreadDeath) { throw (ThreadDeath)throwable; } // Paper
                     throw new RuntimeException("Error generating crash report", t);
                 }
                 // Spigot End
@@ -1961,7 +2015,15 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
             this.worldData.setDataConfiguration(worlddataconfiguration);
             this.resources.managers.updateRegistryTags(this.registryAccess());
-            this.getPlayerList().saveAll();
+            // Paper start
+            if (Thread.currentThread() != this.serverThread) {
+                return;
+            }
+            // this.getPlayerList().saveAll(); // Paper - we don't need to save everything, just advancements
+            for (ServerPlayer player : this.getPlayerList().getPlayers()) {
+                player.getAdvancements().save();
+            }
+            // Paper end
             this.getPlayerList().reloadResources();
             this.functionManager.replaceLibrary(this.resources.managers.getFunctionLibrary());
             this.structureTemplateManager.onResourceManagerReload(this.resources.resourceManager);
