@@ -650,7 +650,7 @@ public class ServerPlayer extends Player {
             containerUpdateDelay = level.paperConfig().tickRates.containerUpdate;
         }
         // Paper end
-        if (!this.level.isClientSide && !this.containerMenu.stillValid(this)) {
+        if (!this.level.isClientSide && this.containerMenu != this.inventoryMenu && (isImmobile() || !this.containerMenu.stillValid(this))) { // Paper - auto close while frozen
             this.closeContainer(org.bukkit.event.inventory.InventoryCloseEvent.Reason.CANT_USE); // Paper
             this.containerMenu = this.inventoryMenu;
         }
@@ -1499,7 +1499,7 @@ public class ServerPlayer extends Player {
             } else {
                 // CraftBukkit start
                 this.containerMenu = container;
-                this.connection.send(new ClientboundOpenScreenPacket(container.containerId, container.getType(), container.getTitle()));
+                if (!isImmobile()) this.connection.send(new ClientboundOpenScreenPacket(container.containerId, container.getType(), container.getTitle())); // Paper
                 // CraftBukkit end
                 this.initMenu(container);
                 return OptionalInt.of(this.containerCounter);
