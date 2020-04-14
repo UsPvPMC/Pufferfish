@@ -644,6 +644,20 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         }
         throw new RuntimeException("Unknown settings type");
     }
+
+    @Override
+    public org.bukkit.entity.Firework boostElytra(ItemStack firework) {
+        Validate.isTrue(isGliding(), "Player must be gliding");
+        Validate.isTrue(firework != null, "firework == null");
+        Validate.isTrue(firework.getType() == Material.FIREWORK_ROCKET, "Firework must be Material.FIREWORK_ROCKET");
+
+        net.minecraft.world.item.ItemStack item = org.bukkit.craftbukkit.inventory.CraftItemStack.asNMSCopy(firework);
+        net.minecraft.world.level.Level world = ((CraftWorld) getWorld()).getHandle();
+        net.minecraft.world.entity.projectile.FireworkRocketEntity entity = new net.minecraft.world.entity.projectile.FireworkRocketEntity(world, item, getHandle());
+        return world.addFreshEntity(entity)
+            ? (org.bukkit.entity.Firework) entity.getBukkitEntity()
+            : null;
+    }
     // Paper end
 
     @Override
