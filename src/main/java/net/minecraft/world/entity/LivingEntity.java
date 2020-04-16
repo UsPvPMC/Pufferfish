@@ -3328,10 +3328,24 @@ public abstract class LivingEntity extends Entity implements Attackable {
         if (this.level.isClientSide()) {
             this.level.getEntities(EntityTypeTest.forClass(net.minecraft.world.entity.player.Player.class), this.getBoundingBox(), EntitySelector.pushableBy(this)).forEach(this::doPush);
         } else {
+            // Paper start - don't run getEntities if we're not going to use its result
+            if (!this.isPushable()) {
+                return;
+            }
+            net.minecraft.world.scores.Team team = this.getTeam();
+            if (team != null && team.getCollisionRule() == net.minecraft.world.scores.Team.CollisionRule.NEVER) {
+                return;
+            }
+
+            int i = this.level.getGameRules().getInt(GameRules.RULE_MAX_ENTITY_CRAMMING);
+            if (i <= 0 && level.paperConfig().collisions.maxEntityCollisions <= 0) {
+                return;
+            }
+            // Paper end - don't run getEntities if we're not going to use its result
             List<Entity> list = this.level.getEntities((Entity) this, this.getBoundingBox(), EntitySelector.pushableBy(this));
 
             if (!list.isEmpty()) {
-                int i = this.level.getGameRules().getInt(GameRules.RULE_MAX_ENTITY_CRAMMING);
+                // Paper - moved up
                 int j;
 
                 if (i > 0 && list.size() > i - 1 && this.random.nextInt(4) == 0) {
