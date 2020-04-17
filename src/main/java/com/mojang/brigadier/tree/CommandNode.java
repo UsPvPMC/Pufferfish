@@ -26,7 +26,7 @@ import java.util.function.Predicate;
 import net.minecraft.commands.CommandSourceStack;
 
 public abstract class CommandNode<S> implements Comparable<CommandNode<S>> {
-    private final Map<String, CommandNode<S>> children = new LinkedHashMap<>();
+    private Map<String, CommandNode<S>> children = com.google.common.collect.Maps.newTreeMap(); // Paper - Switch to tree map for automatic sorting
     private final Map<String, LiteralCommandNode<S>> literals = new LinkedHashMap<>();
     private final Map<String, ArgumentCommandNode<S, ?>> arguments = new LinkedHashMap<>();
     public Predicate<S> requirement;
@@ -107,6 +107,8 @@ public abstract class CommandNode<S> implements Comparable<CommandNode<S>> {
                 this.arguments.put(node.getName(), (ArgumentCommandNode<S, ?>) node);
             }
         }
+
+        // Paper - Remove manual sorting, it is no longer needed
     }
 
     public void findAmbiguities(final AmbiguityConsumer<S> consumer) {
