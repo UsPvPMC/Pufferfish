@@ -831,8 +831,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                         ParseResults<CommandSourceStack> parseresults = this.server.getCommands().getDispatcher().parse(stringreader, this.player.createCommandSourceStack());
 
                         this.server.getCommands().getDispatcher().getCompletionSuggestions(parseresults).thenAccept((suggestions) -> {
-                            if (suggestions.isEmpty()) return; // CraftBukkit - don't send through empty suggestions - prevents [<args>] from showing for plugins with nothing more to offer
-                            this.connection.send(new ClientboundCommandSuggestionsPacket(packet.getId(), suggestions));
+                            // Paper start - Brigadier API
+                            com.destroystokyo.paper.event.brigadier.AsyncPlayerSendSuggestionsEvent suggestEvent = new com.destroystokyo.paper.event.brigadier.AsyncPlayerSendSuggestionsEvent(this.getCraftPlayer(), suggestions, command);
+                            suggestEvent.setCancelled(suggestions.isEmpty());
+                            if (!suggestEvent.callEvent()) return;
+                            this.connection.send(new ClientboundCommandSuggestionsPacket(packet.getId(), suggestEvent.getSuggestions()));
+                            // Paper end - Brigadier API
                         });
                     });
                 }
@@ -847,7 +851,13 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                         builder.suggest(completion.suggestion(), PaperAdventure.asVanilla(completion.tooltip()));
                     }
                 });
-                player.connection.send(new ClientboundCommandSuggestionsPacket(packet.getId(), builder.buildFuture().join()));
+                // Paper start - Brigadier API
+                com.mojang.brigadier.suggestion.Suggestions suggestions = builder.buildFuture().join();
+                com.destroystokyo.paper.event.brigadier.AsyncPlayerSendSuggestionsEvent suggestEvent = new com.destroystokyo.paper.event.brigadier.AsyncPlayerSendSuggestionsEvent(this.getCraftPlayer(), suggestions, command);
+                suggestEvent.setCancelled(suggestions.isEmpty());
+                if (!suggestEvent.callEvent()) return;
+                this.connection.send(new ClientboundCommandSuggestionsPacket(packet.getId(), suggestEvent.getSuggestions()));
+                // Paper end - Brigadier API
             }
         });
         // Paper end - async tab completion
