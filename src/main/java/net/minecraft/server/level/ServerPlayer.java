@@ -265,6 +265,7 @@ public class ServerPlayer extends Player {
     public double maxHealthCache;
     public boolean joining = true;
     public boolean sentListPacket = false;
+    public boolean supressTrackerForLogin = false; // Paper
     public Integer clientViewDistance;
     public String kickLeaveMessage = null; // SPIGOT-3034: Forward leave message to PlayerQuitEvent
     // CraftBukkit end
