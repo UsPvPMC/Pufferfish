@@ -47,6 +47,7 @@ public final class MinecraftTimings {
     public static final Timing antiXrayUpdateTimer = Timings.ofSafe("anti-xray - update");
     public static final Timing antiXrayObfuscateTimer = Timings.ofSafe("anti-xray - obfuscate");
     public static final Timing distanceManagerTick = Timings.ofSafe("Distance Manager Tick"); // Paper - add timings for distance manager
+    public static final Timing scoreboardScoreSearch = Timings.ofSafe("Scoreboard score search"); // Paper - add timings for scoreboard search
 
     public static final Timing midTickChunkTasks = Timings.ofSafe("Mid Tick Chunk Tasks");
 
