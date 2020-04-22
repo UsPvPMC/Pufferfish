@@ -84,8 +84,10 @@ public class DispenserBlock extends BaseEntityBlock {
         int i = tileentitydispenser.getRandomSlot(world.random);
 
         if (i < 0) {
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockFailedDispenseEvent(world, pos)) {// Paper - BlockFailedDispenseEvent is called here
             world.levelEvent(1001, pos, 0);
             world.gameEvent((Entity) null, GameEvent.DISPENSE_FAIL, pos);
+            } // Paper
         } else {
             ItemStack itemstack = tileentitydispenser.getItem(i);
             DispenseItemBehavior idispensebehavior = this.getDispenseMethod(itemstack);
