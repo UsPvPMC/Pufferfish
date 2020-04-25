@@ -1636,9 +1636,9 @@ public abstract class LivingEntity extends Entity implements Attackable {
                 // Paper start
                 org.bukkit.event.entity.EntityDeathEvent deathEvent = this.dropAllDeathLoot(damageSource);
                 if (deathEvent == null || !deathEvent.isCancelled()) {
-                    if (this.deathScore >= 0 && entityliving != null) {
-                        entityliving.awardKillScore(this, this.deathScore, damageSource);
-                    }
+                    // if (this.deathScore >= 0 && entityliving != null) { // Paper moved to be run earlier in #dropAllDeathLoot before destroying the drop items in CraftEventFactory#callEntityDeathEvent
+                    //     entityliving.awardKillScore(this, this.deathScore, damageSource);
+                    // }
                     // Paper start - clear equipment if event is not cancelled
                     if (this instanceof Mob) {
                         for (EquipmentSlot slot : this.clearedEquipmentSlots) {
@@ -1736,8 +1736,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
             this.dropCustomDeathLoot(source, i, flag);
             this.clearEquipmentSlots = prev; // Paper
         }
-        // CraftBukkit start - Call death event
-        org.bukkit.event.entity.EntityDeathEvent deathEvent = CraftEventFactory.callEntityDeathEvent(this, this.drops); // Paper
+        // CraftBukkit start - Call death event // Paper start - call advancement triggers with correct entity equipment
+        org.bukkit.event.entity.EntityDeathEvent deathEvent = CraftEventFactory.callEntityDeathEvent(this, this.drops, () -> {
+            final LivingEntity entityliving = this.getKillCredit();
+            if (this.deathScore >= 0 && entityliving != null) {
+                entityliving.awardKillScore(this, this.deathScore, source);
+            }
+        }); // Paper end
         this.postDeathDropItems(deathEvent); // Paper
         this.drops = new ArrayList<>();
         // CraftBukkit end
