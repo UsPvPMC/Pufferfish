@@ -563,6 +563,7 @@ public class Phantom extends FlyingMob implements Enemy {
                         Player entityhuman = (Player) iterator.next();
 
                         if (Phantom.this.canAttack(entityhuman, TargetingConditions.DEFAULT)) {
+                            if (!level.paperConfig().entities.behavior.phantomsOnlyAttackInsomniacs || EntitySelector.isInsomniac.test(entityhuman)) // Paper
                             Phantom.this.setTarget(entityhuman, org.bukkit.event.entity.EntityTargetEvent.TargetReason.CLOSEST_PLAYER, true); // CraftBukkit - reason
                             return true;
                         }

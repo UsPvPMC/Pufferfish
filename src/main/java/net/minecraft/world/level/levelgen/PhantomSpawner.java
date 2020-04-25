@@ -51,7 +51,7 @@ public class PhantomSpawner implements CustomSpawner {
                     while (iterator.hasNext()) {
                         Player entityhuman = (Player) iterator.next();
 
-                        if (!entityhuman.isSpectator()) {
+                        if (!entityhuman.isSpectator() && (!world.paperConfig().entities.behavior.phantomsDoNotSpawnOnCreativePlayers || !entityhuman.isCreative())) { // Paper
                             BlockPos blockposition = entityhuman.blockPosition();
 
                             if (!world.dimensionType().hasSkyLight() || blockposition.getY() >= world.getSeaLevel() && world.canSeeSky(blockposition)) {
