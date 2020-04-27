@@ -9,7 +9,7 @@ import net.minecraft.world.level.chunk.LightChunkGetter;
 
 public class BlockLightSectionStorage extends LayerLightSectionStorage<BlockLightSectionStorage.BlockDataLayerStorageMap> {
     protected BlockLightSectionStorage(LightChunkGetter chunkProvider) {
-        super(LightLayer.BLOCK, chunkProvider, new BlockLightSectionStorage.BlockDataLayerStorageMap(new Long2ObjectOpenHashMap<>()));
+        super(LightLayer.BLOCK, chunkProvider, new BlockLightSectionStorage.BlockDataLayerStorageMap(new com.destroystokyo.paper.util.map.QueuedChangesMapLong2Object<>(), false)); // Paper - avoid copying light data
     }
 
     @Override
@@ -20,13 +20,13 @@ public class BlockLightSectionStorage extends LayerLightSectionStorage<BlockLigh
     }
 
     protected static final class BlockDataLayerStorageMap extends DataLayerStorageMap<BlockLightSectionStorage.BlockDataLayerStorageMap> {
-        public BlockDataLayerStorageMap(Long2ObjectOpenHashMap<DataLayer> arrays) {
-            super(arrays);
+        public BlockDataLayerStorageMap(com.destroystokyo.paper.util.map.QueuedChangesMapLong2Object<DataLayer> long2objectopenhashmap, boolean isVisible) { // Paper - avoid copying light data
+            super(long2objectopenhashmap, isVisible); // Paper - avoid copying light data
         }
 
         @Override
         public BlockLightSectionStorage.BlockDataLayerStorageMap copy() {
-            return new BlockLightSectionStorage.BlockDataLayerStorageMap(this.map.clone());
+            return new BlockDataLayerStorageMap(this.data, true); // Paper - avoid copying light data
         }
     }
 }

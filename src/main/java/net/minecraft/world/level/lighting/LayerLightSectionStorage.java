@@ -27,7 +27,7 @@ public abstract class LayerLightSectionStorage<M extends DataLayerStorageMap<M>>
     protected final LongSet dataSectionSet = new LongOpenHashSet();
     protected final LongSet toMarkNoData = new LongOpenHashSet();
     protected final LongSet toMarkData = new LongOpenHashSet();
-    protected volatile M visibleSectionData;
+    protected volatile M e_visible; protected final Object visibleUpdateLock = new Object(); // Paper - diff on change, should be "visible" - force compile fail on usage change
     protected final M updatingSectionData;
     protected final LongSet changedSections = new LongOpenHashSet();
     protected final LongSet sectionsAffectedByLightUpdates = new LongOpenHashSet();
@@ -42,8 +42,8 @@ public abstract class LayerLightSectionStorage<M extends DataLayerStorageMap<M>>
         this.layer = lightType;
         this.chunkSource = chunkProvider;
         this.updatingSectionData = lightData;
-        this.visibleSectionData = lightData.copy();
-        this.visibleSectionData.disableCache();
+        this.e_visible = lightData.copy(); // Paper - avoid copying light dat
+        this.e_visible.disableCache(); // Paper - avoid copying light dat
     }
 
     protected boolean storingLightForSection(long sectionPos) {
@@ -52,7 +52,15 @@ public abstract class LayerLightSectionStorage<M extends DataLayerStorageMap<M>>
 
     @Nullable
     protected DataLayer getDataLayer(long sectionPos, boolean cached) {
-        return this.getDataLayer((M)(cached ? this.updatingSectionData : this.visibleSectionData), sectionPos);
+        // Paper start - avoid copying light data
+        if (cached) {
+            return this.getDataLayer(this.updatingSectionData, sectionPos);
+        } else {
+            synchronized (this.visibleUpdateLock) {
+                return this.getDataLayer(this.e_visible, sectionPos);
+            }
+        }
+        // Paper end - avoid copying light data
     }
 
     @Nullable
@@ -342,9 +350,11 @@ public abstract class LayerLightSectionStorage<M extends DataLayerStorageMap<M>>
 
     protected void swapSectionMap() {
         if (!this.changedSections.isEmpty()) {
+            synchronized (this.visibleUpdateLock) { // Paper - avoid copying light data
             M dataLayerStorageMap = this.updatingSectionData.copy();
             dataLayerStorageMap.disableCache();
-            this.visibleSectionData = dataLayerStorageMap;
+            this.e_visible = dataLayerStorageMap; // Paper - avoid copying light data
+            } // Paper - avoid copying light data
             this.changedSections.clear();
         }
 
