@@ -958,7 +958,14 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     @Override
     public void handlePickItem(ServerboundPickItemPacket packet) {
         PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
-        this.player.getInventory().pickSlot(packet.getSlot());
+        // Paper start - validate pick item position
+        if (!(packet.getSlot() >= 0 && packet.getSlot() < this.player.getInventory().items.size())) {
+            ServerGamePacketListenerImpl.LOGGER.warn("{} tried to set an invalid carried item", this.player.getName().getString());
+            this.disconnect("Invalid hotbar selection (Hacking?)");
+            return;
+        }
+        this.player.getInventory().pickSlot(packet.getSlot()); // Paper - Diff above if changed
+        // Paper end
         this.player.connection.send(new ClientboundContainerSetSlotPacket(-2, 0, this.player.getInventory().selected, this.player.getInventory().getItem(this.player.getInventory().selected)));
         this.player.connection.send(new ClientboundContainerSetSlotPacket(-2, 0, packet.getSlot(), this.player.getInventory().getItem(packet.getSlot())));
         this.player.connection.send(new ClientboundSetCarriedItemPacket(this.player.getInventory().selected));
