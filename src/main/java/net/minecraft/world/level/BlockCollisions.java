@@ -106,7 +106,7 @@ public class BlockCollisions extends AbstractIterator<VoxelShape> {
 
                 VoxelShape voxelShape = blockState.getCollisionShape(this.collisionGetter, this.pos, this.context);
                 if (voxelShape == Shapes.block()) {
-                    if (!this.box.intersects((double)i, (double)j, (double)k, (double)i + 1.0D, (double)j + 1.0D, (double)k + 1.0D)) {
+                    if (!io.papermc.paper.util.CollisionUtil.voxelShapeIntersect(this.box, (double)i, (double)j, (double)k, (double)i + 1.0D, (double)j + 1.0D, (double)k + 1.0D)) { // Paper - keep vanilla behavior for voxelshape intersection - See comment in CollisionUtil
                         continue;
                     }
 

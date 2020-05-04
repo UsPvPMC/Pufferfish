@@ -49,7 +49,7 @@ public interface EntityGetter {
             return true;
         } else {
             for(Entity entity : this.getEntities(except, shape.bounds())) {
-                if (!entity.isRemoved() && entity.blocksBuilding && (except == null || !entity.isPassengerOfSameVehicle(except)) && Shapes.joinIsNotEmpty(shape, Shapes.create(entity.getBoundingBox()), BooleanOp.AND)) {
+                if (!entity.isRemoved() && entity.blocksBuilding && (except == null || !entity.isPassengerOfSameVehicle(except)) && shape.intersects(entity.getBoundingBox())) { // Paper
                     return false;
                 }
             }
@@ -67,7 +67,7 @@ public interface EntityGetter {
             return List.of();
         } else {
             Predicate<Entity> predicate = entity == null ? EntitySelector.CAN_BE_COLLIDED_WITH : EntitySelector.NO_SPECTATORS.and(entity::canCollideWith);
-            List<Entity> list = this.getEntities(entity, box.inflate(1.0E-7D), predicate);
+            List<Entity> list = this.getEntities(entity, box.inflate(-1.0E-7D), predicate); // Paper - needs to be negated, or else we get things we don't collide with
             if (list.isEmpty()) {
                 return List.of();
             } else {

@@ -418,7 +418,7 @@ public class ServerPlayer extends Player {
 
                 if (blockposition1 != null) {
                     this.moveTo(blockposition1, 0.0F, 0.0F);
-                    if (world.noCollision((Entity) this)) {
+                    if (world.noCollision(this, this.getBoundingBox(), true)) { // Paper - make sure this loads chunks, we default to NOT loading now
                         break;
                     }
                 }
@@ -426,7 +426,7 @@ public class ServerPlayer extends Player {
         } else {
             this.moveTo(blockposition, 0.0F, 0.0F);
 
-            while (!world.noCollision((Entity) this) && this.getY() < (double) (world.getMaxBuildHeight() - 1)) {
+            while (!world.noCollision(this, this.getBoundingBox(), true) && this.getY() < (double) (world.getMaxBuildHeight() - 1)) { // Paper - make sure this loads chunks, we default to NOT loading now
                 this.setPos(this.getX(), this.getY() + 1.0D, this.getZ());
             }
         }

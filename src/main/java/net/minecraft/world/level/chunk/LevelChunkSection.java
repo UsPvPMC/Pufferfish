@@ -46,6 +46,110 @@ public class LevelChunkSection {
         this.biomes = new PalettedContainer<>(biomeRegistry.asHolderIdMap(), biomeRegistry.getHolderOrThrow(Biomes.PLAINS), PalettedContainer.Strategy.SECTION_BIOMES, null); // Paper - Anti-Xray - Add preset biomes
     }
 
+    // Paper start
+    protected int specialCollidingBlocks;
+    // blockIndex = x | (z << 4) | (y << 8)
+    private long[] knownBlockCollisionData;
+
+    private long[] initKnownDataField() {
+        return this.knownBlockCollisionData = new long[16 * 16 * 16 * 2 / Long.SIZE];
+    }
+
+    public final boolean hasSpecialCollidingBlocks() {
+        return this.specialCollidingBlocks != 0;
+    }
+
+    public static long getKnownBlockInfo(final int blockIndex, final long value) {
+        final int valueShift = (blockIndex & (Long.SIZE / 2 - 1));
+
+        return (value >>> (valueShift << 1)) & 0b11L;
+    }
+
+    public final long getKnownBlockInfo(final int blockIndex) {
+        if (this.knownBlockCollisionData == null) {
+            return 0L;
+        }
+
+        final int arrayIndex = (blockIndex >>> (6 - 1)); // blockIndex / (64/2)
+        final int valueShift = (blockIndex & (Long.SIZE / 2 - 1));
+
+        final long value = this.knownBlockCollisionData[arrayIndex];
+
+        return (value >>> (valueShift << 1)) & 0b11L;
+    }
+
+    // important detail: this returns 32 values, one for localZ = localZ & (~1) and one for localZ = localZ | 1
+    // the even localZ is the lower 32 bits, the odd is the upper 32 bits
+    public final long getKnownBlockInfoHorizontalRaw(final int localY, final int localZ) {
+        if (this.knownBlockCollisionData == null) {
+            return 0L;
+        }
+
+        final int horizontalIndex = (localZ << 4) | (localY << 8);
+        return this.knownBlockCollisionData[horizontalIndex >>> (6 - 1)];
+    }
+
+    private void initBlockCollisionData() {
+        this.specialCollidingBlocks = 0;
+        // In 1.18 all sections will be initialised, whether or not they have blocks (fucking stupid btw)
+        // This means we can't aggressively initialise the backing long[], or else memory usage will just skyrocket.
+        // So only init if we contain non-empty blocks.
+        if (this.nonEmptyBlockCount == 0) {
+            this.knownBlockCollisionData = null;
+            return;
+        }
+        this.initKnownDataField();
+        for (int index = 0; index < (16 * 16 * 16); ++index) {
+            final BlockState state = this.states.get(index);
+            this.setKnownBlockInfo(index, state);
+            if (io.papermc.paper.util.CollisionUtil.isSpecialCollidingBlock(state)) {
+                ++this.specialCollidingBlocks;
+            }
+        }
+    }
+
+    // only use for initBlockCollisionData
+    private void setKnownBlockInfo(final int blockIndex, final BlockState blockState) {
+        final int arrayIndex = (blockIndex >>> (6 - 1)); // blockIndex / (64/2)
+        final int valueShift = (blockIndex & (Long.SIZE / 2 - 1)) << 1;
+
+        long value = this.knownBlockCollisionData[arrayIndex];
+
+        value &= ~(0b11L << valueShift);
+        value |= blockState.getBlockCollisionBehavior() << valueShift;
+
+        this.knownBlockCollisionData[arrayIndex] = value;
+    }
+
+    public void updateKnownBlockInfo(final int blockIndex, final BlockState from, final BlockState to) {
+        if (io.papermc.paper.util.CollisionUtil.isSpecialCollidingBlock(from)) {
+            --this.specialCollidingBlocks;
+        }
+        if (io.papermc.paper.util.CollisionUtil.isSpecialCollidingBlock(to)) {
+            ++this.specialCollidingBlocks;
+        }
+
+        if (this.nonEmptyBlockCount == 0) {
+            this.knownBlockCollisionData = null;
+            return;
+        }
+
+        if (this.knownBlockCollisionData == null) {
+            this.initKnownDataField();
+        }
+
+        final int arrayIndex = (blockIndex >>> (6 - 1)); // blockIndex / (64/2)
+        final int valueShift = (blockIndex & (Long.SIZE / 2 - 1)) << 1;
+
+        long value = this.knownBlockCollisionData[arrayIndex];
+
+        value &= ~(0b11L << valueShift);
+        value |= to.getBlockCollisionBehavior() << valueShift;
+
+        this.knownBlockCollisionData[arrayIndex] = value;
+    }
+    // Paper end
+
     public static int getBottomBlockY(int chunkPos) {
         return chunkPos << 4;
     }
@@ -70,8 +174,8 @@ public class LevelChunkSection {
         return this.setBlockState(x, y, z, state, true);
     }
 
-    public BlockState setBlockState(int x, int y, int z, BlockState state, boolean lock) {
-        BlockState iblockdata1;
+    public BlockState setBlockState(int x, int y, int z, BlockState state, boolean lock) {  // Paper - state -> new state
+        BlockState iblockdata1; // Paper - iblockdata1 -> oldState
 
         if (lock) {
             iblockdata1 = (BlockState) this.states.getAndSet(x, y, z, state);
@@ -110,6 +214,7 @@ public class LevelChunkSection {
             ++this.tickingFluidCount;
         }
 
+        this.updateKnownBlockInfo(x | (z << 4) | (y << 8), iblockdata1, state); // Paper
         return iblockdata1;
     }
 
@@ -159,6 +264,7 @@ public class LevelChunkSection {
 
         });
         // Paper end
+        this.initBlockCollisionData(); // Paper
     }
 
     public PalettedContainer<BlockState> getStates() {
