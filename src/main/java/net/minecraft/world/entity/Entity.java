@@ -57,6 +57,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -476,6 +477,38 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
     public boolean updatingSectionStatus = false;
     // Paper end
+    // Paper start - optimise entity tracking
+    final org.spigotmc.TrackingRange.TrackingRangeType trackingRangeType = org.spigotmc.TrackingRange.getTrackingRangeType(this);
+
+    public boolean isLegacyTrackingEntity = false;
+
+    public final void setLegacyTrackingEntity(final boolean isLegacyTrackingEntity) {
+        this.isLegacyTrackingEntity = isLegacyTrackingEntity;
+    }
+
+    public final com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> getPlayersInTrackRange() {
+        // determine highest range of passengers
+        if (this.passengers.isEmpty()) {
+            return ((ServerLevel)this.level).getChunkSource().chunkMap.playerEntityTrackerTrackMaps[this.trackingRangeType.ordinal()]
+                .getObjectsInRange(MCUtil.getCoordinateKey(this));
+        }
+        Iterable<Entity> passengers = this.getIndirectPassengers();
+        net.minecraft.server.level.ChunkMap chunkMap = ((ServerLevel)this.level).getChunkSource().chunkMap;
+        org.spigotmc.TrackingRange.TrackingRangeType type = this.trackingRangeType;
+        int range = chunkMap.getEntityTrackerRange(type.ordinal());
+
+        for (Entity passenger : passengers) {
+            org.spigotmc.TrackingRange.TrackingRangeType passengerType = passenger.trackingRangeType;
+            int passengerRange = chunkMap.getEntityTrackerRange(passengerType.ordinal());
+            if (passengerRange > range) {
+                type = passengerType;
+                range = passengerRange;
+            }
+        }
+
+        return chunkMap.playerEntityTrackerTrackMaps[type.ordinal()].getObjectsInRange(MCUtil.getCoordinateKey(this));
+    }
+    // Paper end - optimise entity tracking
 
     public Entity(EntityType<?> type, Level world) {
         this.id = Entity.ENTITY_COUNTER.incrementAndGet();
