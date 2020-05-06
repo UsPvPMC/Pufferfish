@@ -54,7 +54,7 @@ public abstract class DistanceManager {
     private static final int BLOCK_TICKING_LEVEL_THRESHOLD = 33;
     final Long2ObjectMap<ObjectSet<ServerPlayer>> playersPerChunk = new Long2ObjectOpenHashMap();
     // Paper - rewrite chunk system
-    private final DistanceManager.FixedPlayerDistanceChunkTracker naturalSpawnChunkCounter = new DistanceManager.FixedPlayerDistanceChunkTracker(8);
+    public static final int MOB_SPAWN_RANGE = 8; // private final DistanceManager.FixedPlayerDistanceChunkTracker naturalSpawnChunkCounter = new DistanceManager.FixedPlayerDistanceChunkTracker(8); // Paper - no longer used
     //private final TickingTracker tickingTicketsTracker = new TickingTracker(); // Paper - no longer used
     //private final DistanceManager.PlayerTicketTracker playerTicketManager = new DistanceManager.PlayerTicketTracker(33); // Paper - no longer used
     // Paper - rewrite chunk system
@@ -142,7 +142,7 @@ public abstract class DistanceManager {
         long i = chunkcoordintpair.toLong();
 
         // Paper - no longer used
-        this.naturalSpawnChunkCounter.update(i, 0, true);
+        //this.naturalSpawnChunkCounter.update(i, 0, true); // Paper - no longer used
         //this.playerTicketManager.update(i, 0, true); // Paper - no longer used
         //this.tickingTicketsTracker.addTicket(TicketType.PLAYER, chunkcoordintpair, this.getPlayerTicketLevel(), chunkcoordintpair); // Paper - no longer used
     }
@@ -156,7 +156,7 @@ public abstract class DistanceManager {
         if (objectset != null) objectset.remove(player); // Paper - some state corruption happens here, don't crash, clean up gracefully.
         if (objectset == null || objectset.isEmpty()) { // Paper
             this.playersPerChunk.remove(i);
-            this.naturalSpawnChunkCounter.update(i, Integer.MAX_VALUE, false);
+            // this.naturalSpawnChunkCounter.update(i, Integer.MAX_VALUE, false); // Paper - no longer used
             //this.playerTicketManager.update(i, Integer.MAX_VALUE, false); // Paper - no longer used
             //this.tickingTicketsTracker.removeTicket(TicketType.PLAYER, chunkcoordintpair, this.getPlayerTicketLevel(), chunkcoordintpair); // Paper - no longer used
         }
@@ -198,13 +198,17 @@ public abstract class DistanceManager {
     }
 
     public int getNaturalSpawnChunkCount() {
-        this.naturalSpawnChunkCounter.runAllUpdates();
-        return this.naturalSpawnChunkCounter.chunks.size();
+        // Paper start - use distance map to implement
+        // note: this is the spawn chunk count
+        return this.chunkMap.playerChunkTickRangeMap.size();
+        // Paper end - use distance map to implement
     }
 
     public boolean hasPlayersNearby(long chunkPos) {
-        this.naturalSpawnChunkCounter.runAllUpdates();
-        return this.naturalSpawnChunkCounter.chunks.containsKey(chunkPos);
+        // Paper start - use distance map to implement
+        // note: this is the is spawn chunk method
+        return this.chunkMap.playerChunkTickRangeMap.getObjectsInRange(chunkPos) != null;
+        // Paper end - use distance map to implement
     }
 
     public String getDebugStatus() {

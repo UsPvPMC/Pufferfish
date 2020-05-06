@@ -658,6 +658,37 @@ public class ServerChunkCache extends ChunkSource {
         if (flag) {
             this.chunkMap.tick();
         } else {
+            // Paper start - optimize isOutisdeRange
+            ChunkMap playerChunkMap = this.chunkMap;
+            for (ServerPlayer player : this.level.players) {
+                if (!player.affectsSpawning || player.isSpectator()) {
+                    playerChunkMap.playerMobSpawnMap.remove(player);
+                    continue;
+                }
+
+                int viewDistance = this.chunkMap.getEffectiveViewDistance();
+
+                // copied and modified from isOutisdeRange
+                int chunkRange = level.spigotConfig.mobSpawnRange;
+                chunkRange = (chunkRange > viewDistance) ? (byte)viewDistance : chunkRange;
+                chunkRange = (chunkRange > DistanceManager.MOB_SPAWN_RANGE) ? DistanceManager.MOB_SPAWN_RANGE : chunkRange;
+
+                com.destroystokyo.paper.event.entity.PlayerNaturallySpawnCreaturesEvent event = new com.destroystokyo.paper.event.entity.PlayerNaturallySpawnCreaturesEvent(player.getBukkitEntity(), (byte)chunkRange);
+                event.callEvent();
+                if (event.isCancelled() || event.getSpawnRadius() < 0 || playerChunkMap.playerChunkTickRangeMap.getLastViewDistance(player) == -1) {
+                    playerChunkMap.playerMobSpawnMap.remove(player);
+                    continue;
+                }
+
+                int range = Math.min(event.getSpawnRadius(), 32); // limit to max view distance
+                int chunkX = io.papermc.paper.util.MCUtil.getChunkCoordinate(player.getX());
+                int chunkZ = io.papermc.paper.util.MCUtil.getChunkCoordinate(player.getZ());
+
+                playerChunkMap.playerMobSpawnMap.addOrUpdate(player, chunkX, chunkZ, range);
+                player.lastEntitySpawnRadiusSquared = (double)((range << 4) * (range << 4)); // used in anyPlayerCloseEnoughForSpawning
+                player.playerNaturallySpawnedEvent = event;
+            }
+            // Paper end - optimize isOutisdeRange
             LevelData worlddata = this.level.getLevelData();
             ProfilerFiller gameprofilerfiller = this.level.getProfiler();
 
@@ -701,15 +732,7 @@ public class ServerChunkCache extends ChunkSource {
             boolean flag2 = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING) && !this.level.players().isEmpty(); // CraftBukkit
 
             Collections.shuffle(list);
-            // Paper start - call player naturally spawn event
-            int chunkRange = level.spigotConfig.mobSpawnRange;
-            chunkRange = (chunkRange > level.spigotConfig.viewDistance) ? (byte) level.spigotConfig.viewDistance : chunkRange;
-            chunkRange = Math.min(chunkRange, 8);
-            for (ServerPlayer entityPlayer : this.level.players()) {
-                entityPlayer.playerNaturallySpawnedEvent = new com.destroystokyo.paper.event.entity.PlayerNaturallySpawnCreaturesEvent(entityPlayer.getBukkitEntity(), (byte) chunkRange);
-                entityPlayer.playerNaturallySpawnedEvent.callEvent();
-            };
-            // Paper end
+            // Paper - moved natural spawn event up
             Iterator iterator1 = list.iterator();
 
             while (iterator1.hasNext()) {
@@ -717,9 +740,9 @@ public class ServerChunkCache extends ChunkSource {
                 LevelChunk chunk1 = chunkproviderserver_a.chunk;
                 ChunkPos chunkcoordintpair = chunk1.getPos();
 
-                if (this.level.isNaturalSpawningAllowed(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(chunkcoordintpair)) {
+                if (this.level.isNaturalSpawningAllowed(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(chunkproviderserver_a.holder, chunkcoordintpair, false)) { // Paper - optimise anyPlayerCloseEnoughForSpawning
                     chunk1.incrementInhabitedTime(j);
-                    if (flag2 && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(chunkcoordintpair, true)) { // Spigot
+                    if (flag2 && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(chunkproviderserver_a.holder, chunkcoordintpair, true)) { // Spigot // Paper - optimise anyPlayerCloseEnoughForSpawning
                         NaturalSpawner.spawnForChunk(this.level, chunk1, spawnercreature_d, this.spawnFriendlies, this.spawnEnemies, flag1);
                     }
 

@@ -270,6 +270,7 @@ public class ServerPlayer extends Player {
     public String kickLeaveMessage = null; // SPIGOT-3034: Forward leave message to PlayerQuitEvent
     // CraftBukkit end
     public boolean isRealPlayer; // Paper
+    public double lastEntitySpawnRadiusSquared; // Paper - optimise isOutsideRange, this field is in blocks
     public final com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> cachedSingleHashSet; // Paper
     public PlayerNaturallySpawnCreaturesEvent playerNaturallySpawnedEvent; // Paper
 

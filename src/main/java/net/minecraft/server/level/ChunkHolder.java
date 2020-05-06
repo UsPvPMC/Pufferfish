@@ -83,15 +83,28 @@ public class ChunkHolder {
 
     // Paper start
     public void onChunkAdd() {
-
+        // Paper start - optimise anyPlayerCloseEnoughForSpawning
+        long key = io.papermc.paper.util.MCUtil.getCoordinateKey(this.pos);
+        this.playersInMobSpawnRange = this.chunkMap.playerMobSpawnMap.getObjectsInRange(key);
+        this.playersInChunkTickRange = this.chunkMap.playerChunkTickRangeMap.getObjectsInRange(key);
+        // Paper end - optimise anyPlayerCloseEnoughForSpawning
     }
 
     public void onChunkRemove() {
-
+        // Paper start - optimise anyPlayerCloseEnoughForSpawning
+        this.playersInMobSpawnRange = null;
+        this.playersInChunkTickRange = null;
+        // Paper end - optimise anyPlayerCloseEnoughForSpawning
     }
     // Paper end
 
     public final io.papermc.paper.chunk.system.scheduling.NewChunkHolder newChunkHolder; // Paper - rewrite chunk system
+
+    // Paper start - optimise anyPlayerCloseEnoughForSpawning
+    // cached here to avoid a map lookup
+    com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> playersInMobSpawnRange;
+    com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> playersInChunkTickRange;
+    // Paper end - optimise anyPlayerCloseEnoughForSpawning
 
     public ChunkHolder(ChunkPos pos, LevelHeightAccessor world, LevelLightEngine lightingProvider, ChunkHolder.PlayerProvider playersWatchingChunkProvider, io.papermc.paper.chunk.system.scheduling.NewChunkHolder newChunkHolder) { // Paper - rewrite chunk system
         this.newChunkHolder = newChunkHolder; // Paper - rewrite chunk system
