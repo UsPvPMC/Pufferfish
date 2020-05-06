@@ -24,6 +24,14 @@ public class ClientboundLevelChunkPacketData {
     private final CompoundTag heightmaps;
     private final byte[] buffer;
     private final List<ClientboundLevelChunkPacketData.BlockEntityInfo> blockEntitiesData;
+    // Paper start
+    private final java.util.List<net.minecraft.network.protocol.Packet> extraPackets = new java.util.ArrayList<>();
+    private static final int TE_LIMIT = Integer.getInteger("Paper.excessiveTELimit", 750);
+
+    public List<net.minecraft.network.protocol.Packet> getExtraPackets() {
+        return this.extraPackets;
+    }
+    // Paper end
 
     public ClientboundLevelChunkPacketData(LevelChunk chunk) {
         this.heightmaps = new CompoundTag();
@@ -37,8 +45,18 @@ public class ClientboundLevelChunkPacketData {
         this.buffer = new byte[calculateChunkSize(chunk)];
         extractChunkData(new FriendlyByteBuf(this.getWriteBuffer()), chunk);
         this.blockEntitiesData = Lists.newArrayList();
+        int totalTileEntities = 0; // Paper
 
         for(Map.Entry<BlockPos, BlockEntity> entry2 : chunk.getBlockEntities().entrySet()) {
+            // Paper start
+            if (++totalTileEntities > TE_LIMIT) {
+                var packet = entry2.getValue().getUpdatePacket();
+                if (packet != null) {
+                    this.extraPackets.add(packet);
+                    continue;
+                }
+            }
+            // Paper end
             this.blockEntitiesData.add(ClientboundLevelChunkPacketData.BlockEntityInfo.create(entry2.getValue()));
         }
 

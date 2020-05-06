@@ -57,4 +57,11 @@ public class ClientboundLevelChunkWithLightPacket implements Packet<ClientGamePa
     public ClientboundLightUpdatePacketData getLightData() {
         return this.lightData;
     }
+
+    // Paper start - handle over-sized TE packets
+    @Override
+    public java.util.List<Packet> getExtraPackets() {
+        return this.chunkData.getExtraPackets();
+    }
+    // Paper end
 }
