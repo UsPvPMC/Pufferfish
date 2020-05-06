@@ -118,6 +118,10 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
     public int protocolVersion;
     public java.net.InetSocketAddress virtualHost;
     private static boolean enableExplicitFlush = Boolean.getBoolean("paper.explicit-flush");
+    // Optimize network
+    public boolean isPending = true;
+    public boolean queueImmunity = false;
+    public ConnectionProtocol protocol;
     // Paper end
 
     public Connection(PacketFlow side) {
@@ -141,6 +145,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
     }
 
     public void setProtocol(ConnectionProtocol state) {
+        protocol = state; // Paper
         this.channel.attr(Connection.ATTRIBUTE_PROTOCOL).set(state);
         this.channel.attr(BundlerInfo.BUNDLER_PROVIDER).set(state);
         this.channel.config().setAutoRead(true);
@@ -220,19 +225,88 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         Validate.notNull(listener, "packetListener", new Object[0]);
         this.packetListener = listener;
     }
+    // Paper start
+    public @Nullable net.minecraft.server.level.ServerPlayer getPlayer() {
+        if (packetListener instanceof net.minecraft.server.network.ServerGamePacketListenerImpl serverGamePacketListener) {
+            return serverGamePacketListener.player;
+        } else {
+            return null;
+        }
+    }
+    private static class InnerUtil { // Attempt to hide these methods from ProtocolLib so it doesn't accidently pick them up.
+        private static java.util.List<Packet> buildExtraPackets(Packet packet) {
+            java.util.List<Packet> extra = packet.getExtraPackets();
+            if (extra == null || extra.isEmpty()) {
+                return null;
+            }
+            java.util.List<Packet> ret = new java.util.ArrayList<>(1 + extra.size());
+            buildExtraPackets0(extra, ret);
+            return ret;
+        }
+
+        private static void buildExtraPackets0(java.util.List<Packet> extraPackets, java.util.List<Packet> into) {
+            for (Packet extra : extraPackets) {
+                into.add(extra);
+                java.util.List<Packet> extraExtra = extra.getExtraPackets();
+                if (extraExtra != null && !extraExtra.isEmpty()) {
+                    buildExtraPackets0(extraExtra, into);
+                }
+            }
+        }
+        // Paper start
+        private static boolean canSendImmediate(Connection networkManager, Packet<?> packet) {
+            return networkManager.isPending || networkManager.protocol != ConnectionProtocol.PLAY ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundKeepAlivePacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundPlayerChatPacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundSystemChatPacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundClearTitlesPacket ||
+                packet instanceof net.minecraft.network.protocol.game.ClientboundBossEventPacket;
+        }
+        // Paper end
+    }
+    // Paper end
 
     public void send(Packet<?> packet) {
         this.send(packet, (PacketSendListener) null);
     }
 
     public void send(Packet<?> packet, @Nullable PacketSendListener callbacks) {
-        if (this.isConnected()) {
-            this.flushQueue();
-            this.sendPacket(packet, callbacks);
-        } else {
-            this.queue.add(new Connection.PacketHolder(packet, callbacks));
+        // Paper start - handle oversized packets better
+        boolean connected = this.isConnected();
+        if (!connected && !preparing) {
+            return; // Do nothing
         }
+        packet.onPacketDispatch(getPlayer());
+        if (connected && (InnerUtil.canSendImmediate(this, packet) || (
+            io.papermc.paper.util.MCUtil.isMainThread() && packet.isReady() && this.queue.isEmpty() &&
+            (packet.getExtraPackets() == null || packet.getExtraPackets().isEmpty())
+        ))) {
+            this.sendPacket(packet, callbacks);
+            return;
+        }
+        // write the packets to the queue, then flush - antixray hooks there already
+        java.util.List<Packet> extraPackets = InnerUtil.buildExtraPackets(packet);
+        boolean hasExtraPackets = extraPackets != null && !extraPackets.isEmpty();
+        if (!hasExtraPackets) {
+            this.queue.add(new Connection.PacketHolder(packet, callbacks));
+        } else {
+            java.util.List<Connection.PacketHolder> packets = new java.util.ArrayList<>(1 + extraPackets.size());
+            packets.add(new Connection.PacketHolder(packet, null)); // delay the future listener until the end of the extra packets
 
+            for (int i = 0, len = extraPackets.size(); i < len;) {
+                Packet extra = extraPackets.get(i);
+                boolean end = ++i == len;
+                packets.add(new Connection.PacketHolder(extra, end ? callbacks : null)); // append listener to the end
+            }
+            this.queue.addAll(packets); // atomic
+        }
+        this.flushQueue();
+        // Paper end
     }
 
     private void sendPacket(Packet<?> packet, @Nullable PacketSendListener callbacks) {
@@ -264,6 +338,15 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
             this.setProtocol(packetState);
         }
 
+        // Paper start
+        net.minecraft.server.level.ServerPlayer player = getPlayer();
+        if (!isConnected()) {
+            packet.onPacketDispatchFinish(player, null);
+            return;
+        }
+
+        try {
+            // Paper end
         ChannelFuture channelfuture = this.channel.writeAndFlush(packet);
 
         if (callbacks != null) {
@@ -282,28 +365,72 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
 
             });
         }
+        // Paper start
+        if (packet.hasFinishListener()) {
+            channelfuture.addListener((ChannelFutureListener) channelFuture -> packet.onPacketDispatchFinish(player, channelFuture));
+        }
+        // Paper end
 
         channelfuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+        // Paper start
+        } catch (Exception e) {
+            LOGGER.error("NetworkException: " + player, e);
+            disconnect(Component.translatable("disconnect.genericReason", "Internal Exception: " + e.getMessage()));
+            packet.onPacketDispatchFinish(player, null);
+        }
+        // Paper end
     }
 
     private ConnectionProtocol getCurrentProtocol() {
         return (ConnectionProtocol) this.channel.attr(Connection.ATTRIBUTE_PROTOCOL).get();
     }
 
-    private void flushQueue() {
-        try { // Paper - add pending task queue
-        if (this.channel != null && this.channel.isOpen()) {
-            Queue queue = this.queue;
-
+    // Paper start - rewrite this to be safer if ran off main thread
+    private boolean flushQueue() { // void -> boolean
+        if (!isConnected()) {
+            return true;
+        }
+        if (io.papermc.paper.util.MCUtil.isMainThread()) {
+            return processQueue();
+        } else if (isPending) {
+            // Should only happen during login/status stages
             synchronized (this.queue) {
-                Connection.PacketHolder networkmanager_queuedpacket;
-
-                while ((networkmanager_queuedpacket = (Connection.PacketHolder) this.queue.poll()) != null) {
-                    this.sendPacket(networkmanager_queuedpacket.packet, networkmanager_queuedpacket.listener);
-                }
-
+                return this.processQueue();
             }
         }
+        return false;
+    }
+    private boolean processQueue() {
+        try { // Paper - add pending task queue
+        if (this.queue.isEmpty()) return true;
+        // If we are on main, we are safe here in that nothing else should be processing queue off main anymore
+        // But if we are not on main due to login/status, the parent is synchronized on packetQueue
+        java.util.Iterator<PacketHolder> iterator = this.queue.iterator();
+        while (iterator.hasNext()) {
+            PacketHolder queued = iterator.next(); // poll -> peek
+
+            // Fix NPE (Spigot bug caused by handleDisconnection())
+            if (queued == null) {
+                return true;
+            }
+
+            // Paper start - checking isConsumed flag and skipping packet sending
+            if (queued.isConsumed()) {
+                continue;
+            }
+            // Paper end - checking isConsumed flag and skipping packet sending
+
+            Packet<?> packet = queued.packet;
+            if (!packet.isReady()) {
+                return false;
+            } else {
+                iterator.remove();
+                if (queued.tryMarkConsumed()) { // Paper - try to mark isConsumed flag for de-duplicating packet
+                    this.sendPacket(packet, queued.listener);
+                }
+            }
+        }
+        return true;
         } finally { // Paper start - add pending task queue
             Runnable r;
             while ((r = this.pendingTasks.poll()) != null) {
@@ -311,6 +438,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
             }
         } // Paper end - add pending task queue
     }
+    // Paper end
 
     public void tick() {
         this.flushQueue();
@@ -347,9 +475,22 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         return this.address;
     }
 
+    // Paper start
+    public void clearPacketQueue() {
+        net.minecraft.server.level.ServerPlayer player = getPlayer();
+        queue.forEach(queuedPacket -> {
+            Packet<?> packet = queuedPacket.packet;
+            if (packet.hasFinishListener()) {
+                packet.onPacketDispatchFinish(player, null);
+            }
+        });
+        queue.clear();
+    }
+    // Paper end
     public void disconnect(Component disconnectReason) {
         // Spigot Start
         this.preparing = false;
+        clearPacketQueue(); // Paper
         // Spigot End
         if (this.channel.isOpen()) {
             this.channel.close(); // We can't wait as this may be called from an event loop.
@@ -478,7 +619,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
     public void handleDisconnection() {
         if (this.channel != null && !this.channel.isOpen()) {
             if (this.disconnectionHandled) {
-                Connection.LOGGER.warn("handleDisconnection() called twice");
+                //Connection.LOGGER.warn("handleDisconnection() called twice"); // Paper - Do not log useless message
             } else {
                 this.disconnectionHandled = true;
                 if (this.getDisconnectedReason() != null) {
@@ -486,7 +627,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
                 } else if (this.getPacketListener() != null) {
                     this.getPacketListener().onDisconnect(Component.translatable("multiplayer.disconnect.generic"));
                 }
-                this.queue.clear(); // Free up packet queue.
+                clearPacketQueue(); // Paper
                 // Paper start - Add PlayerConnectionCloseEvent
                 final PacketListener packetListener = this.getPacketListener();
                 if (packetListener instanceof net.minecraft.server.network.ServerGamePacketListenerImpl) {
@@ -525,6 +666,18 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         final Packet<?> packet;
         @Nullable
         final PacketSendListener listener;
+
+        // Paper start - isConsumed flag for the connection
+        private java.util.concurrent.atomic.AtomicBoolean isConsumed = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+        public boolean tryMarkConsumed() {
+            return isConsumed.compareAndSet(false, true);
+        }
+
+        public boolean isConsumed() {
+            return isConsumed.get();
+        }
+        // Paper end - isConsumed flag for the connection
 
         public PacketHolder(Packet<?> packet, @Nullable PacketSendListener callbacks) {
             this.packet = packet;

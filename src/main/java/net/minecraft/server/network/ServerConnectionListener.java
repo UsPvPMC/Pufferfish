@@ -62,10 +62,12 @@ public class ServerConnectionListener {
     final List<Connection> connections = Collections.synchronizedList(Lists.newArrayList());
     // Paper start - prevent blocking on adding a new network manager while the server is ticking
     private final java.util.Queue<Connection> pending = new java.util.concurrent.ConcurrentLinkedQueue<>();
+    private static final boolean disableFlushConsolidation = Boolean.getBoolean("Paper.disableFlushConsolidate"); // Paper
     private final void addPending() {
         Connection manager = null;
         while ((manager = pending.poll()) != null) {
             connections.add(manager);
+            manager.isPending = false;
         }
     }
     // Paper end
@@ -100,6 +102,7 @@ public class ServerConnectionListener {
                         ;
                     }
 
+                    if (!disableFlushConsolidation) channel.pipeline().addFirst(new io.netty.handler.flush.FlushConsolidationHandler()); // Paper
                     ChannelPipeline channelpipeline = channel.pipeline().addLast("timeout", new ReadTimeoutHandler(30)).addLast("legacy_query", new LegacyQueryHandler(ServerConnectionListener.this));
 
                     Connection.configureSerialization(channelpipeline, PacketFlow.SERVERBOUND);
