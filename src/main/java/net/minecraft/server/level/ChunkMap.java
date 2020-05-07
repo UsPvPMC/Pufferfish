@@ -116,6 +116,8 @@ import org.bukkit.craftbukkit.generator.CustomChunkGenerator;
 import org.bukkit.entity.Player;
 // CraftBukkit end
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet; // Paper
+
 public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider {
 
     private static final byte CHUNK_TYPE_REPLACEABLE = -1;
@@ -154,6 +156,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
     private final Queue<Runnable> unloadQueue;
     int viewDistance;
     public final com.destroystokyo.paper.util.misc.PlayerAreaMap playerMobDistanceMap; // Paper
+    public final ReferenceOpenHashSet<ChunkHolder> needsChangeBroadcasting = new ReferenceOpenHashSet<>();
 
     // Paper - rewrite chunk system
 

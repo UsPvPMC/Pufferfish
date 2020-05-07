@@ -48,6 +48,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.level.storage.LevelStorageSource;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet; // Paper
 
 public class ServerChunkCache extends ChunkSource {
 
@@ -724,42 +725,59 @@ public class ServerChunkCache extends ChunkSource {
 
             this.lastSpawnState = spawnercreature_d;
             gameprofilerfiller.popPush("filteringLoadedChunks");
-            List<ServerChunkCache.ChunkAndHolder> list = Lists.newArrayListWithCapacity(l);
-            Iterator iterator = this.chunkMap.getChunks().iterator();
+            // Paper - moved down
             this.level.timings.chunkTicks.startTiming(); // Paper
 
-            while (iterator.hasNext()) {
-                ChunkHolder playerchunk = (ChunkHolder) iterator.next();
-                LevelChunk chunk = playerchunk.getTickingChunk();
-
-                if (chunk != null) {
-                    list.add(new ServerChunkCache.ChunkAndHolder(chunk, playerchunk));
-                }
-            }
+            // Paper - moved down
 
             gameprofilerfiller.popPush("spawnAndTick");
             boolean flag2 = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING) && !this.level.players().isEmpty(); // CraftBukkit
 
-            Collections.shuffle(list);
+            // Paper - only shuffle if per-player mob spawning is disabled
             // Paper - moved natural spawn event up
-            Iterator iterator1 = list.iterator();
+            // Paper start - optimise chunk tick iteration
+            Iterator<LevelChunk> iterator1;
+            if (this.level.paperConfig().entities.spawning.perPlayerMobSpawns) {
+                iterator1 = this.entityTickingChunks.iterator();
+            } else {
+                iterator1 = this.entityTickingChunks.unsafeIterator();
+                List<LevelChunk> shuffled = Lists.newArrayListWithCapacity(this.entityTickingChunks.size());
+                while (iterator1.hasNext()) {
+                    shuffled.add(iterator1.next());
+                }
+                Collections.shuffle(shuffled);
+                iterator1 = shuffled.iterator();
+            }
 
+            try {
             while (iterator1.hasNext()) {
-                ServerChunkCache.ChunkAndHolder chunkproviderserver_a = (ServerChunkCache.ChunkAndHolder) iterator1.next();
-                LevelChunk chunk1 = chunkproviderserver_a.chunk;
+                LevelChunk chunk1 = iterator1.next();
+                ChunkHolder holder = chunk1.playerChunk;
+                if (holder != null) {
+                    // Paper - move down
+                // Paper end - optimise chunk tick iteration
                 ChunkPos chunkcoordintpair = chunk1.getPos();
 
-                if (this.level.isNaturalSpawningAllowed(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(chunkproviderserver_a.holder, chunkcoordintpair, false)) { // Paper - optimise anyPlayerCloseEnoughForSpawning
+                if ((true || this.level.isNaturalSpawningAllowed(chunkcoordintpair)) && this.chunkMap.anyPlayerCloseEnoughForSpawning(holder, chunkcoordintpair, false)) { // Paper - optimise anyPlayerCloseEnoughForSpawning // Paper - the chunk is known ticking
                     chunk1.incrementInhabitedTime(j);
-                    if (flag2 && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(chunkproviderserver_a.holder, chunkcoordintpair, true)) { // Spigot // Paper - optimise anyPlayerCloseEnoughForSpawning
+                    if (flag2 && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(holder, chunkcoordintpair, true)) { // Spigot // Paper - optimise anyPlayerCloseEnoughForSpawning & optimise chunk tick iteration
                         NaturalSpawner.spawnForChunk(this.level, chunk1, spawnercreature_d, this.spawnFriendlies, this.spawnEnemies, flag1);
                     }
 
-                    if (this.level.shouldTickBlocksAt(chunkcoordintpair.toLong())) {
+                    if (true || this.level.shouldTickBlocksAt(chunkcoordintpair.toLong())) { // Paper - the chunk is known ticking
                         this.level.tickChunk(chunk1, k);
                     }
                 }
+                // Paper start - optimise chunk tick iteration
+                }
             }
+
+            } finally {
+                if (iterator1 instanceof io.papermc.paper.util.maplist.IteratorSafeOrderedReferenceSet.Iterator safeIterator) {
+                    safeIterator.finishedIterating();
+                }
+            }
+            // Paper end - optimise chunk tick iteration
             this.level.timings.chunkTicks.stopTiming(); // Paper
             gameprofilerfiller.popPush("customSpawners");
             if (flag2) {
@@ -767,15 +785,24 @@ public class ServerChunkCache extends ChunkSource {
                 this.level.tickCustomSpawners(this.spawnEnemies, this.spawnFriendlies);
                 } // Paper - timings
             }
-
+            gameprofilerfiller.pop();
+            // Paper start - use set of chunks requiring updates, rather than iterating every single one loaded
             gameprofilerfiller.popPush("broadcast");
-            list.forEach((chunkproviderserver_a1) -> {
-                this.level.timings.broadcastChunkUpdates.startTiming(); // Paper - timing
-                chunkproviderserver_a1.holder.broadcastChanges(chunkproviderserver_a1.chunk);
-                this.level.timings.broadcastChunkUpdates.stopTiming(); // Paper - timing
-            });
+            this.level.timings.broadcastChunkUpdates.startTiming(); // Paper - timing
+            if (!this.chunkMap.needsChangeBroadcasting.isEmpty()) {
+                ReferenceOpenHashSet<ChunkHolder> copy = this.chunkMap.needsChangeBroadcasting.clone();
+                this.chunkMap.needsChangeBroadcasting.clear();
+                for (ChunkHolder holder : copy) {
+                    holder.broadcastChanges(holder.getFullChunkNowUnchecked()); // LevelChunks are NEVER unloaded
+                    if (holder.needsBroadcastChanges()) {
+                        // I DON'T want to KNOW what DUMB plugins might be doing.
+                        this.chunkMap.needsChangeBroadcasting.add(holder);
+                    }
+                }
+            }
+            this.level.timings.broadcastChunkUpdates.stopTiming(); // Paper - timing
             gameprofilerfiller.pop();
-            gameprofilerfiller.pop();
+            // Paper end - use set of chunks requiring updates, rather than iterating every single one loaded
             this.chunkMap.tick();
         }
     }
