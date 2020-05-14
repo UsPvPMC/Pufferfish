@@ -235,7 +235,7 @@ public abstract class BlockBehaviour implements FeatureElement {
     /** @deprecated */
     @Deprecated
     public boolean canBeReplaced(BlockState state, BlockPlaceContext context) {
-        return this.material.isReplaceable() && (context.getItemInHand().isEmpty() || !context.getItemInHand().is(this.asItem()));
+        return this.material.isReplaceable() && (context.getItemInHand().isEmpty() || !context.getItemInHand().is(this.asItem())) && (state.isDestroyable() || (context.getPlayer() != null && context.getPlayer().getAbilities().instabuild)); // Paper
     }
 
     /** @deprecated */
@@ -800,6 +800,12 @@ public abstract class BlockBehaviour implements FeatureElement {
             return ((Block) this.owner).builtInRegistryHolder();
         }
 
+        // Paper start
+        public final boolean isDestroyable() {
+            return getBlock().isDestroyable();
+        }
+        // Paper end
+
         public Material getMaterial() {
             return this.material;
         }
@@ -897,7 +903,7 @@ public abstract class BlockBehaviour implements FeatureElement {
         }
 
         public PushReaction getPistonPushReaction() {
-            return this.getBlock().getPistonPushReaction(this.asState());
+            return !isDestroyable() ? PushReaction.BLOCK : this.getBlock().getPistonPushReaction(this.asState()); // Paper
         }
 
         public boolean isSolidRender(BlockGetter world, BlockPos pos) {

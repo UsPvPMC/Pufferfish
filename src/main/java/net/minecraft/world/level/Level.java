@@ -435,6 +435,10 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     public boolean setBlock(BlockPos pos, BlockState state, int flags, int maxUpdateDepth) {
         // CraftBukkit start - tree generation
         if (this.captureTreeGeneration) {
+            // Paper start
+            BlockState type = getBlockState(pos);
+            if (!type.isDestroyable()) return false;
+            // Paper end
             CraftBlockState blockstate = this.capturedBlockStates.get(pos);
             if (blockstate == null) {
                 blockstate = CapturedBlockState.getTreeBlockState(this, pos, flags);

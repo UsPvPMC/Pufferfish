@@ -199,6 +199,12 @@ public class PistonBaseBlock extends DirectionalBlock {
     @Override
     public boolean triggerEvent(BlockState state, Level world, BlockPos pos, int type, int data) {
         Direction enumdirection = (Direction) state.getValue(PistonBaseBlock.FACING);
+        // Paper start - prevent retracting when we're facing the wrong way (we were replaced before retraction could occur)
+        Direction directionQueuedAs = Direction.from3DDataValue(data & 7); // Paper - copied from below
+        if (!io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowPermanentBlockBreakExploits && enumdirection != directionQueuedAs) {
+            return false;
+        }
+        // Paper end - prevent retracting when we're facing the wrong way
 
         if (!world.isClientSide) {
             boolean flag = this.getNeighborSignal(world, pos, enumdirection);
@@ -231,7 +237,7 @@ public class PistonBaseBlock extends DirectionalBlock {
             BlockState iblockdata1 = (BlockState) ((BlockState) Blocks.MOVING_PISTON.defaultBlockState().setValue(MovingPistonBlock.FACING, enumdirection)).setValue(MovingPistonBlock.TYPE, this.isSticky ? PistonType.STICKY : PistonType.DEFAULT);
 
             world.setBlock(pos, iblockdata1, 20);
-            world.setBlockEntity(MovingPistonBlock.newMovingBlockEntity(pos, iblockdata1, (BlockState) this.defaultBlockState().setValue(PistonBaseBlock.FACING, Direction.from3DDataValue(data & 7)), enumdirection, false, true));
+            world.setBlockEntity(MovingPistonBlock.newMovingBlockEntity(pos, iblockdata1, (BlockState) this.defaultBlockState().setValue(PistonBaseBlock.FACING, Direction.from3DDataValue(data & 7)), enumdirection, false, true)); // Paper - diff on change
             world.blockUpdated(pos, iblockdata1.getBlock());
             iblockdata1.updateNeighbourShapes(world, pos, 2);
             if (this.isSticky) {
@@ -260,7 +266,14 @@ public class PistonBaseBlock extends DirectionalBlock {
                     }
                 }
             } else {
-                world.removeBlock(pos.relative(enumdirection), false);
+                // Paper start - fix headless pistons breaking blocks
+                BlockPos headPos = pos.relative(enumdirection);
+                if (io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowPermanentBlockBreakExploits || world.getBlockState(headPos) == Blocks.PISTON_HEAD.defaultBlockState().setValue(FACING, enumdirection)) { // double check to make sure we're not a headless piston.
+                    world.removeBlock(headPos, false);
+                } else {
+                    ((ServerLevel)world).getChunkSource().blockChanged(headPos); // ... fix client desync
+                }
+                // Paper end - fix headless pistons breaking blocks
             }
 
             world.playSound((Player) null, pos, SoundEvents.PISTON_CONTRACT, SoundSource.BLOCKS, 0.5F, world.random.nextFloat() * 0.15F + 0.6F);
