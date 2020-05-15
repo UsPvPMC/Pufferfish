@@ -106,7 +106,14 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity {
             List<Entity> list = world.getEntitiesOfClass(Entity.class, new AABB(pos), TheEndGatewayBlockEntity::canEntityTeleport);
 
             if (!list.isEmpty()) {
-                TheEndGatewayBlockEntity.teleportEntity(world, pos, state, (Entity) list.get(world.random.nextInt(list.size())), blockEntity);
+                // Paper start
+                for (Entity entity : list) {
+                    if (entity.canChangeDimensions()) {
+                        TheEndGatewayBlockEntity.teleportEntity(world, pos, state, entity, blockEntity);
+                        break;
+                    }
+                }
+                // Paper end
             }
 
             if (blockEntity.age % 2400L == 0L) {
