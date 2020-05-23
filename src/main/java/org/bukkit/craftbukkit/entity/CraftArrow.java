@@ -102,6 +102,23 @@ public class CraftArrow extends AbstractProjectile implements AbstractArrow {
         this.getHandle().pickup = net.minecraft.world.entity.projectile.AbstractArrow.Pickup.byOrdinal(status.ordinal());
     }
 
+    // Paper start
+    @Override
+    public org.bukkit.craftbukkit.inventory.CraftItemStack getItemStack() {
+        return org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(getHandle().getPickupItem());
+    }
+
+    @Override
+    public void setNoPhysics(boolean noPhysics) {
+        this.getHandle().setNoPhysics(noPhysics);
+    }
+
+    @Override
+    public boolean hasNoPhysics() {
+        return this.getHandle().isNoPhysics();
+    }
+    // Paper end
+
     @Override
     public void setTicksLived(int value) {
         super.setTicksLived(value);
