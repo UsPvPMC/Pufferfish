@@ -3108,9 +3108,15 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             if (!this.player.containerMenu.stillValid(this.player)) {
                 ServerGamePacketListenerImpl.LOGGER.debug("Player {} interacted with invalid menu {}", this.player, this.player.containerMenu);
             } else {
-                this.server.getRecipeManager().byKey(packet.getRecipe()).ifPresent((irecipe) -> {
-                    ((RecipeBookMenu) this.player.containerMenu).handlePlacement(packet.isShiftDown(), irecipe, this.player);
-                });
+                // Paper start - fire event for clicking recipes in the recipe book
+                com.destroystokyo.paper.event.player.PlayerRecipeBookClickEvent event = new com.destroystokyo.paper.event.player.PlayerRecipeBookClickEvent(
+                    player.getBukkitEntity(), org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(packet.getRecipe()), packet.isShiftDown());
+                if (event.callEvent() && this.player.containerMenu instanceof RecipeBookMenu<?> recipeBookMenu) { // check if inventory changed during event handling
+                    this.server.getRecipeManager().byKey(org.bukkit.craftbukkit.util.CraftNamespacedKey.toMinecraft(event.getRecipe())).ifPresent((irecipe) -> {
+                        recipeBookMenu.handlePlacement(event.isMakeAll(), irecipe, this.player);
+                    });
+                }
+                // Paper end
             }
         }
     }
