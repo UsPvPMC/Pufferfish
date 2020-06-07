@@ -134,9 +134,9 @@ public class MapItem extends ComplexItem {
                             int j2 = (j / i + k1 - 64) * i;
                             int k2 = (k / i + l1 - 64) * i;
                             Multiset<MaterialColor> multiset = LinkedHashMultiset.create();
-                            LevelChunk chunk = world.getChunk(SectionPos.blockToSectionCoord(j2), SectionPos.blockToSectionCoord(k2));
+                            LevelChunk chunk = world.getChunkIfLoaded(SectionPos.blockToSectionCoord(j2), SectionPos.blockToSectionCoord(k2)); // Paper - Maps shouldn't load chunks
 
-                            if (!chunk.isEmpty()) {
+                            if (chunk != null && !chunk.isEmpty()) { // Paper - Maps shouldn't load chunks
                                 int l2 = 0;
                                 double d1 = 0.0D;
                                 int i3;
