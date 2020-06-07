@@ -250,14 +250,13 @@ public class MapItem extends ComplexItem {
                 boolean[] aboolean = new boolean[16384];
                 int l = j / i - 64;
                 int i1 = k / i - 64;
-                BlockPos.MutableBlockPos blockposition_mutableblockposition = new BlockPos.MutableBlockPos();
 
                 int j1;
                 int k1;
 
                 for (j1 = 0; j1 < 128; ++j1) {
                     for (k1 = 0; k1 < 128; ++k1) {
-                        Holder<Biome> holder = world.getBiome(blockposition_mutableblockposition.set((l + k1) * i, 0, (i1 + j1) * i));
+                        Holder<Biome> holder = world.getUncachedNoiseBiome((l + k1) * i, 0, (i1 + j1) * i); // Paper
 
                         aboolean[j1 * 128 + k1] = holder.is(BiomeTags.WATER_ON_MAP_OUTLINES);
                     }
