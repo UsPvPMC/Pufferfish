@@ -282,7 +282,13 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
     @Override
     public Chunk getChunkAt(int x, int z) {
-        net.minecraft.world.level.chunk.LevelChunk chunk = (net.minecraft.world.level.chunk.LevelChunk) this.world.getChunk(x, z, ChunkStatus.FULL, true);
+        // Paper start - add ticket to hold chunk for a little while longer if plugin accesses it
+        net.minecraft.world.level.chunk.LevelChunk chunk = this.world.getChunkSource().getChunkAtIfLoadedImmediately(x, z);
+        if (chunk == null) {
+            this.addTicket(x, z);
+            chunk = this.world.getChunkSource().getChunk(x, z, true);
+        }
+        // Paper end
         return new CraftChunk(chunk);
     }
 
@@ -295,6 +301,12 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
         return new CraftChunk(this.getHandle(), x, z);
     }
+
+    // Paper start
+    private void addTicket(int x, int z) {
+        io.papermc.paper.util.MCUtil.MAIN_EXECUTOR.execute(() -> this.world.getChunkSource().addRegionTicket(TicketType.PLUGIN, new ChunkPos(x, z), 0, Unit.INSTANCE)); // Paper
+    }
+    // Paper end
 
     @Override
     public Chunk getChunkAt(Block block) {
@@ -361,7 +373,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
     public boolean unloadChunkRequest(int x, int z) {
         org.spigotmc.AsyncCatcher.catchOp("chunk unload"); // Spigot
         if (this.isChunkLoaded(x, z)) {
-            this.world.getChunkSource().removeRegionTicket(TicketType.PLUGIN, new ChunkPos(x, z), 1, Unit.INSTANCE);
+            this.world.getChunkSource().removeRegionTicket(TicketType.PLUGIN, new ChunkPos(x, z), 0, Unit.INSTANCE); // Paper
         }
 
         return true;
@@ -447,9 +459,12 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         org.spigotmc.AsyncCatcher.catchOp("chunk load"); // Spigot
         // Paper start - Optimize this method
         ChunkPos chunkPos = new ChunkPos(x, z);
+        ChunkAccess immediate = world.getChunkSource().getChunkAtIfLoadedImmediately(x, z); // Paper
+        if (immediate != null) return true; // Paper
 
         if (!generate) {
-            ChunkAccess immediate = world.getChunkSource().getChunkAtImmediately(x, z);
+
+            //IChunkAccess immediate = world.getChunkProvider().getChunkAtImmediately(x, z); // Paper
             if (immediate == null) {
                 immediate = world.getChunkSource().chunkMap.getUnloadingChunk(x, z);
             }
@@ -457,7 +472,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
                 if (!(immediate instanceof ImposterProtoChunk) && !(immediate instanceof net.minecraft.world.level.chunk.LevelChunk)) {
                     return false; // not full status
                 }
-                world.getChunkSource().addRegionTicket(TicketType.PLUGIN, chunkPos, 1, Unit.INSTANCE);
+                world.getChunkSource().addRegionTicket(TicketType.PLUGIN, chunkPos, 0, Unit.INSTANCE); // Paper
                 world.getChunk(x, z); // make sure we're at ticket level 32 or lower
                 return true;
             }
@@ -483,7 +498,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
             // we do this so we do not re-read the chunk data on disk
         }
 
-        world.getChunkSource().addRegionTicket(TicketType.PLUGIN, chunkPos, 1, Unit.INSTANCE);
+        world.getChunkSource().addRegionTicket(TicketType.PLUGIN, chunkPos, 0, Unit.INSTANCE); // Paper
         world.getChunkSource().getChunk(x, z, ChunkStatus.FULL, true);
         return true;
         // Paper end
@@ -2175,6 +2190,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         io.papermc.paper.chunk.system.ChunkSystem.scheduleChunkLoad(this.getHandle(), x, z, gen, ChunkStatus.FULL, true, priority, (c) -> {
             net.minecraft.server.MinecraftServer.getServer().scheduleOnMain(() -> {
                 net.minecraft.world.level.chunk.LevelChunk chunk = (net.minecraft.world.level.chunk.LevelChunk)c;
+                if (chunk != null) this.addTicket(x, z); // Paper
                 ret.complete(chunk == null ? null : new CraftChunk(chunk));
             });
         });
