@@ -129,6 +129,11 @@ public class FallingBlockEntity extends Entity {
 
     @Override
     public void tick() {
+        // Paper start - fix sand duping
+        if (this.isRemoved()) {
+            return;
+        }
+        // Paper end - fix sand duping
         if (this.blockState.isAir()) {
             this.discard();
         } else {
@@ -140,6 +145,12 @@ public class FallingBlockEntity extends Entity {
             }
 
             this.move(MoverType.SELF, this.getDeltaMovement());
+
+            // Paper start - fix sand duping
+            if (this.isRemoved()) {
+                return;
+            }
+            // Paper end - fix sand duping
 
             // Paper start - Configurable EntityFallingBlock height nerf
             if (this.level.paperConfig().fixes.fallingBlockHeightNerf.test(v -> this.getY() > v)) {
