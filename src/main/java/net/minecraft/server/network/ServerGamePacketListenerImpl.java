@@ -1834,7 +1834,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                                 MutableComponent ichatmutablecomponent = Component.translatable("build.tooHigh", i - 1).withStyle(ChatFormatting.RED);
 
                                 this.player.sendSystemMessage(ichatmutablecomponent, true);
-                            } else if (enuminteractionresult.shouldSwing()) {
+                        } else if (enuminteractionresult.shouldSwing() && !this.player.gameMode.interactResult) { // Paper
                                 this.player.swing(enumhand, true);
                             }
                         }
@@ -2464,7 +2464,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         // SPIGOT-5607: Only call interact event if no block or entity is being clicked. Use bukkit ray trace method, because it handles blocks and entities at the same time
         org.bukkit.util.RayTraceResult result = this.player.level.getWorld().rayTrace(origin, origin.getDirection(), d3, org.bukkit.FluidCollisionMode.NEVER, false, 0.1, entity -> entity != this.player.getBukkitEntity() && this.player.getBukkitEntity().canSee(entity));
 
-        if (result == null) {
+        if (result == null || this.player.gameMode.getGameModeForPlayer() == GameType.ADVENTURE) { // Paper - call PlayerInteractEvent when left-clicking on a block in adventure mode
             CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.getInventory().getSelected(), InteractionHand.MAIN_HAND);
         }
 
