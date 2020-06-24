@@ -78,6 +78,26 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
         return (BeaconBlockEntity.hasSecondaryEffect(this.levels, this.primaryPower, this.secondaryPower)) ? CraftPotionUtil.toBukkit(new MobEffectInstance(this.secondaryPower, BeaconBlockEntity.getLevel(this.levels), BeaconBlockEntity.getAmplification(this.levels, this.primaryPower, this.secondaryPower), true, true)) : null;
     }
     // CraftBukkit end
+    // Paper start - add field/methods for custom range
+    private final String PAPER_RANGE_TAG = "Paper.Range";
+    private double effectRange = -1;
+
+    public double getEffectRange() {
+        if (this.effectRange < 0) {
+            return this.levels * 10 + 10;
+        } else {
+            return effectRange;
+        }
+    }
+
+    public void setEffectRange(double range) {
+        this.effectRange = range;
+    }
+
+    public void resetEffectRange() {
+        this.effectRange = -1;
+    }
+    // Paper end
 
     public BeaconBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityType.BEACON, pos, state);
@@ -188,7 +208,7 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
             }
 
             if (blockEntity.levels > 0 && !blockEntity.beamSections.isEmpty()) {
-                BeaconBlockEntity.applyEffects(world, pos, blockEntity.levels, blockEntity.primaryPower, blockEntity.secondaryPower);
+                BeaconBlockEntity.applyEffects(world, pos, blockEntity.levels, blockEntity.primaryPower, blockEntity.secondaryPower, blockEntity); // Paper
                 BeaconBlockEntity.playSound(world, pos, SoundEvents.BEACON_AMBIENT);
             }
         }
@@ -274,8 +294,13 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
     }
 
     public static List getHumansInRange(Level world, BlockPos blockposition, int i) {
+        // Paper start
+        return BeaconBlockEntity.getHumansInRange(world, blockposition, i, null);
+    }
+    public static List getHumansInRange(Level world, BlockPos blockposition, int i, @Nullable BeaconBlockEntity blockEntity) {
+        // Paper end
         {
-            double d0 = (double) (i * 10 + 10);
+            double d0 = blockEntity != null ? blockEntity.getEffectRange() : (i * 10 + 10);// Paper - custom beacon ranges
 
             AABB axisalignedbb = (new AABB(blockposition)).inflate(d0).expandTowards(0.0D, (double) world.getHeight(), 0.0D);
             List<Player> list = world.getEntitiesOfClass(Player.class, axisalignedbb);
@@ -316,12 +341,17 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
     }
 
     private static void applyEffects(Level world, BlockPos pos, int beaconLevel, @Nullable MobEffect primaryEffect, @Nullable MobEffect secondaryEffect) {
+        // Paper start
+        BeaconBlockEntity.applyEffects(world, pos, beaconLevel, primaryEffect, secondaryEffect, null);
+    }
+    private static void applyEffects(Level world, BlockPos pos, int beaconLevel, @Nullable MobEffect primaryEffect, @Nullable MobEffect secondaryEffect, @Nullable BeaconBlockEntity blockEntity) {
+        // Paper end
         if (!world.isClientSide && primaryEffect != null) {
             double d0 = (double) (beaconLevel * 10 + 10);
             byte b0 = BeaconBlockEntity.getAmplification(beaconLevel, primaryEffect, secondaryEffect);
 
             int j = BeaconBlockEntity.getLevel(beaconLevel);
-            List list = BeaconBlockEntity.getHumansInRange(world, pos, beaconLevel);
+            List list = BeaconBlockEntity.getHumansInRange(world, pos, beaconLevel, blockEntity); // Paper
 
             BeaconBlockEntity.applyEffect(list, primaryEffect, j, b0, true, pos); // Paper - BeaconEffectEvent
 
@@ -371,6 +401,7 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
         }
 
         this.lockKey = LockCode.fromTag(nbt);
+        this.effectRange = nbt.contains(PAPER_RANGE_TAG, 6) ? nbt.getDouble(PAPER_RANGE_TAG) : -1; // Paper
     }
 
     @Override
@@ -384,6 +415,7 @@ public class BeaconBlockEntity extends BlockEntity implements MenuProvider, Name
         }
 
         this.lockKey.addToTag(nbt);
+        nbt.putDouble(PAPER_RANGE_TAG, this.effectRange); // Paper
     }
 
     public void setCustomName(@Nullable Component customName) {
