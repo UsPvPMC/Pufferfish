@@ -158,13 +158,27 @@ public class BeaconMenu extends AbstractContainerMenu {
     public MobEffect getSecondaryEffect() {
         return MobEffect.byId(this.beaconData.get(2));
     }
+    // Paper start
+    private static @Nullable org.bukkit.potion.PotionEffectType convert(Optional<MobEffect> effect) {
+        return effect.flatMap(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT::getResourceKey).map(key -> {
+            return org.bukkit.potion.PotionEffectType.getByKey(org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(key.location()));
+        }).orElse(null);
+    }
+    // Paper end
 
     public void updateEffects(Optional<MobEffect> primary, Optional<MobEffect> secondary) {
         if (this.paymentSlot.hasItem()) {
-            this.beaconData.set(1, (Integer) primary.map(MobEffect::getId).orElse(-1));
-            this.beaconData.set(2, (Integer) secondary.map(MobEffect::getId).orElse(-1));
+            // Paper start
+            io.papermc.paper.event.player.PlayerChangeBeaconEffectEvent event = new io.papermc.paper.event.player.PlayerChangeBeaconEffectEvent((org.bukkit.entity.Player) this.player.player.getBukkitEntity(), convert(primary), convert(secondary), this.access.getLocation().getBlock());
+            if (event.callEvent()) {
+            this.beaconData.set(1, event.getPrimary() == null ? -1 : event.getPrimary().getId());
+            this.beaconData.set(2, event.getSecondary() == null ? -1 : event.getSecondary().getId());
+            if (event.willConsumeItem()) {
+            // Paper end
             this.paymentSlot.remove(1);
+            }
             this.access.execute(Level::blockEntityChanged);
+            } // Paper end
         }
 
     }
