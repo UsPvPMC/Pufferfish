@@ -144,7 +144,7 @@ public class DedicatedServerProperties extends Settings<DedicatedServerPropertie
         this.maxWorldSize = this.get("max-world-size", (integer) -> {
             return Mth.clamp(integer, 1, 29999984);
         }, 29999984);
-        this.syncChunkWrites = this.get("sync-chunk-writes", true);
+        this.syncChunkWrites = this.get("sync-chunk-writes", true) && Boolean.getBoolean("Paper.enable-sync-chunk-writes"); // Paper - hide behind flag
         this.enableJmxMonitoring = this.get("enable-jmx-monitoring", false);
         this.enableStatus = this.get("enable-status", true);
         this.hideOnlinePlayers = this.get("hide-online-players", false);
