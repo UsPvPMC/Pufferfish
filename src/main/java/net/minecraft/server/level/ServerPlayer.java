@@ -1161,7 +1161,7 @@ public class ServerPlayer extends Player {
                 this.isChangingDimension = true; // CraftBukkit - Set teleport invulnerability only if player changing worlds
 
                 this.connection.send(new ClientboundRespawnPacket(worldserver.dimensionTypeId(), worldserver.dimension(), BiomeManager.obfuscateSeed(worldserver.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), worldserver.isDebug(), worldserver.isFlat(), (byte) 3, this.getLastDeathLocation()));
-                this.connection.send(new ClientboundChangeDifficultyPacket(this.level.getDifficulty(), this.level.getLevelData().isDifficultyLocked()));
+                this.connection.send(new ClientboundChangeDifficultyPacket(worldserver.getDifficulty(), this.level.getLevelData().isDifficultyLocked())); // Paper - fix difficulty sync issue
                 PlayerList playerlist = this.server.getPlayerList();
 
                 playerlist.sendPlayerPermissionLevel(this);

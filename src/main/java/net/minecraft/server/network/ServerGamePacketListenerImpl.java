@@ -3383,7 +3383,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     public void handleChangeDifficulty(ServerboundChangeDifficultyPacket packet) {
         PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
         if (this.player.hasPermissions(2) || this.isSingleplayerOwner()) {
-            this.server.setDifficulty(packet.getDifficulty(), false);
+            // this.server.setDifficulty(packet.getDifficulty(), false); // Paper - don't allow clients to change this
         }
     }
 

@@ -326,7 +326,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
 
     @Override
     public void forceDifficulty() {
-        this.setDifficulty(this.getProperties().difficulty, true);
+        // this.setDifficulty(this.getProperties().difficulty, true); // Paper - Don't overwrite level.dat's difficulty, keep current
     }
 
     @Override

@@ -47,7 +47,7 @@ public class DifficultyCommand {
         if (worldServer.getDifficulty() == difficulty) { // CraftBukkit
             throw DifficultyCommand.ERROR_ALREADY_DIFFICULT.create(difficulty.getKey());
         } else {
-            worldServer.serverLevelData.setDifficulty(difficulty); // CraftBukkit
+            minecraftserver.setDifficulty(worldServer, difficulty, true); // Paper - don't skip other difficulty-changing logic (fix upstream's fix)
             source.sendSuccess(Component.translatable("commands.difficulty.success", difficulty.getDisplayName()), true);
             return 0;
         }
