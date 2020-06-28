@@ -42,6 +42,7 @@ public final class PaperCommand extends Command {
         commands.put(Set.of("fixlight"), new FixLightCommand());
         commands.put(Set.of("debug", "chunkinfo", "holderinfo"), new ChunkDebugCommand());
         commands.put(Set.of("syncloadinfo"), new SyncLoadInfoCommand());
+        commands.put(Set.of("dumpitem"), new DumpItemCommand());
 
         return commands.entrySet().stream()
             .flatMap(entry -> entry.getKey().stream().map(s -> Map.entry(s, entry.getValue())))
