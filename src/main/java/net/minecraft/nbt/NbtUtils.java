@@ -76,6 +76,11 @@ public final class NbtUtils {
         if (nbt.contains("Name", 8)) {
             string = nbt.getString("Name");
         }
+        // Paper start - support string UUID's
+        if (nbt.contains("Id", 8)) {
+            uUID = UUID.fromString(nbt.getString("Id"));
+        }
+        // Paper end
 
         if (nbt.hasUUID("Id")) {
             uUID = nbt.getUUID("Id");

@@ -196,6 +196,12 @@ public class CompoundTag implements Tag {
     }
 
     public void putUUID(String key, UUID value) {
+        // Paper start - support old format
+        if (this.contains(key + "Most", 99) && this.contains(key + "Least", 99)) {
+            this.tags.remove(key + "Most");
+            this.tags.remove(key + "Least");
+        }
+        // Paper end
         this.tags.put(key, NbtUtils.createUUID(value));
     }
 
@@ -204,10 +210,20 @@ public class CompoundTag implements Tag {
      * You must use {@link #hasUUID(String)} before or else it <b>will</b> throw an NPE.
      */
     public UUID getUUID(String key) {
+        // Paper start - support old format
+        if (!contains(key, 11) && this.contains(key + "Most", 99) && this.contains(key + "Least", 99)) {
+            return new UUID(this.getLong(key + "Most"), this.getLong(key + "Least"));
+        }
+        // Paper end
         return NbtUtils.loadUUID(this.get(key));
     }
 
     public boolean hasUUID(String key) {
+        // Paper start - support old format
+        if (this.contains(key + "Most", 99) && this.contains(key + "Least", 99)) {
+            return true;
+        }
+        // Paper end
         Tag tag = this.get(key);
         return tag != null && tag.getType() == IntArrayTag.TYPE && ((IntArrayTag)tag).getAsIntArray().length == 4;
     }
