@@ -53,6 +53,18 @@ public class PlayerHeadItem extends StandingAndWallBlockItem {
             });
             // CraftBukkit start
         } else {
+            // Paper start - clean up old duplicated properties
+            CompoundTag properties = nbt.getCompound("SkullOwner").getCompound("Properties");
+            for (String key : properties.getAllKeys()) {
+                net.minecraft.nbt.ListTag values = properties.getList(key, 10);
+                if (values.size() > 1) {
+                    net.minecraft.nbt.Tag texture = values.get(values.size() - 1);
+                    values = new net.minecraft.nbt.ListTag();
+                    values.add(texture);
+                    properties.put(key, values);
+                }
+            }
+            // Paper end
             net.minecraft.nbt.ListTag textures = nbt.getCompound("SkullOwner").getCompound("Properties").getList("textures", 10); // Safe due to method contracts
             for (int i = 0; i < textures.size(); i++) {
                 if (textures.get(i) instanceof CompoundTag && !((CompoundTag) textures.get(i)).contains("Signature", 8) && ((CompoundTag) textures.get(i)).getString("Value").trim().isEmpty()) {

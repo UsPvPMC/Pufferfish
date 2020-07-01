@@ -94,7 +94,8 @@ public final class NbtUtils {
                 for(String string2 : compoundTag.getAllKeys()) {
                     ListTag listTag = compoundTag.getList(string2, 10);
 
-                    for(int i = 0; i < listTag.size(); ++i) {
+                    if (listTag.size() == 0) continue; // Paper - remove duplicate properties
+                    for (int i = listTag.size() - 1; i < listTag.size(); ++i) { // Paper - remove duplicate properties
                         CompoundTag compoundTag2 = listTag.getCompound(i);
                         String string3 = compoundTag2.getString("Value");
                         if (compoundTag2.contains("Signature", 8)) {
