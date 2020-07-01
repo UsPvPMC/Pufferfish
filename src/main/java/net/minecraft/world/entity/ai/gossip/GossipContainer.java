@@ -61,8 +61,22 @@ public class GossipContainer {
         });
     }
 
+    // Paper start - Remove streams from reputation
+    private List<GossipContainer.GossipEntry> decompress() {
+        List<GossipContainer.GossipEntry> list = new it.unimi.dsi.fastutil.objects.ObjectArrayList<>();
+        for (Map.Entry<UUID, GossipContainer.EntityGossips> entry : this.gossips.entrySet()) {
+            for (GossipContainer.GossipEntry cur : entry.getValue().decompress(entry.getKey())) {
+                if (cur.weightedValue() != 0) {
+                    list.add(cur);
+                }
+            }
+        }
+        return list;
+    }
+    // Paper end
+
     private Collection<GossipContainer.GossipEntry> selectGossipsForTransfer(RandomSource random, int count) {
-        List<GossipContainer.GossipEntry> list = this.unpack().toList();
+        List<GossipContainer.GossipEntry> list = this.decompress(); // Paper - Remove streams from reputation
         if (list.isEmpty()) {
             return Collections.emptyList();
         } else {
@@ -156,7 +170,7 @@ public class GossipContainer {
     }
 
     public <T> T store(DynamicOps<T> ops) {
-        return GossipContainer.GossipEntry.LIST_CODEC.encodeStart(ops, this.unpack().toList()).resultOrPartial((error) -> {
+        return GossipContainer.GossipEntry.LIST_CODEC.encodeStart(ops, this.decompress()).resultOrPartial((error) -> {
             LOGGER.warn("Failed to serialize gossips: {}", (Object)error);
         }).orElseGet(ops::emptyList);
     }
@@ -184,11 +198,23 @@ public class GossipContainer {
         final Object2IntMap<GossipType> entries = new Object2IntOpenHashMap<>();
 
         public int weightedValue(Predicate<GossipType> gossipTypeFilter) {
-            return this.entries.object2IntEntrySet().stream().filter((entry) -> {
-                return gossipTypeFilter.test(entry.getKey());
-            }).mapToInt((entry) -> {
-                return entry.getIntValue() * (entry.getKey()).weight;
-            }).sum();
+            // Paper start - Remove streams from reputation
+            int weight = 0;
+            for (Object2IntMap.Entry<GossipType> entry : entries.object2IntEntrySet()) {
+                if (gossipTypeFilter.test(entry.getKey())) {
+                    weight += entry.getIntValue() * entry.getKey().weight;
+                }
+            }
+            return weight;
+        }
+
+        public List<GossipContainer.GossipEntry> decompress(UUID uuid) {
+            List<GossipContainer.GossipEntry> list = new it.unimi.dsi.fastutil.objects.ObjectArrayList<>();
+            for (Object2IntMap.Entry<GossipType> entry : entries.object2IntEntrySet()) {
+                list.add(new GossipContainer.GossipEntry(uuid, entry.getKey(), entry.getIntValue()));
+            }
+            return list;
+            // Paper end
         }
 
         public Stream<GossipContainer.GossipEntry> unpack(UUID target) {
