@@ -758,6 +758,14 @@ public abstract class AbstractContainerMenu {
     public abstract boolean stillValid(Player player);
 
     protected boolean moveItemStackTo(ItemStack stack, int startIndex, int endIndex, boolean fromLast) {
+        // Paper start
+        return this.moveItemStackTo(stack, startIndex, endIndex, fromLast, false);
+    }
+    protected boolean moveItemStackTo(ItemStack stack, int startIndex, int endIndex, boolean fromLast, boolean isCheck) {
+        if (isCheck) {
+            stack = stack.copy();
+        }
+        // Paper end
         boolean flag1 = false;
         int k = startIndex;
 
@@ -780,18 +788,27 @@ public abstract class AbstractContainerMenu {
 
                 slot = (Slot) this.slots.get(k);
                 itemstack1 = slot.getItem();
+                // Paper start - clone if only a check
+                if (isCheck) {
+                    itemstack1 = itemstack1.copy();
+                }
+                // Paper end
                 if (!itemstack1.isEmpty() && ItemStack.isSameItemSameTags(stack, itemstack1)) {
                     int l = itemstack1.getCount() + stack.getCount();
 
                     if (l <= stack.getMaxStackSize()) {
                         stack.setCount(0);
                         itemstack1.setCount(l);
+                        if (!isCheck) { // Paper - dont update if only a check
                         slot.setChanged();
+                        } // Paper
                         flag1 = true;
                     } else if (itemstack1.getCount() < stack.getMaxStackSize()) {
                         stack.shrink(stack.getMaxStackSize() - itemstack1.getCount());
                         itemstack1.setCount(stack.getMaxStackSize());
+                        if (!isCheck) { // Paper - dont update if only a check
                         slot.setChanged();
+                        } // Paper
                         flag1 = true;
                     }
                 }
@@ -822,14 +839,33 @@ public abstract class AbstractContainerMenu {
 
                 slot = (Slot) this.slots.get(k);
                 itemstack1 = slot.getItem();
+                // Paper start - clone if only a check
+                if (isCheck) {
+                    itemstack1 = itemstack1.copy();
+                }
+                // Paper end
                 if (itemstack1.isEmpty() && slot.mayPlace(stack)) {
                     if (stack.getCount() > slot.getMaxStackSize()) {
+                        // Paper start - dont set slot if only check
+                        if (isCheck) {
+                            stack.shrink(slot.getMaxStackSize());
+                        } else {
+                        // Paper end
                         slot.setByPlayer(stack.split(slot.getMaxStackSize()));
+                        } // Paper
                     } else {
+                        // Paper start - dont set slot if only check
+                        if (isCheck) {
+                            stack.shrink(stack.getCount());
+                        } else {
+                        // Paper end
                         slot.setByPlayer(stack.split(stack.getCount()));
+                        } // Paper
                     }
 
+                    if (!isCheck) { // Paper - dont update if only check
                     slot.setChanged();
+                    } // Paper
                     flag1 = true;
                     break;
                 }

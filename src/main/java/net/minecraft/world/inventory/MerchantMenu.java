@@ -134,12 +134,12 @@ public class MerchantMenu extends AbstractContainerMenu {
 
             itemstack = itemstack1.copy();
             if (slot == 2) {
-                if (!this.moveItemStackTo(itemstack1, 3, 39, true)) {
+                if (!this.moveItemStackTo(itemstack1, 3, 39, true, true)) { // Paper
                     return ItemStack.EMPTY;
                 }
 
-                slot1.onQuickCraft(itemstack1, itemstack);
-                this.playTradeSound();
+                //  slot1.onQuickCraft(itemstack1, itemstack); // Paper - moved to after the non-check moveItemStackTo call
+                // this.playTradeSound();
             } else if (slot != 0 && slot != 1) {
                 if (slot >= 3 && slot < 30) {
                     if (!this.moveItemStackTo(itemstack1, 30, 39, false)) {
@@ -152,6 +152,7 @@ public class MerchantMenu extends AbstractContainerMenu {
                 return ItemStack.EMPTY;
             }
 
+            if (slot != 2) { // Paper - moved down for slot 2
             if (itemstack1.isEmpty()) {
                 slot1.setByPlayer(ItemStack.EMPTY);
             } else {
@@ -163,6 +164,21 @@ public class MerchantMenu extends AbstractContainerMenu {
             }
 
             slot1.onTake(player, itemstack1);
+            } // Paper start - handle slot 2
+            if (slot == 2) { // is merchant result slot
+                slot1.onTake(player, itemstack1);
+                if (itemstack1.isEmpty()) {
+                    slot1.set(ItemStack.EMPTY);
+                    return ItemStack.EMPTY;
+                }
+
+                this.moveItemStackTo(itemstack1, 3, 39, true, false); // This should always succeed because it's checked above
+
+                slot1.onQuickCraft(itemstack1, itemstack);
+                this.playTradeSound();
+                slot1.set(ItemStack.EMPTY); // itemstack1 should ALWAYS be empty
+            }
+            // Paper end
         }
 
         return itemstack;
