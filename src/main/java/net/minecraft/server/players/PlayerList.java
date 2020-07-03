@@ -203,7 +203,18 @@ public abstract class PlayerList {
         }
         // CraftBukkit end
 
-        if (nbttagcompound != null) {
+        // Paper start - move logic in Entity to here, to use bukkit supplied world UUID.
+        if (nbttagcompound != null && nbttagcompound.contains("WorldUUIDMost") && nbttagcompound.contains("WorldUUIDLeast")) {
+            UUID uid = new UUID(nbttagcompound.getLong("WorldUUIDMost"), nbttagcompound.getLong("WorldUUIDLeast"));
+            org.bukkit.World bWorld = org.bukkit.Bukkit.getServer().getWorld(uid);
+            if (bWorld != null) {
+                resourcekey = ((CraftWorld) bWorld).getHandle().dimension();
+            } else {
+                resourcekey = Level.OVERWORLD;
+            }
+        } else if (nbttagcompound != null) {
+            // Vanilla migration support
+            // Paper end
             DataResult<ResourceKey<Level>> dataresult = DimensionType.parseLegacy(new Dynamic(NbtOps.INSTANCE, nbttagcompound.get("Dimension"))); // CraftBukkit - decompile error
             Logger logger = PlayerList.LOGGER;
 
