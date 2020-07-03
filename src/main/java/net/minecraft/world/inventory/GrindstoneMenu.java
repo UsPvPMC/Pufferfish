@@ -159,6 +159,7 @@ public class GrindstoneMenu extends AbstractContainerMenu {
         super.slotsChanged(inventory);
         if (inventory == this.repairSlots) {
             this.createResult();
+            org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareResultEvent(this, RESULT_SLOT); // Paper
         }
 
     }

@@ -107,6 +107,7 @@ public class SmithingMenu extends ItemCombinerMenu {
             }
         }
 
+        org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareResultEvent(this, RESULT_SLOT); // Paper
     }
 
     @Override

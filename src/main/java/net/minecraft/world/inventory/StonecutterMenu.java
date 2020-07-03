@@ -176,6 +176,7 @@ public class StonecutterMenu extends AbstractContainerMenu {
             this.setupRecipeList(inventory, itemstack);
         }
 
+        org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareResultEvent(this, RESULT_SLOT); // Paper
     }
 
     private void setupRecipeList(Container input, ItemStack stack) {
