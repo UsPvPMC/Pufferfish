@@ -3435,7 +3435,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
         Entity entity = this.getVehicle();
 
         super.stopRiding(suppressCancellation); // Paper - suppress
-        if (entity != null && entity != this.getVehicle() && !this.level.isClientSide) {
+        if (entity != null && entity != this.getVehicle() && !this.level.isClientSide && entity.valid) { // Paper - don't process on world gen
             this.dismountVehicle(entity);
         }
 
