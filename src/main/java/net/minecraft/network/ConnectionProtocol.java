@@ -329,6 +329,7 @@ public enum ConnectionProtocol implements BundlerInfo.Provider {
 
         @Nullable
         public Packet<?> createPacket(int id, FriendlyByteBuf buf) {
+            if (id < 0 || id >= this.idToDeserializer.size()) return null; // Paper
             Function<FriendlyByteBuf, ? extends Packet<T>> function = this.idToDeserializer.get(id);
             return function != null ? function.apply(buf) : null;
         }
