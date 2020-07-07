@@ -474,9 +474,9 @@ public class BlockPos extends Vec3i {
         }
 
         public BlockPos.MutableBlockPos set(int x, int y, int z) {
-            this.setX(x);
-            this.setY(y);
-            this.setZ(z);
+            this.x = x; // Paper - force inline
+            this.y = y; // Paper - force inline
+            this.z = z; // Paper - force inline
             return this;
         }
 
@@ -540,19 +540,19 @@ public class BlockPos extends Vec3i {
         // Paper start - comment out useless overrides @Override - TODO figure out why this is suddenly important to keep
         @Override
         public BlockPos.MutableBlockPos setX(int i) {
-            super.setX(i);
+            this.x = i; // Paper
             return this;
         }
 
         @Override
         public BlockPos.MutableBlockPos setY(int i) {
-            super.setY(i);
+            this.y = i; // Paper
             return this;
         }
 
         @Override
         public BlockPos.MutableBlockPos setZ(int i) {
-            super.setZ(i);
+            this.z = i; // Paper
             return this;
         }
         // Paper end
