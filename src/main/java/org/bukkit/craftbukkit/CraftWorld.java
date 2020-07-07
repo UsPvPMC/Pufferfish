@@ -2060,6 +2060,69 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         return new CraftStructureSearchResult(CraftStructure.minecraftToBukkit(found.getSecond().value(), this.getHandle().registryAccess()), new Location(this, found.getFirst().getX(), found.getFirst().getY(), found.getFirst().getZ()));
     }
 
+    // Paper start
+    @Override
+    public Location locateNearestBiome(Location origin, Biome biome, int radius) {
+        return this.locateNearestBiome(origin, biome, radius, 8);
+    }
+
+    @Override
+    public Location locateNearestBiome(Location origin, Biome biome, int radius, int step) {
+        BlockPos originPos = io.papermc.paper.util.MCUtil.toBlockPos(origin);
+        Pair<BlockPos, Holder<net.minecraft.world.level.biome.Biome>> pair = getHandle().findClosestBiome3d(holder -> holder.is(CraftNamespacedKey.toMinecraft(biome.getKey())), originPos, radius, step, step);
+        if (pair == null) {
+            return null;
+        }
+        BlockPos nearest = pair.getFirst();
+        return new Location(this, nearest.getX(), nearest.getY(), nearest.getZ());
+    }
+
+    @Override
+    public boolean isUltrawarm() {
+        return getHandle().dimensionType().ultraWarm();
+    }
+
+    @Override
+    public double getCoordinateScale() {
+        return getHandle().dimensionType().coordinateScale();
+    }
+
+    @Override
+    public boolean hasSkylight() {
+        return getHandle().dimensionType().hasSkyLight();
+    }
+
+    @Override
+    public boolean hasBedrockCeiling() {
+        return getHandle().dimensionType().hasSkyLight();
+    }
+
+    @Override
+    public boolean doesBedWork() {
+        return getHandle().dimensionType().bedWorks();
+    }
+
+    @Override
+    public boolean doesRespawnAnchorWork() {
+        return getHandle().dimensionType().respawnAnchorWorks();
+    }
+
+    @Override
+    public boolean isFixedTime() {
+        return getHandle().dimensionType().hasFixedTime();
+    }
+
+    @Override
+    public Collection<org.bukkit.Material> getInfiniburn() {
+        return com.google.common.collect.Sets.newHashSet(com.google.common.collect.Iterators.transform(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getTagOrEmpty(this.getHandle().dimensionType().infiniburn()).iterator(), blockHolder -> CraftMagicNumbers.getMaterial(blockHolder.value())));
+    }
+
+    @Override
+    public void sendGameEvent(Entity sourceEntity, org.bukkit.GameEvent gameEvent, Vector position) {
+        getHandle().gameEvent(sourceEntity != null ? ((CraftEntity) sourceEntity).getHandle(): null, net.minecraft.core.registries.BuiltInRegistries.GAME_EVENT.get(org.bukkit.craftbukkit.util.CraftNamespacedKey.toMinecraft(gameEvent.getKey())), org.bukkit.craftbukkit.util.CraftVector.toBlockPos(position));
+    }
+    // Paper end
+
     @Override
     public Raid locateNearestRaid(Location location, int radius) {
         Validate.notNull(location, "Location cannot be null");
