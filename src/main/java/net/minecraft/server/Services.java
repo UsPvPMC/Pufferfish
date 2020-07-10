@@ -19,12 +19,12 @@ public record Services(MinecraftSessionService sessionService, SignatureValidato
         return java.util.Objects.requireNonNull(this.paperConfigurations);
     }
     // Paper end
-    private static final String USERID_CACHE_FILE = "usercache.json";
+    public static final String USERID_CACHE_FILE = "usercache.json"; // Paper - private -> public
 
-    public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory, joptsimple.OptionSet optionSet) throws Exception { // Paper
+    public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory, File userCacheFile, joptsimple.OptionSet optionSet) throws Exception { // Paper
         MinecraftSessionService minecraftSessionService = authenticationService.createMinecraftSessionService();
         GameProfileRepository gameProfileRepository = authenticationService.createProfileRepository();
-        GameProfileCache gameProfileCache = new GameProfileCache(gameProfileRepository, new File(rootDirectory, "usercache.json"));
+        GameProfileCache gameProfileCache = new GameProfileCache(gameProfileRepository, userCacheFile); // Paper
         SignatureValidator signatureValidator = SignatureValidator.from(authenticationService.getServicesKey());
         // Paper start
         final java.nio.file.Path legacyConfigPath = ((File) optionSet.valueOf("paper-settings")).toPath();
