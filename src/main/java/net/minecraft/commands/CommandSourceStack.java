@@ -61,7 +61,7 @@ public class CommandSourceStack implements SharedSuggestionProvider, com.destroy
     private final Vec2 rotation;
     private final CommandSigningContext signingContext;
     private final TaskChainer chatMessageChainer;
-    public volatile CommandNode currentCommand; // CraftBukkit
+    public java.util.Map<Thread, CommandNode> currentCommand = new java.util.concurrent.ConcurrentHashMap<>(); // CraftBukkit // Paper
     public boolean bypassSelectorPermissions = false; // Paper
 
     public CommandSourceStack(CommandSource output, Vec3 pos, Vec2 rot, ServerLevel world, int level, String name, Component displayName, MinecraftServer server, @Nullable Entity entity) {
@@ -194,9 +194,11 @@ public class CommandSourceStack implements SharedSuggestionProvider, com.destroy
     @Override
     public boolean hasPermission(int level) {
         // CraftBukkit start
-        CommandNode currentCommand = this.currentCommand;
+        // Paper start - fix concurrency issue
+        CommandNode currentCommand = this.currentCommand.get(Thread.currentThread());
         if (currentCommand != null) {
             return this.hasPermission(level, org.bukkit.craftbukkit.command.VanillaCommandWrapper.getPermission(currentCommand));
+            // Paper end
         }
         // CraftBukkit end
 

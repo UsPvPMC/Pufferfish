@@ -75,10 +75,10 @@ public abstract class CommandNode<S> implements Comparable<CommandNode<S>> {
     public synchronized boolean canUse(final S source) {
         if (source instanceof CommandSourceStack) {
             try {
-                ((CommandSourceStack) source).currentCommand = this;
+                ((CommandSourceStack) source).currentCommand.put(Thread.currentThread(), this); // Paper
                 return this.requirement.test(source);
             } finally {
-                ((CommandSourceStack) source).currentCommand = null;
+                ((CommandSourceStack) source).currentCommand.remove(Thread.currentThread()); // Paper
             }
         }
         // CraftBukkit end
