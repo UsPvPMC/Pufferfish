@@ -50,6 +50,7 @@ public class PotionItem extends Item {
             CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayer) entityhuman, stack);
         }
 
+        List<MobEffectInstance> instantLater = new java.util.ArrayList<>(); // Paper - Fix harming potion dupe
         if (!world.isClientSide) {
             List<MobEffectInstance> list = PotionUtils.getMobEffects(stack);
             Iterator iterator = list.iterator();
@@ -58,7 +59,7 @@ public class PotionItem extends Item {
                 MobEffectInstance mobeffect = (MobEffectInstance) iterator.next();
 
                 if (mobeffect.getEffect().isInstantenous()) {
-                    mobeffect.getEffect().applyInstantenousEffect(entityhuman, entityhuman, user, mobeffect.getAmplifier(), 1.0D);
+                    instantLater.add(mobeffect); // Paper - Fix harming potion dupe
                 } else {
                     user.addEffect(new MobEffectInstance(mobeffect), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.POTION_DRINK); // CraftBukkit
                 }
@@ -72,7 +73,18 @@ public class PotionItem extends Item {
             }
         }
 
+        // Paper start - Fix harming potion dupe
+        for (MobEffectInstance mobeffect : instantLater) {
+            mobeffect.getEffect().applyInstantenousEffect(entityhuman, entityhuman, user, mobeffect.getAmplifier(), 1.0D);
+        }
+        // Paper end
         if (entityhuman == null || !entityhuman.getAbilities().instabuild) {
+            // Paper start - Fix harming potion dupe
+            if (user.getHealth() <= 0 && !user.level.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_KEEPINVENTORY)) {
+                user.spawnAtLocation(new ItemStack(Items.GLASS_BOTTLE), 0);
+                return ItemStack.EMPTY;
+            }
+            // Paper end
             if (stack.isEmpty()) {
                 return new ItemStack(Items.GLASS_BOTTLE);
             }
