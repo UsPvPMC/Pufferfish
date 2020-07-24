@@ -70,6 +70,7 @@ public class DetectorRailBlock extends BaseRailBlock {
 
     private void checkPressed(Level world, BlockPos pos, BlockState state) {
         if (this.canSurvive(state, world, pos)) {
+            if (state.getBlock() != this) { return; } // Paper - not our block, don't do anything
             boolean flag = (Boolean) state.getValue(DetectorRailBlock.POWERED);
             boolean flag1 = false;
             List<AbstractMinecart> list = this.getInteractingMinecartOfType(world, pos, AbstractMinecart.class, (entity) -> {

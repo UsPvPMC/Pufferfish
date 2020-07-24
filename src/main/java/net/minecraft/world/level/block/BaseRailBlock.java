@@ -65,6 +65,7 @@ public abstract class BaseRailBlock extends Block implements SimpleWaterloggedBl
         state = this.updateDir(world, pos, state, true);
         if (this.isStraight) {
             world.neighborChanged(state, pos, this, pos, notify);
+            state = world.getBlockState(pos); // Paper - don't desync, update again
         }
 
         return state;
