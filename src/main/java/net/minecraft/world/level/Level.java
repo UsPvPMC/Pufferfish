@@ -158,7 +158,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     public boolean captureBlockStates = false;
     public boolean captureTreeGeneration = false;
     public Map<BlockPos, org.bukkit.craftbukkit.block.CraftBlockState> capturedBlockStates = new java.util.LinkedHashMap<>(); // Paper
-    public Map<BlockPos, BlockEntity> capturedTileEntities = new HashMap<>();
+    public Map<BlockPos, BlockEntity> capturedTileEntities = new java.util.LinkedHashMap<>(); // Paper
     public List<ItemEntity> captureDrops;
     public final it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap<SpawnCategory> ticksPerSpawnCategory = new it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap<>();
     // Paper start
