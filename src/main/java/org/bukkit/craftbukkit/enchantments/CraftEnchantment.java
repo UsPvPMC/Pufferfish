@@ -194,6 +194,11 @@ public class CraftEnchantment extends Enchantment {
     public net.kyori.adventure.text.Component displayName(int level) {
         return io.papermc.paper.adventure.PaperAdventure.asAdventure(getHandle().getFullname(level));
     }
+
+    @Override
+    public String translationKey() {
+        return this.target.getDescriptionId();
+    }
     // Paper end
 
     public net.minecraft.world.item.enchantment.Enchantment getHandle() {
