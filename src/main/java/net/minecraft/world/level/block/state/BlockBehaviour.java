@@ -40,6 +40,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
@@ -143,6 +144,12 @@ public abstract class BlockBehaviour implements FeatureElement {
         DebugPackets.sendNeighborsUpdatePacket(world, pos);
     }
 
+    // Paper start - add ItemActionContext param
+    @Deprecated
+    public void onPlace(BlockState iblockdata, Level world, BlockPos blockposition, BlockState iblockdata1, boolean flag, UseOnContext itemActionContext) {
+        this.onPlace(iblockdata, world, blockposition, iblockdata1, flag);
+    }
+    // Paper end
     /** @deprecated */
     @Deprecated
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean notify) {

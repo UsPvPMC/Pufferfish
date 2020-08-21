@@ -138,20 +138,23 @@ public abstract class BaseFireBlock extends Block {
         super.entityInside(state, world, pos, entity);
     }
 
+    // Paper start - ItemActionContext param
+    @Override public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean notify) { this.onPlace(state, world, pos, oldState, notify, null); }
     @Override
-    public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean notify) {
-        if (!oldState.is(state.getBlock())) {
+    public void onPlace(BlockState iblockdata, Level world, BlockPos blockposition, BlockState iblockdata1, boolean flag, net.minecraft.world.item.context.UseOnContext itemActionContext) {
+        // Paper end
+        if (!iblockdata1.is(iblockdata.getBlock())) {
             if (BaseFireBlock.inPortalDimension(world)) {
-                Optional<PortalShape> optional = PortalShape.findEmptyPortalShape(world, pos, Direction.Axis.X);
+                Optional<PortalShape> optional = PortalShape.findEmptyPortalShape(world, blockposition, Direction.Axis.X);
 
                 if (optional.isPresent()) {
-                    ((PortalShape) optional.get()).createPortalBlocks();
+                    ((PortalShape) optional.get()).createPortalBlocks(itemActionContext); // Paper - pass ItemActionContext param
                     return;
                 }
             }
 
-            if (!state.canSurvive(world, pos)) {
-                this.fireExtinguished(world, pos); // CraftBukkit - fuel block broke
+            if (!iblockdata.canSurvive(world, blockposition)) {
+                fireExtinguished(world, blockposition); // CraftBukkit - fuel block broke
             }
 
         }

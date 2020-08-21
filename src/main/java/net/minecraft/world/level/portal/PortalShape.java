@@ -11,6 +11,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.NetherPortalBlock;
@@ -190,7 +191,10 @@ public class PortalShape {
     }
 
     // CraftBukkit start - return boolean
-    public boolean createPortalBlocks() {
+    // Paper start - ItemActionContext param
+    @Deprecated public boolean createPortalBlocks() { return this.createPortalBlocks(null); }
+    public boolean createPortalBlocks(UseOnContext itemActionContext) {
+        // Paper end
         org.bukkit.World bworld = this.level.getMinecraftWorld().getWorld();
 
         // Copy below for loop
@@ -200,7 +204,7 @@ public class PortalShape {
             this.blocks.setBlock(blockposition, iblockdata, 18);
         });
 
-        PortalCreateEvent event = new PortalCreateEvent((java.util.List<org.bukkit.block.BlockState>) (java.util.List) this.blocks.getList(), bworld, null, PortalCreateEvent.CreateReason.FIRE);
+        PortalCreateEvent event = new PortalCreateEvent((java.util.List<org.bukkit.block.BlockState>) (java.util.List) blocks.getList(), bworld, itemActionContext == null || itemActionContext.getPlayer() == null ? null : itemActionContext.getPlayer().getBukkitEntity(), PortalCreateEvent.CreateReason.FIRE); // Paper - pass entity param
         this.level.getMinecraftWorld().getServer().server.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
