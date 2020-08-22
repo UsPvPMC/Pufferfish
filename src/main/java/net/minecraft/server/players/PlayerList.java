@@ -153,7 +153,7 @@ public abstract class PlayerList {
     private boolean doWhiteList;
     private final LayeredRegistryAccess<RegistryLayer> registries;
     private final RegistryAccess.Frozen synchronizedRegistries;
-    protected final int maxPlayers;
+    protected int maxPlayers; public final void setMaxPlayers(int maxPlayers) { this.maxPlayers = maxPlayers; } // Paper - remove final and add setter
     private int viewDistance;
     private int simulationDistance;
     private boolean allowCheatsForAllPlayers;
