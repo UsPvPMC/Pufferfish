@@ -1862,9 +1862,11 @@ public class ServerLevel extends Level implements WorldGenLevel {
     public void setDefaultSpawnPos(BlockPos pos, float angle) {
         // Paper - configurable spawn radius
         BlockPos prevSpawn = this.getSharedSpawnPos();
+        Location prevSpawnLoc = this.getWorld().getSpawnLocation(); // Paper
         //ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(new BlockPosition(this.worldData.a(), 0, this.worldData.c()));
 
         this.levelData.setSpawn(pos, angle);
+        new org.bukkit.event.world.SpawnChangeEvent(this.getWorld(), prevSpawnLoc).callEvent(); // Paper
         if (this.keepSpawnInMemory) {
             // if this keepSpawnInMemory is false a plugin has already removed our tickets, do not re-add
             this.removeTicketsForSpawn(this.paperConfig().spawn.keepSpawnLoadedRange * 16, prevSpawn);
