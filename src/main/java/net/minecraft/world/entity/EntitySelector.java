@@ -45,11 +45,17 @@ public final class EntitySelector {
     }
 
     public static Predicate<Entity> pushableBy(Entity entity) {
+        // Paper start - ignoreClimbing param
+        return pushable(entity, false);
+    }
+
+    public static Predicate<Entity> pushable(Entity entity, boolean ignoreClimbing) {
+        // Paper end
         Team scoreboardteambase = entity.getTeam();
         Team.CollisionRule scoreboardteambase_enumteampush = scoreboardteambase == null ? Team.CollisionRule.ALWAYS : scoreboardteambase.getCollisionRule();
 
         return (Predicate) (scoreboardteambase_enumteampush == Team.CollisionRule.NEVER ? Predicates.alwaysFalse() : EntitySelector.NO_SPECTATORS.and((entity1) -> {
-            if (!entity1.canCollideWithBukkit(entity) || !entity.canCollideWithBukkit(entity1)) { // CraftBukkit - collidable API
+            if (!entity1.isCollidable(ignoreClimbing) || !entity1.canCollideWithBukkit(entity) || !entity.canCollideWithBukkit(entity1)) { // CraftBukkit - collidable API // Paper - isCollidable
                 return false;
             } else if (entity.level.isClientSide && (!(entity1 instanceof Player) || !((Player) entity1).isLocalPlayer())) {
                 return false;

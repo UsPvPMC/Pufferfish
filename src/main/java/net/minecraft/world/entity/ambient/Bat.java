@@ -85,7 +85,7 @@ public class Bat extends AmbientCreature {
     }
 
     @Override
-    public boolean isPushable() {
+    public boolean isCollidable(boolean ignoreClimbing) { // Paper
         return false;
     }
 

@@ -159,7 +159,7 @@ public class Boat extends Entity implements VariantHolder<Boat.Type> {
     }
 
     @Override
-    public boolean isPushable() {
+    public boolean isCollidable(boolean ignoreClimbing) { // Paper
         return true;
     }
 

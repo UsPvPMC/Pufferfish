@@ -1929,6 +1929,12 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     }
 
     public boolean isPushable() {
+        // Paper start
+        return isCollidable(false);
+    }
+
+    public boolean isCollidable(boolean ignoreClimbing) {
+        // Paper end
         return false;
     }
 
