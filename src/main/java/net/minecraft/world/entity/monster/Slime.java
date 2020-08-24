@@ -241,6 +241,7 @@ public class Slime extends Mob implements Enemy {
                         entityslime.setPersistenceRequired();
                     }
 
+                entityslime.aware = this.aware; // Paper
                     entityslime.setCustomName(ichatbasecomponent);
                     entityslime.setNoAi(flag);
                     entityslime.setInvulnerable(this.isInvulnerable());
