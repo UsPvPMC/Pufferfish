@@ -167,6 +167,7 @@ public abstract class BaseSpawner {
                             return;
                         }
 
+                        entity.preserveMotion = true; // Paper - preserve entity motion from tag
                         entity.moveTo(entity.getX(), entity.getY(), entity.getZ(), randomsource.nextFloat() * 360.0F, 0.0F);
                         if (entity instanceof Mob) {
                             Mob entityinsentient = (Mob) entity;
