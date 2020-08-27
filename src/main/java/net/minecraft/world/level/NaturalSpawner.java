@@ -260,7 +260,7 @@ public final class NaturalSpawner {
                             blockposition_mutableblockposition.set(l, i, i1);
                             double d0 = (double) l + 0.5D;
                             double d1 = (double) i1 + 0.5D;
-                            Player entityhuman = world.getNearestPlayer(d0, (double) i, d1, -1.0D, false);
+                            Player entityhuman = (chunk instanceof LevelChunk) ? ((LevelChunk)chunk).findNearestPlayer(d0, i, d1, 576.0D, net.minecraft.world.entity.EntitySelector.NO_SPECTATORS) : world.getNearestPlayer(d0, (double) i, d1, -1.0D, false); // Paper - use chunk's player cache to optimize search in range
 
                             if (entityhuman != null) {
                                 double d2 = entityhuman.distanceToSqr(d0, (double) i, d1);
@@ -334,7 +334,7 @@ public final class NaturalSpawner {
     }
 
     private static boolean isRightDistanceToPlayerAndSpawnPoint(ServerLevel world, ChunkAccess chunk, BlockPos.MutableBlockPos pos, double squaredDistance) {
-        return squaredDistance <= 576.0D ? false : (world.getSharedSpawnPos().closerToCenterThan(new Vec3((double) pos.getX() + 0.5D, (double) pos.getY(), (double) pos.getZ() + 0.5D), 24.0D) ? false : Objects.equals(new ChunkPos(pos), chunk.getPos()) || world.isNaturalSpawningAllowed((BlockPos) pos));
+        return squaredDistance <= 576.0D ? false : (world.getSharedSpawnPos().closerToCenterThan(new Vec3((double) pos.getX() + 0.5D, (double) pos.getY(), (double) pos.getZ() + 0.5D), 24.0D) ? false : Objects.equals(new ChunkPos(pos), chunk.getPos()) || world.isNaturalSpawningAllowed((BlockPos) pos)); // Paper - diff on change, copy into caller
     }
 
     private static Boolean isValidSpawnPostitionForType(ServerLevel world, MobCategory group, StructureManager structureAccessor, ChunkGenerator chunkGenerator, MobSpawnSettings.SpawnerData spawnEntry, BlockPos.MutableBlockPos pos, double squaredDistance) { // Paper

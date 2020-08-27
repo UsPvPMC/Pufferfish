@@ -855,7 +855,12 @@ public abstract class Mob extends LivingEntity implements Targeting {
         if (this.level.getDifficulty() == Difficulty.PEACEFUL && this.shouldDespawnInPeaceful()) {
             this.discard();
         } else if (!this.isPersistenceRequired() && !this.requiresCustomPersistence()) {
-            Player entityhuman = this.level.findNearbyPlayer(this, -1.0D, EntitySelector.PLAYER_AFFECTS_SPAWNING); // Paper
+            // Paper start - optimise checkDespawn
+            Player entityhuman = this.level.findNearbyPlayer(this, level.paperConfig().entities.spawning.despawnRanges.get(this.getType().getCategory()).hard() + 1, EntitySelector.PLAYER_AFFECTS_SPAWNING); // Paper
+            if (entityhuman == null) {
+                entityhuman = ((ServerLevel)this.level).playersAffectingSpawning.isEmpty() ? null : ((ServerLevel)this.level).playersAffectingSpawning.get(0);
+            }
+            // Paper end - optimise checkDespawn
 
             if (entityhuman != null) {
                 double d0 = entityhuman.distanceToSqr((Entity) this);

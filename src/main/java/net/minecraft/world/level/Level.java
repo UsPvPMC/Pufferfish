@@ -208,6 +208,69 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         return this.getChunkIfLoaded(chunkX, chunkZ) != null;
     }
     // Paper end
+    // Paper start - optimise checkDespawn
+    public final List<net.minecraft.server.level.ServerPlayer> getNearbyPlayers(@Nullable Entity source, double sourceX, double sourceY,
+                                                                                double sourceZ, double maxRange, @Nullable Predicate<Entity> predicate) {
+        LevelChunk chunk;
+        if (maxRange < 0.0 || maxRange >= net.minecraft.server.level.ChunkMap.GENERAL_AREA_MAP_ACCEPTABLE_SEARCH_RANGE ||
+            (chunk = (LevelChunk)this.getChunkIfLoadedImmediately(Mth.floor(sourceX) >> 4, Mth.floor(sourceZ) >> 4)) == null) {
+            return this.getNearbyPlayersSlow(source, sourceX, sourceY, sourceZ, maxRange, predicate);
+        }
+
+        List<net.minecraft.server.level.ServerPlayer> ret = new java.util.ArrayList<>();
+        chunk.getNearestPlayers(sourceX, sourceY, sourceZ, predicate, maxRange, ret);
+        return ret;
+    }
+
+    private List<net.minecraft.server.level.ServerPlayer> getNearbyPlayersSlow(@Nullable Entity source, double sourceX, double sourceY,
+                                                                               double sourceZ, double maxRange, @Nullable Predicate<Entity> predicate) {
+        List<net.minecraft.server.level.ServerPlayer> ret = new java.util.ArrayList<>();
+        double maxRangeSquared = maxRange * maxRange;
+
+        for (net.minecraft.server.level.ServerPlayer player : (List<net.minecraft.server.level.ServerPlayer>)this.players()) {
+            if ((maxRange < 0.0 || player.distanceToSqr(sourceX, sourceY, sourceZ) < maxRangeSquared)) {
+                if (predicate == null || predicate.test(player)) {
+                    ret.add(player);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private net.minecraft.server.level.ServerPlayer getNearestPlayerSlow(@Nullable Entity source, double sourceX, double sourceY,
+                                                                         double sourceZ, double maxRange, @Nullable Predicate<Entity> predicate) {
+        net.minecraft.server.level.ServerPlayer closest = null;
+        double closestRangeSquared = maxRange < 0.0 ? Double.MAX_VALUE : maxRange * maxRange;
+
+        for (net.minecraft.server.level.ServerPlayer player : (List<net.minecraft.server.level.ServerPlayer>)this.players()) {
+            double distanceSquared = player.distanceToSqr(sourceX, sourceY, sourceZ);
+            if (distanceSquared < closestRangeSquared && (predicate == null || predicate.test(player))) {
+                closest = player;
+                closestRangeSquared = distanceSquared;
+            }
+        }
+
+        return closest;
+    }
+
+
+    public final net.minecraft.server.level.ServerPlayer getNearestPlayer(@Nullable Entity source, double sourceX, double sourceY,
+                                                                          double sourceZ, double maxRange, @Nullable Predicate<Entity> predicate) {
+        LevelChunk chunk;
+        if (maxRange < 0.0 || maxRange >= net.minecraft.server.level.ChunkMap.GENERAL_AREA_MAP_ACCEPTABLE_SEARCH_RANGE ||
+            (chunk = (LevelChunk)this.getChunkIfLoadedImmediately(Mth.floor(sourceX) >> 4, Mth.floor(sourceZ) >> 4)) == null) {
+            return this.getNearestPlayerSlow(source, sourceX, sourceY, sourceZ, maxRange, predicate);
+        }
+
+        return chunk.findNearestPlayer(sourceX, sourceY, sourceZ, maxRange, predicate);
+    }
+
+    @Override
+    public @Nullable Player getNearestPlayer(double d0, double d1, double d2, double d3, @Nullable Predicate<Entity> predicate) {
+        return this.getNearestPlayer(null, d0, d1, d2, d3, predicate);
+    }
+    // Paper end - optimise checkDespawn
 
     public abstract ResourceKey<LevelStem> getTypeKey();
 

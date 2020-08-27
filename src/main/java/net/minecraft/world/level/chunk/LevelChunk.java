@@ -262,6 +262,98 @@ public class LevelChunk extends ChunkAccess {
         }
     }
     // Paper end
+    // Paper start - optimise checkDespawn
+    private boolean playerGeneralAreaCacheSet;
+    private com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<net.minecraft.server.level.ServerPlayer> playerGeneralAreaCache;
+
+    public com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<net.minecraft.server.level.ServerPlayer> getPlayerGeneralAreaCache() {
+        if (!this.playerGeneralAreaCacheSet) {
+            this.updateGeneralAreaCache();
+        }
+        return this.playerGeneralAreaCache;
+    }
+
+    public void updateGeneralAreaCache() {
+        this.updateGeneralAreaCache(((ServerLevel)this.level).getChunkSource().chunkMap.playerGeneralAreaMap.getObjectsInRange(this.coordinateKey));
+    }
+
+    public void removeGeneralAreaCache() {
+        this.playerGeneralAreaCacheSet = false;
+        this.playerGeneralAreaCache = null;
+    }
+
+    public void updateGeneralAreaCache(com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<net.minecraft.server.level.ServerPlayer> value) {
+        this.playerGeneralAreaCacheSet = true;
+        this.playerGeneralAreaCache = value;
+    }
+
+    public net.minecraft.server.level.ServerPlayer findNearestPlayer(double sourceX, double sourceY, double sourceZ,
+                                                                     double maxRange, java.util.function.Predicate<Entity> predicate) {
+        if (!this.playerGeneralAreaCacheSet) {
+            this.updateGeneralAreaCache();
+        }
+
+        com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<net.minecraft.server.level.ServerPlayer> nearby = this.playerGeneralAreaCache;
+
+        if (nearby == null) {
+            return null;
+        }
+
+        Object[] backingSet = nearby.getBackingSet();
+        double closestDistance = maxRange < 0.0 ? Double.MAX_VALUE : maxRange * maxRange;
+        net.minecraft.server.level.ServerPlayer closest = null;
+        for (int i = 0, len = backingSet.length; i < len; ++i) {
+            Object _player = backingSet[i];
+            if (!(_player instanceof net.minecraft.server.level.ServerPlayer)) {
+                continue;
+            }
+            net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer)_player;
+
+            double distance = player.distanceToSqr(sourceX, sourceY, sourceZ);
+            if (distance < closestDistance && predicate.test(player)) {
+                closest = player;
+                closestDistance = distance;
+            }
+        }
+
+        return closest;
+    }
+
+    public void getNearestPlayers(double sourceX, double sourceY, double sourceZ, java.util.function.Predicate<Entity> predicate,
+                                  double range, java.util.List<net.minecraft.server.level.ServerPlayer> ret) {
+        if (!this.playerGeneralAreaCacheSet) {
+            this.updateGeneralAreaCache();
+        }
+
+        com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<net.minecraft.server.level.ServerPlayer> nearby = this.playerGeneralAreaCache;
+
+        if (nearby == null) {
+            return;
+        }
+
+        double rangeSquared = range * range;
+
+        Object[] backingSet = nearby.getBackingSet();
+        for (int i = 0, len = backingSet.length; i < len; ++i) {
+            Object _player = backingSet[i];
+            if (!(_player instanceof net.minecraft.server.level.ServerPlayer)) {
+                continue;
+            }
+            net.minecraft.server.level.ServerPlayer player = (net.minecraft.server.level.ServerPlayer)_player;
+
+            if (range >= 0.0) {
+                double distanceSquared = player.distanceToSqr(sourceX, sourceY, sourceZ);
+                if (distanceSquared > rangeSquared) {
+                    continue;
+                }
+            }
+
+            if (predicate == null || predicate.test(player)) {
+                ret.add(player);
+            }
+        }
+    }
+    // Paper end - optimise checkDespawn
 
     public LevelChunk(ServerLevel world, ProtoChunk protoChunk, @Nullable LevelChunk.PostLoadProcessor entityLoader) {
         this(world, protoChunk.getPos(), protoChunk.getUpgradeData(), protoChunk.unpackBlockTicks(), protoChunk.unpackFluidTicks(), protoChunk.getInhabitedTime(), protoChunk.getSections(), entityLoader, protoChunk.getBlendingData());

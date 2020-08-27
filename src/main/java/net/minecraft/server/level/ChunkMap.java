@@ -159,6 +159,12 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
     public final ReferenceOpenHashSet<ChunkHolder> needsChangeBroadcasting = new ReferenceOpenHashSet<>();
 
     // Paper - rewrite chunk system
+    // Paper start - optimise checkDespawn
+    public static final int GENERAL_AREA_MAP_SQUARE_RADIUS = 40;
+    public static final double GENERAL_AREA_MAP_ACCEPTABLE_SEARCH_RANGE = 16.0 * (GENERAL_AREA_MAP_SQUARE_RADIUS - 1);
+    public static final double GENERAL_AREA_MAP_ACCEPTABLE_SEARCH_RANGE_SQUARED = GENERAL_AREA_MAP_ACCEPTABLE_SEARCH_RANGE * GENERAL_AREA_MAP_ACCEPTABLE_SEARCH_RANGE;
+    public final com.destroystokyo.paper.util.misc.PlayerAreaMap playerGeneralAreaMap;
+    // Paper end - optimise checkDespawn
 
     // Paper start - distance maps
     private final com.destroystokyo.paper.util.misc.PooledLinkedHashSets<ServerPlayer> pooledLinkedPlayerHashSets = new com.destroystokyo.paper.util.misc.PooledLinkedHashSets<>();
@@ -211,6 +217,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
             trackMap.add(player, chunkX, chunkZ, Math.min(trackRange, io.papermc.paper.chunk.system.ChunkSystem.getSendViewDistance(player)));
         }
         // Paper end - use distance map to optimise entity tracker
+        this.playerGeneralAreaMap.add(player, chunkX, chunkZ, GENERAL_AREA_MAP_SQUARE_RADIUS); // Paper - optimise checkDespawn
     }
 
     void removePlayerFromDistanceMaps(ServerPlayer player) {
@@ -220,6 +227,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
         this.playerMobSpawnMap.remove(player);
         this.playerChunkTickRangeMap.remove(player);
         // Paper end - optimise ChunkMap#anyPlayerCloseEnoughForSpawning
+        this.playerGeneralAreaMap.remove(player); // Paper - optimise checkDespawns
         // Paper start - per player mob spawning
         if (this.playerMobDistanceMap != null) {
             this.playerMobDistanceMap.remove(player);
@@ -251,6 +259,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
             trackMap.update(player, chunkX, chunkZ, Math.min(trackRange, io.papermc.paper.chunk.system.ChunkSystem.getSendViewDistance(player)));
         }
         // Paper end - use distance map to optimise entity tracker
+        this.playerGeneralAreaMap.update(player, chunkX, chunkZ, GENERAL_AREA_MAP_SQUARE_RADIUS); // Paper - optimise checkDespawn
     }
     // Paper end
     // Paper start
@@ -408,6 +417,23 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
                 }
             });
         // Paper end - optimise ChunkMap#anyPlayerCloseEnoughForSpawning
+        // Paper start - optimise checkDespawn
+        this.playerGeneralAreaMap = new com.destroystokyo.paper.util.misc.PlayerAreaMap(this.pooledLinkedPlayerHashSets,
+            (ServerPlayer player, int rangeX, int rangeZ, int currPosX, int currPosZ, int prevPosX, int prevPosZ,
+             com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> newState) -> {
+                LevelChunk chunk = ChunkMap.this.level.getChunkSource().getChunkAtIfCachedImmediately(rangeX, rangeZ);
+                if (chunk != null) {
+                    chunk.updateGeneralAreaCache(newState);
+                }
+            },
+            (ServerPlayer player, int rangeX, int rangeZ, int currPosX, int currPosZ, int prevPosX, int prevPosZ,
+             com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> newState) -> {
+                LevelChunk chunk = ChunkMap.this.level.getChunkSource().getChunkAtIfCachedImmediately(rangeX, rangeZ);
+                if (chunk != null) {
+                    chunk.updateGeneralAreaCache(newState);
+                }
+            });
+        // Paper end - optimise checkDespawn
     }
 
     protected ChunkGenerator generator() {

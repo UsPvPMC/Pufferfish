@@ -442,6 +442,84 @@ public class ServerLevel extends Level implements WorldGenLevel {
     }
     // Paper end
 
+    // Paper start - optimise checkDespawn
+    public final List<ServerPlayer> playersAffectingSpawning = new java.util.ArrayList<>();
+    // Paper end - optimise checkDespawn
+    // Paper start - optimise get nearest players for entity AI
+    @Override
+    public final ServerPlayer getNearestPlayer(net.minecraft.world.entity.ai.targeting.TargetingConditions condition, @Nullable LivingEntity source,
+                                               double centerX, double centerY, double centerZ) {
+        com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> nearby;
+        nearby = this.getChunkSource().chunkMap.playerGeneralAreaMap.getObjectsInRange(Mth.floor(centerX) >> 4, Mth.floor(centerZ) >> 4);
+
+        if (nearby == null) {
+            return null;
+        }
+
+        Object[] backingSet = nearby.getBackingSet();
+
+        double closestDistanceSquared = Double.MAX_VALUE;
+        ServerPlayer closest = null;
+
+        for (int i = 0, len = backingSet.length; i < len; ++i) {
+            Object _player = backingSet[i];
+            if (!(_player instanceof ServerPlayer)) {
+                continue;
+            }
+            ServerPlayer player = (ServerPlayer)_player;
+
+            double distanceSquared = player.distanceToSqr(centerX, centerY, centerZ);
+            if (distanceSquared < closestDistanceSquared && condition.test(source, player)) {
+                closest = player;
+                closestDistanceSquared = distanceSquared;
+            }
+        }
+
+        return closest;
+    }
+
+    @Override
+    public Player getNearestPlayer(net.minecraft.world.entity.ai.targeting.TargetingConditions pathfindertargetcondition, LivingEntity entityliving) {
+        return this.getNearestPlayer(pathfindertargetcondition, entityliving, entityliving.getX(), entityliving.getY(), entityliving.getZ());
+    }
+
+    @Override
+    public Player getNearestPlayer(net.minecraft.world.entity.ai.targeting.TargetingConditions pathfindertargetcondition,
+                                   double d0, double d1, double d2) {
+        return this.getNearestPlayer(pathfindertargetcondition, null, d0, d1, d2);
+    }
+
+    @Override
+    public List<Player> getNearbyPlayers(net.minecraft.world.entity.ai.targeting.TargetingConditions condition, LivingEntity source, AABB axisalignedbb) {
+        com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> nearby;
+        double centerX = (axisalignedbb.maxX + axisalignedbb.minX) * 0.5;
+        double centerZ = (axisalignedbb.maxZ + axisalignedbb.minZ) * 0.5;
+        nearby = this.getChunkSource().chunkMap.playerGeneralAreaMap.getObjectsInRange(Mth.floor(centerX) >> 4, Mth.floor(centerZ) >> 4);
+
+        List<Player> ret = new java.util.ArrayList<>();
+
+        if (nearby == null) {
+            return ret;
+        }
+
+        Object[] backingSet = nearby.getBackingSet();
+
+        for (int i = 0, len = backingSet.length; i < len; ++i) {
+            Object _player = backingSet[i];
+            if (!(_player instanceof ServerPlayer)) {
+                continue;
+            }
+            ServerPlayer player = (ServerPlayer)_player;
+
+            if (axisalignedbb.contains(player.getX(), player.getY(), player.getZ()) && condition.test(source, player)) {
+                ret.add(player);
+            }
+        }
+
+        return ret;
+    }
+    // Paper end - optimise get nearest players for entity AI
+
     // Add env and gen to constructor, IWorldDataServer -> WorldDataServer
     public ServerLevel(MinecraftServer minecraftserver, Executor executor, LevelStorageSource.LevelStorageAccess convertable_conversionsession, PrimaryLevelData iworlddataserver, ResourceKey<Level> resourcekey, LevelStem worlddimension, ChunkProgressListener worldloadlistener, boolean flag, long i, List<CustomSpawner> list, boolean flag1, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) {
         // IRegistryCustom.Dimension iregistrycustom_dimension = minecraftserver.registryAccess(); // CraftBukkit - decompile error
@@ -546,6 +624,14 @@ public class ServerLevel extends Level implements WorldGenLevel {
     }
 
     public void tick(BooleanSupplier shouldKeepTicking) {
+        // Paper start - optimise checkDespawn
+        this.playersAffectingSpawning.clear();
+        for (ServerPlayer player : this.players) {
+            if (net.minecraft.world.entity.EntitySelector.PLAYER_AFFECTS_SPAWNING.test(player)) {
+                this.playersAffectingSpawning.add(player);
+            }
+        }
+        // Paper end - optimise checkDespawn
         ProfilerFiller gameprofilerfiller = this.getProfiler();
 
         this.handlingTick = true;
