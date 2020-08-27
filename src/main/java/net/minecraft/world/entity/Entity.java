@@ -4307,4 +4307,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
         void accept(Entity entity, double x, double y, double z);
     }
+
+    // Paper start
+    public static int nextEntityId() {
+        return ENTITY_COUNTER.incrementAndGet();
+    }
+    // Paper end
 }
