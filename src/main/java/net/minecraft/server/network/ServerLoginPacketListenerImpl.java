@@ -102,7 +102,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
     // CraftBukkit start
     @Deprecated
     public void disconnect(String s) {
-        this.disconnect(Component.literal(s));
+        this.disconnect(org.bukkit.craftbukkit.util.CraftChatMessage.fromString(s, true)[0]); // Paper - Fix hex colors not working in some kick messages
     }
     // CraftBukkit end
 
