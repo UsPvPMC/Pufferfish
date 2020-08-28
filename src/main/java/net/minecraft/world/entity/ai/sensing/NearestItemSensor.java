@@ -25,13 +25,16 @@ public class NearestItemSensor extends Sensor<Mob> {
     protected void doTick(ServerLevel world, Mob entity) {
         Brain<?> brain = entity.getBrain();
         List<ItemEntity> list = world.getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(32.0D, 16.0D, 32.0D), (itemEntity) -> {
-            return true;
+            return itemEntity.closerThan(entity, 9.0D) && entity.wantsToPickUp(itemEntity.getItem()); // Paper - move predicate into getEntities
         });
-        list.sort(Comparator.comparingDouble(entity::distanceToSqr));
+        list.sort((e1, e2) -> Double.compare(entity.distanceToSqr(e1), entity.distanceToSqr(e2))); // better to take the sort perf hit than using line of sight more than we need to.
+        // Paper start - remove streams
         // Paper start - remove streams in favour of lists
         ItemEntity nearest = null;
-        for (ItemEntity entityItem : list) {
-            if (entity.wantsToPickUp(entityItem.getItem()) && entityItem.closerThan(entity, 32.0D) && entity.hasLineOfSight(entityItem)) {
+        for (int i = 0; i < list.size(); i++) {
+            ItemEntity entityItem = list.get(i);
+            if (entity.hasLineOfSight(entityItem)) {
+                // Paper end - remove streams
                 nearest = entityItem;
                 break;
             }

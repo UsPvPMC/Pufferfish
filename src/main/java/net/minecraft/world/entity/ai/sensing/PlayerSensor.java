@@ -21,25 +21,30 @@ public class PlayerSensor extends Sensor<LivingEntity> {
 
     @Override
     protected void doTick(ServerLevel world, LivingEntity entity) {
-        List<Player> players = new java.util.ArrayList<>(world.players());
-        players.removeIf(player -> !EntitySelector.NO_SPECTATORS.test(player) || !entity.closerThan(player, 16.0D));
-        players.sort(Comparator.comparingDouble(entity::distanceTo));
+        // Paper start - remove streams
+        List<Player> players = (List)world.getNearbyPlayers(entity, entity.getX(), entity.getY(), entity.getZ(), 16.0D, EntitySelector.NO_SPECTATORS);
+        players.sort((e1, e2) -> Double.compare(entity.distanceToSqr(e1), entity.distanceToSqr(e2)));
         Brain<?> brain = entity.getBrain();
 
         brain.setMemory(MemoryModuleType.NEAREST_PLAYERS, players);
 
-        Player nearest = null, nearestTargetable = null;
-        for (Player player : players) {
-            if (Sensor.isEntityTargetable(entity, player)) {
-                if (nearest == null) nearest = player;
-                if (Sensor.isEntityAttackable(entity, player)) {
-                    nearestTargetable = player;
-                    break; // Both variables are assigned, no reason to loop further
-                }
+        Player firstTargetable = null;
+        Player firstAttackable = null;
+        for (int index = 0, len = players.size(); index < len; ++index) {
+            Player player = players.get(index);
+            if (firstTargetable == null && isEntityTargetable(entity, player)) {
+                firstTargetable = player;
+            }
+            if (firstAttackable == null && isEntityAttackable(entity, player)) {
+                firstAttackable = player;
+            }
+
+            if (firstAttackable != null && firstTargetable != null) {
+                break;
             }
         }
-        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_PLAYER, nearest);
-        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_ATTACKABLE_PLAYER, nearestTargetable);
-        // Paper end
+        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_PLAYER, firstTargetable);
+        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_ATTACKABLE_PLAYER, Optional.ofNullable(firstAttackable));
+        // Paper end - remove streams
     }
 }

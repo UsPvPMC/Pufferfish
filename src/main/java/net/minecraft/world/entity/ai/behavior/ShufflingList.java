@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 import net.minecraft.util.RandomSource;
 
 public class ShufflingList<U> implements Iterable<U> {
-    protected final List<ShufflingList.WeightedEntry<U>> entries;
+    public final List<ShufflingList.WeightedEntry<U>> entries; // Paper - public
     private final RandomSource random = RandomSource.create();
     private final boolean isUnsafe; // Paper
 
