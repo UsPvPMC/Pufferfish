@@ -121,6 +121,24 @@ public abstract class ChunkGenerator {
 
     @Nullable
     public Pair<BlockPos, Holder<Structure>> findNearestMapStructure(ServerLevel world, HolderSet<Structure> structures, BlockPos center, int radius, boolean skipReferencedStructures) {
+        // Paper start - StructuresLocateEvent
+        final org.bukkit.World bukkitWorld = world.getWorld();
+        final org.bukkit.Location origin = io.papermc.paper.util.MCUtil.toLocation(world, center);
+        final List<org.bukkit.generator.structure.Structure> apiStructures = structures.stream().map(Holder::value).map(nms -> org.bukkit.craftbukkit.generator.strucutre.CraftStructure.minecraftToBukkit(nms, world.registryAccess())).toList();
+        if (!apiStructures.isEmpty()) {
+            final io.papermc.paper.event.world.StructuresLocateEvent event = new io.papermc.paper.event.world.StructuresLocateEvent(bukkitWorld, origin, apiStructures, radius, skipReferencedStructures);
+            if (!event.callEvent()) {
+                return null;
+            }
+            if (event.getResult() != null) {
+                return Pair.of(io.papermc.paper.util.MCUtil.toBlockPos(event.getResult().pos()), world.registryAccess().registryOrThrow(Registries.STRUCTURE).wrapAsHolder(org.bukkit.craftbukkit.generator.strucutre.CraftStructure.bukkitToMinecraft(event.getResult().structure())));
+            }
+            center = io.papermc.paper.util.MCUtil.toBlockPosition(event.getOrigin());
+            radius = event.getRadius();
+            skipReferencedStructures = event.shouldFindUnexplored();
+            structures = HolderSet.direct(api -> world.registryAccess().registryOrThrow(Registries.STRUCTURE).wrapAsHolder(org.bukkit.craftbukkit.generator.strucutre.CraftStructure.bukkitToMinecraft(api)), event.getStructures());
+        }
+        // Paper end
         ChunkGeneratorStructureState chunkgeneratorstructurestate = world.getChunkSource().getGeneratorState();
         Map<StructurePlacement, Set<Holder<Structure>>> map = new Object2ObjectArrayMap();
         Iterator iterator = structures.iterator();

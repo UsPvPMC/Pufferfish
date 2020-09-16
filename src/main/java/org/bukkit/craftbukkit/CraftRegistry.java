@@ -37,6 +37,11 @@ public class CraftRegistry<B extends Keyed, M> implements Registry<B> {
             return new CraftRegistry<>(registryHolder.registryOrThrow(Registries.TRIM_PATTERN), CraftTrimPattern::new);
         }
         // TODO registry modification API
+        // Paper start - remove this after a while along with all ConfiguredStructure stuff
+        if (bukkitClass == io.papermc.paper.world.structure.ConfiguredStructure.class) {
+            return new io.papermc.paper.world.structure.PaperConfiguredStructure.LegacyRegistry(registryHolder.registryOrThrow(Registries.STRUCTURE));
+        }
+        // Paper end
 
         return null;
     }
