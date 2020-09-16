@@ -436,10 +436,12 @@ public class ServerPlayerGameMode {
                     // return true; // CraftBukkit
                 }
                 // CraftBukkit start
+                java.util.List<net.minecraft.world.entity.item.ItemEntity> itemsToDrop = level.captureDrops; // Paper - store current list
+                level.captureDrops = null; // Paper - Remove this earlier so that we can actually drop stuff
                 if (event.isDropItems()) {
-                    org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockDropItemEvent(bblock, state, this.player, level.captureDrops);
+                    org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockDropItemEvent(bblock, state, this.player, itemsToDrop); // Paper - use stored ref
                 }
-                level.captureDrops = null;
+                //world.captureDrops = null; // Paper - move up
 
                 // Drop event experience
                 if (flag && event != null) {
