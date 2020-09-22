@@ -48,6 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+
+import io.netty.util.concurrent.AbstractEventExecutor; // Paper
 public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
 
     private static final float AVERAGE_PACKETS_SMOOTHING = 0.75F;
@@ -425,9 +427,19 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         if (this.channel.eventLoop().inEventLoop()) {
             this.doSendPacket(packet, callbacks, enumprotocol, enumprotocol1, flush); // Paper
         } else {
+            // Paper start - optimise packets that are not flushed
+            // note: since the type is not dynamic here, we need to actually copy the old executor code
+            // into two branches. On conflict, just re-copy - no changes were made inside the executor code.
+            if (!flush) {
+                AbstractEventExecutor.LazyRunnable run = () -> {
+                    this.doSendPacket(packet, callbacks, enumprotocol, enumprotocol1, flush); // Paper - add flush parameter
+                };
+                this.channel.eventLoop().execute(run);
+            } else { // Paper end - optimise packets that are not flushed
             this.channel.eventLoop().execute(() -> {
-                this.doSendPacket(packet, callbacks, enumprotocol, enumprotocol1, flush); // Paper
+                this.doSendPacket(packet, callbacks, enumprotocol, enumprotocol1, flush); // Paper - add flush parameter // Paper - diff on change
             });
+            } // Paper
         }
 
     }
