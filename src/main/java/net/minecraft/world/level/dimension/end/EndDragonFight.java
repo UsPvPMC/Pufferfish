@@ -218,7 +218,7 @@ public class EndDragonFight {
             this.dragonUUID = enderDragon.getUUID();
             LOGGER.info("Found that there's a dragon still alive ({})", (Object)enderDragon);
             this.dragonKilled = false;
-            if (!bl) {
+            if (!bl && this.level.paperConfig().entities.behavior.shouldRemoveDragon) {
                 LOGGER.info("But we didn't have a portal, let's remove it.");
                 enderDragon.discard();
                 this.dragonUUID = null;
