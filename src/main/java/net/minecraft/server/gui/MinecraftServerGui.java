@@ -59,6 +59,15 @@ public class MinecraftServerGui extends JComponent {
         jframe.pack();
         jframe.setLocationRelativeTo((Component) null);
         jframe.setVisible(true);
+        jframe.setName("Minecraft server"); // Paper
+
+        // Paper start - Add logo as frame image
+        try {
+            jframe.setIconImage(javax.imageio.ImageIO.read(Objects.requireNonNull(MinecraftServerGui.class.getClassLoader().getResourceAsStream("logo.png"))));
+        } catch (java.io.IOException ignore) {
+        }
+        // Paper end
+
         jframe.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent windowevent) {
                 if (!servergui.isClosing.getAndSet(true)) {
