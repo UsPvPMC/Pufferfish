@@ -4312,5 +4312,9 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     public static int nextEntityId() {
         return ENTITY_COUNTER.incrementAndGet();
     }
+
+    public boolean isTicking() {
+        return ((net.minecraft.server.level.ServerChunkCache) level.getChunkSource()).isPositionTicking(this);
+    }
     // Paper end
 }
