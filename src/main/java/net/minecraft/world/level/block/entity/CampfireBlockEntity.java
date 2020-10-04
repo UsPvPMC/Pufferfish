@@ -81,7 +81,11 @@ public class CampfireBlockEntity extends BlockEntity implements Clearable {
                         result = blockCookEvent.getResult();
                         itemstack1 = CraftItemStack.asNMSCopy(result);
                         // CraftBukkit end
-                        Containers.dropItemStack(world, (double) pos.getX(), (double) pos.getY(), (double) pos.getZ(), itemstack1);
+                    // Paper start
+                    net.minecraft.world.entity.item.ItemEntity droppedItem = new net.minecraft.world.entity.item.ItemEntity(world, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, itemstack1.split(world.random.nextInt(21) + 10));
+                    droppedItem.setDeltaMovement(world.random.nextGaussian() * 0.05D, world.random.nextGaussian() * 0.05D + 0.2D, world.random.nextGaussian() * 0.05D);
+                    world.addFreshEntity(droppedItem);
+                    // Paper end
                         campfire.items.set(i, ItemStack.EMPTY);
                         world.sendBlockUpdated(pos, state, state, 3);
                         world.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(state));
