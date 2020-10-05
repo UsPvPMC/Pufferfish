@@ -2160,11 +2160,21 @@ public class ServerPlayer extends Player {
 
     public void trackChunk(ChunkPos chunkPos, Packet<?> chunkDataPacket) {
         this.connection.send(chunkDataPacket);
+        // Paper start
+        if(io.papermc.paper.event.packet.PlayerChunkLoadEvent.getHandlerList().getRegisteredListeners().length > 0){
+            new io.papermc.paper.event.packet.PlayerChunkLoadEvent(this.getBukkitEntity().getWorld().getChunkAt(chunkPos.longKey), this.getBukkitEntity()).callEvent();
+        }
+        // Paper end
     }
 
     public void untrackChunk(ChunkPos chunkPos) {
         if (this.isAlive()) {
             this.connection.send(new ClientboundForgetLevelChunkPacket(chunkPos.x, chunkPos.z));
+            // Paper start
+            if(io.papermc.paper.event.packet.PlayerChunkUnloadEvent.getHandlerList().getRegisteredListeners().length > 0){
+                new io.papermc.paper.event.packet.PlayerChunkUnloadEvent(this.getBukkitEntity().getWorld().getChunkAt(chunkPos.longKey), this.getBukkitEntity()).callEvent();
+            }
+            // Paper end
         }
 
     }
