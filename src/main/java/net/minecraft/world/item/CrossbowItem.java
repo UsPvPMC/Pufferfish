@@ -89,7 +89,14 @@ public class CrossbowItem extends ProjectileWeaponItem implements Vanishable {
         int j = this.getUseDuration(stack) - remainingUseTicks;
         float f = CrossbowItem.getPowerForTime(j, stack);
 
-        if (f >= 1.0F && !CrossbowItem.isCharged(stack) && CrossbowItem.tryLoadProjectiles(user, stack)) {
+        // Paper start - EntityLoadCrossbowEvent
+        if (f >= 1.0F && !CrossbowItem.isCharged(stack) /*&& CrossbowItem.tryLoadProjectiles(entityliving, itemstack)*/) {
+            final io.papermc.paper.event.entity.EntityLoadCrossbowEvent event = new io.papermc.paper.event.entity.EntityLoadCrossbowEvent(user.getBukkitLivingEntity(), stack.asBukkitMirror(), user.getUsedItemHand() == InteractionHand.MAIN_HAND ? org.bukkit.inventory.EquipmentSlot.HAND : org.bukkit.inventory.EquipmentSlot.OFF_HAND);
+            if (!event.callEvent() || !tryLoadProjectiles(user, stack, event.shouldConsumeItem())) {
+                if (user instanceof ServerPlayer player) player.containerMenu.sendAllDataToRemote();
+                return;
+            }
+            // Paper end
             CrossbowItem.setCharged(stack, true);
             SoundSource soundcategory = user instanceof Player ? SoundSource.PLAYERS : SoundSource.HOSTILE;
 
@@ -99,9 +106,14 @@ public class CrossbowItem extends ProjectileWeaponItem implements Vanishable {
     }
 
     private static boolean tryLoadProjectiles(LivingEntity shooter, ItemStack projectile) {
+        // Paper start
+        return CrossbowItem.tryLoadProjectiles(shooter, projectile, true);
+    }
+    private static boolean tryLoadProjectiles(LivingEntity shooter, ItemStack projectile, boolean consume) {
+        // Paper end
         int i = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MULTISHOT, projectile);
         int j = i == 0 ? 1 : 3;
-        boolean flag = shooter instanceof Player && ((Player) shooter).getAbilities().instabuild;
+        boolean flag = !consume || shooter instanceof Player && ((Player) shooter).getAbilities().instabuild; // Paper - add consume
         ItemStack itemstack1 = shooter.getProjectile(projectile);
         ItemStack itemstack2 = itemstack1.copy();
 
