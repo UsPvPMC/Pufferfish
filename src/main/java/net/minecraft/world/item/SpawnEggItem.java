@@ -61,7 +61,7 @@ public class SpawnEggItem extends Item {
             Direction enumdirection = context.getClickedFace();
             BlockState iblockdata = world.getBlockState(blockposition);
 
-            if (iblockdata.is(Blocks.SPAWNER)) {
+            if (!world.paperConfig().entities.spawning.disableMobSpawnerSpawnEggTransformation && iblockdata.is(Blocks.SPAWNER)) { // Paper
                 BlockEntity tileentity = world.getBlockEntity(blockposition);
 
                 if (tileentity instanceof SpawnerBlockEntity) {
