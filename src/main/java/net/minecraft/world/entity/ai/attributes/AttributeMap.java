@@ -150,4 +150,12 @@ public class AttributeMap {
         }
 
     }
+
+    // Paper - start
+    public void registerAttribute(Attribute attributeBase) {
+        AttributeInstance attributeModifiable = new AttributeInstance(attributeBase, AttributeInstance::getAttribute);
+        attributes.put(attributeBase, attributeModifiable);
+    }
+    // Paper - end
+
 }
