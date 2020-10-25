@@ -1808,6 +1808,28 @@ public final class CraftServer implements Server {
         return result;
     }
 
+    // Paper start
+    @Override
+    @Nullable
+    public OfflinePlayer getOfflinePlayerIfCached(String name) {
+        Validate.notNull(name, "Name cannot be null");
+        Validate.notEmpty(name, "Name cannot be empty");
+
+        OfflinePlayer result = getPlayerExact(name);
+        if (result == null) {
+            GameProfile profile = console.getProfileCache().getProfileIfCached(name);
+
+            if (profile != null) {
+                result = getOfflinePlayer(profile);
+            }
+        } else {
+            offlinePlayers.remove(result.getUniqueId());
+        }
+
+        return result;
+    }
+    // Paper end
+
     @Override
     public OfflinePlayer getOfflinePlayer(UUID id) {
         Validate.notNull(id, "UUID cannot be null");
