@@ -84,6 +84,14 @@ public class ChunkSerializer {
     public static final String BLOCK_LIGHT_TAG = "BlockLight";
     public static final String SKY_LIGHT_TAG = "SkyLight";
 
+    // Paper start - replace light engine impl
+    private static final int STARLIGHT_LIGHT_VERSION = 8;
+
+    private static final String BLOCKLIGHT_STATE_TAG = "starlight.blocklight_state";
+    private static final String SKYLIGHT_STATE_TAG = "starlight.skylight_state";
+    private static final String STARLIGHT_VERSION_TAG = "starlight.light_version";
+    // Paper end - replace light engine impl
+
     public ChunkSerializer() {}
 
     public static ProtoChunk read(ServerLevel world, PoiManager poiStorage, ChunkPos chunkPos, CompoundTag nbt) {
@@ -94,13 +102,20 @@ public class ChunkSerializer {
         }
 
         UpgradeData chunkconverter = nbt.contains("UpgradeData", 10) ? new UpgradeData(nbt.getCompound("UpgradeData"), world) : UpgradeData.EMPTY;
-        boolean flag = nbt.getBoolean("isLightOn");
+        boolean flag = getStatus(nbt) != null && getStatus(nbt).isOrAfter(ChunkStatus.LIGHT) && nbt.get("isLightOn") != null && nbt.getInt(STARLIGHT_VERSION_TAG) == STARLIGHT_LIGHT_VERSION; // Paper
         ListTag nbttaglist = nbt.getList("sections", 10);
         int i = world.getSectionsCount();
         LevelChunkSection[] achunksection = new LevelChunkSection[i];
         boolean flag1 = world.dimensionType().hasSkyLight();
         ServerChunkCache chunkproviderserver = world.getChunkSource();
         LevelLightEngine lightengine = chunkproviderserver.getLightEngine();
+        // Paper start
+        ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] blockNibbles = ca.spottedleaf.starlight.common.light.StarLightEngine.getFilledEmptyLight(world);
+        ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] skyNibbles = ca.spottedleaf.starlight.common.light.StarLightEngine.getFilledEmptyLight(world);
+        final int minSection = io.papermc.paper.util.WorldUtil.getMinLightSection(world);
+        final int maxSection = io.papermc.paper.util.WorldUtil.getMaxLightSection(world);
+        boolean canReadSky = world.dimensionType().hasSkyLight();
+        // Paper end
         Registry<Biome> iregistry = world.registryAccess().registryOrThrow(Registries.BIOME);
         Codec<PalettedContainer<Holder<Biome>>> codec = ChunkSerializer.makeBiomeCodecRW(iregistry); // CraftBukkit - read/write
         boolean flag2 = false;
@@ -108,7 +123,7 @@ public class ChunkSerializer {
         DataResult dataresult;
 
         for (int j = 0; j < nbttaglist.size(); ++j) {
-            CompoundTag nbttagcompound1 = nbttaglist.getCompound(j);
+            CompoundTag nbttagcompound1 = nbttaglist.getCompound(j); CompoundTag sectionData = nbttagcompound1; // Paper
             byte b0 = nbttagcompound1.getByte("Y");
             int k = world.getSectionIndexFromSectionY(b0);
 
@@ -149,19 +164,39 @@ public class ChunkSerializer {
             boolean flag3 = nbttagcompound1.contains("BlockLight", 7);
             boolean flag4 = flag1 && nbttagcompound1.contains("SkyLight", 7);
 
-            if (flag3 || flag4) {
-                if (!flag2) {
-                    lightengine.retainData(chunkPos, true);
-                    flag2 = true;
-                }
-
+            // Paper start - rewrite the light engine
+            if (flag) {
+                try {
+                int y = sectionData.getByte("Y");
+                // Paper end - rewrite the light engine
                 if (flag3) {
-                    lightengine.queueSectionData(LightLayer.BLOCK, SectionPos.of(chunkPos, b0), new DataLayer(nbttagcompound1.getByteArray("BlockLight")), true);
+                    // Paper start - rewrite the light engine
+                    // this is where our diff is
+                    blockNibbles[y - minSection] = new ca.spottedleaf.starlight.common.light.SWMRNibbleArray(sectionData.getByteArray("BlockLight").clone(), sectionData.getInt(BLOCKLIGHT_STATE_TAG)); // clone for data safety
+                } else {
+                    blockNibbles[y - minSection] = new ca.spottedleaf.starlight.common.light.SWMRNibbleArray(null, sectionData.getInt(BLOCKLIGHT_STATE_TAG));
+                    // Paper end - rewrite the light engine
                 }
 
                 if (flag4) {
-                    lightengine.queueSectionData(LightLayer.SKY, SectionPos.of(chunkPos, b0), new DataLayer(nbttagcompound1.getByteArray("SkyLight")), true);
+                    // Paper start - rewrite the light engine
+                    // we store under the same key so mod programs editing nbt
+                    // can still read the data, hopefully.
+                    // however, for compatibility we store chunks as unlit so vanilla
+                    // is forced to re-light them if it encounters our data. It's too much of a burden
+                    // to try and maintain compatibility with a broken and inferior skylight management system.
+                    skyNibbles[y - minSection] = new ca.spottedleaf.starlight.common.light.SWMRNibbleArray(sectionData.getByteArray("SkyLight").clone(), sectionData.getInt(SKYLIGHT_STATE_TAG)); // clone for data safety
+                } else if (flag1) {
+                    skyNibbles[y - minSection] = new ca.spottedleaf.starlight.common.light.SWMRNibbleArray(null, sectionData.getInt(SKYLIGHT_STATE_TAG));
+                    // Paper end - rewrite the light engine
                 }
+
+                // Paper start - rewrite the light engine
+                } catch (Exception ex) {
+                    LOGGER.warn("Failed to load light data for chunk " + chunkPos + " in world '" + world.getWorld().getName() + "', light will be regenerated", ex);
+                    flag = false;
+                }
+                // Paper end - rewrite light engine
             }
         }
 
@@ -190,6 +225,8 @@ public class ChunkSerializer {
             }, chunkPos);
 
             object1 = new LevelChunk(world.getLevel(), chunkPos, chunkconverter, levelchunkticks, levelchunkticks1, l, achunksection, ChunkSerializer.postLoadChunk(world, nbt), blendingdata);
+            ((LevelChunk)object1).setBlockNibbles(blockNibbles); // Paper - replace light impl
+            ((LevelChunk)object1).setSkyNibbles(skyNibbles); // Paper - replace light impl
         } else {
             ProtoChunkTicks<Block> protochunkticklist = ProtoChunkTicks.load(nbt.getList("block_ticks", 10), (s) -> {
                 return BuiltInRegistries.BLOCK.getOptional(ResourceLocation.tryParse(s));
@@ -198,6 +235,8 @@ public class ChunkSerializer {
                 return BuiltInRegistries.FLUID.getOptional(ResourceLocation.tryParse(s));
             }, chunkPos);
             ProtoChunk protochunk = new ProtoChunk(chunkPos, chunkconverter, achunksection, protochunkticklist, protochunkticklist1, world, iregistry, blendingdata);
+            protochunk.setBlockNibbles(blockNibbles); // Paper - replace light impl
+            protochunk.setSkyNibbles(skyNibbles); // Paper - replace light impl
 
             object1 = protochunk;
             protochunk.setInhabitedTime(l);
@@ -342,6 +381,12 @@ public class ChunkSerializer {
     // CraftBukkit end
 
     public static CompoundTag write(ServerLevel world, ChunkAccess chunk) {
+        // Paper start - rewrite light impl
+        final int minSection = io.papermc.paper.util.WorldUtil.getMinLightSection(world);
+        final int maxSection = io.papermc.paper.util.WorldUtil.getMaxLightSection(world);
+        ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] blockNibbles = chunk.getBlockNibbles();
+        ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] skyNibbles = chunk.getSkyNibbles();
+        // Paper end - rewrite light impl
         ChunkPos chunkcoordintpair = chunk.getPos();
         CompoundTag nbttagcompound = NbtUtils.addCurrentDataVersion(new CompoundTag());
 
@@ -391,11 +436,14 @@ public class ChunkSerializer {
         for (int i = lightenginethreaded.getMinLightSection(); i < lightenginethreaded.getMaxLightSection(); ++i) {
             int j = chunk.getSectionIndexFromSectionY(i);
             boolean flag1 = j >= 0 && j < achunksection.length;
-            DataLayer nibblearray = lightenginethreaded.getLayerListener(LightLayer.BLOCK).getDataLayerData(SectionPos.of(chunkcoordintpair, i));
-            DataLayer nibblearray1 = lightenginethreaded.getLayerListener(LightLayer.SKY).getDataLayerData(SectionPos.of(chunkcoordintpair, i));
+            // Paper - replace light engine
 
-            if (flag1 || nibblearray != null || nibblearray1 != null) {
-                CompoundTag nbttagcompound1 = new CompoundTag();
+            // Paper start - replace light engine
+            ca.spottedleaf.starlight.common.light.SWMRNibbleArray.SaveState blockNibble = blockNibbles[i - minSection].getSaveState();
+            ca.spottedleaf.starlight.common.light.SWMRNibbleArray.SaveState skyNibble = skyNibbles[i - minSection].getSaveState();
+            if (flag1 || blockNibble != null || skyNibble != null) {
+                // Paper end - replace light engine
+                CompoundTag nbttagcompound1 = new CompoundTag(); CompoundTag section = nbttagcompound1; // Paper
 
                 if (flag1) {
                     LevelChunkSection chunksection = achunksection[j];
@@ -410,13 +458,27 @@ public class ChunkSerializer {
                     nbttagcompound1.put("biomes", (Tag) dataresult1.getOrThrow(false, logger1::error));
                 }
 
-                if (nibblearray != null && !nibblearray.isEmpty()) {
-                    nbttagcompound1.putByteArray("BlockLight", nibblearray.getData());
+                // Paper start
+                // we store under the same key so mod programs editing nbt
+                // can still read the data, hopefully.
+                // however, for compatibility we store chunks as unlit so vanilla
+                // is forced to re-light them if it encounters our data. It's too much of a burden
+                // to try and maintain compatibility with a broken and inferior skylight management system.
+
+                if (blockNibble != null) {
+                    if (blockNibble.data != null) {
+                        section.putByteArray("BlockLight", blockNibble.data);
+                    }
+                    section.putInt(BLOCKLIGHT_STATE_TAG, blockNibble.state);
                 }
 
-                if (nibblearray1 != null && !nibblearray1.isEmpty()) {
-                    nbttagcompound1.putByteArray("SkyLight", nibblearray1.getData());
+                if (skyNibble != null) {
+                    if (skyNibble.data != null) {
+                        section.putByteArray("SkyLight", skyNibble.data);
+                    }
+                    section.putInt(SKYLIGHT_STATE_TAG, skyNibble.state);
                 }
+                // Paper end
 
                 if (!nbttagcompound1.isEmpty()) {
                     nbttagcompound1.putByte("Y", (byte) i);
@@ -427,7 +489,8 @@ public class ChunkSerializer {
 
         nbttagcompound.put("sections", nbttaglist);
         if (flag) {
-            nbttagcompound.putBoolean("isLightOn", true);
+            nbttagcompound.putInt(STARLIGHT_VERSION_TAG, STARLIGHT_LIGHT_VERSION); // Paper
+            nbttagcompound.putBoolean("isLightOn", false); // Paper - set to false but still store, this allows us to detect --eraseCache (as eraseCache _removes_)
         }
 
         ListTag nbttaglist1 = new ListTag();
@@ -501,6 +564,17 @@ public class ChunkSerializer {
             return BuiltInRegistries.FLUID.getKey(fluidtype).toString();
         }));
     }
+
+    // Paper start
+    public static @Nullable ChunkStatus getStatus(@Nullable CompoundTag compound) {
+        if (compound == null) {
+            return null;
+        }
+
+        // Note: Copied from below
+        return ChunkStatus.getStatus(compound.getString("Status"));
+    }
+    // Paper end
 
     public static ChunkStatus.ChunkType getChunkTypeFromTag(@Nullable CompoundTag nbt) {
         return nbt != null ? ChunkStatus.byName(nbt.getString("Status")).getChunkType() : ChunkStatus.ChunkType.PROTOCHUNK;

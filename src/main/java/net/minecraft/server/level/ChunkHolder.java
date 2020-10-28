@@ -55,7 +55,7 @@ public class ChunkHolder {
     private volatile CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> fullChunkFuture; private int fullChunkCreateCount; private volatile boolean isFullChunkReady; // Paper - cache chunk ticking stage
     private volatile CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> tickingChunkFuture; private volatile boolean isTickingReady; // Paper - cache chunk ticking stage
     private volatile CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> entityTickingChunkFuture; private volatile boolean isEntityTickingReady; // Paper - cache chunk ticking stage
-    private CompletableFuture<ChunkAccess> chunkToSave;
+    public CompletableFuture<ChunkAccess> chunkToSave;  // Paper - public
     @Nullable
     private final DebugBuffer<ChunkHolder.ChunkSaveDebug> chunkToSaveHistory;
     public int oldTicketLevel;

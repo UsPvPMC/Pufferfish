@@ -81,6 +81,47 @@ public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiom
     private static final org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry();
     public org.bukkit.craftbukkit.persistence.DirtyCraftPersistentDataContainer persistentDataContainer = new org.bukkit.craftbukkit.persistence.DirtyCraftPersistentDataContainer(ChunkAccess.DATA_TYPE_REGISTRY);
     // CraftBukkit end
+    // Paper start - rewrite light engine
+    private volatile ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] blockNibbles;
+
+    private volatile ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] skyNibbles;
+
+    private volatile boolean[] skyEmptinessMap;
+
+    private volatile boolean[] blockEmptinessMap;
+
+    public ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] getBlockNibbles() {
+        return this.blockNibbles;
+    }
+
+    public void setBlockNibbles(final ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] nibbles) {
+        this.blockNibbles = nibbles;
+    }
+
+    public ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] getSkyNibbles() {
+        return this.skyNibbles;
+    }
+
+    public void setSkyNibbles(final ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] nibbles) {
+        this.skyNibbles = nibbles;
+    }
+
+    public boolean[] getSkyEmptinessMap() {
+        return this.skyEmptinessMap;
+    }
+
+    public void setSkyEmptinessMap(final boolean[] emptinessMap) {
+        this.skyEmptinessMap = emptinessMap;
+    }
+
+    public boolean[] getBlockEmptinessMap() {
+        return this.blockEmptinessMap;
+    }
+
+    public void setBlockEmptinessMap(final boolean[] emptinessMap) {
+        this.blockEmptinessMap = emptinessMap;
+    }
+    // Paper end - rewrite light engine
 
     public ChunkAccess(ChunkPos pos, UpgradeData upgradeData, LevelHeightAccessor heightLimitView, Registry<Biome> biome, long inhabitedTime, @Nullable LevelChunkSection[] sectionArrayInitializer, @Nullable BlendingData blendingData) {
         this.locX = pos.x; this.locZ = pos.z; // Paper - reduce need for field lookups

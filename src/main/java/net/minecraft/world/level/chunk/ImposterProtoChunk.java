@@ -31,6 +31,48 @@ public class ImposterProtoChunk extends ProtoChunk {
     private final LevelChunk wrapped;
     private final boolean allowWrites;
 
+    // Paper start - rewrite light engine
+    @Override
+    public ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] getBlockNibbles() {
+        return this.wrapped.getBlockNibbles();
+    }
+
+    @Override
+    public void setBlockNibbles(final ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] nibbles) {
+        this.wrapped.setBlockNibbles(nibbles);
+    }
+
+    @Override
+    public ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] getSkyNibbles() {
+        return this.wrapped.getSkyNibbles();
+    }
+
+    @Override
+    public void setSkyNibbles(final ca.spottedleaf.starlight.common.light.SWMRNibbleArray[] nibbles) {
+        this.wrapped.setSkyNibbles(nibbles);
+    }
+
+    @Override
+    public boolean[] getSkyEmptinessMap() {
+        return this.wrapped.getSkyEmptinessMap();
+    }
+
+    @Override
+    public void setSkyEmptinessMap(final boolean[] emptinessMap) {
+        this.wrapped.setSkyEmptinessMap(emptinessMap);
+    }
+
+    @Override
+    public boolean[] getBlockEmptinessMap() {
+        return this.wrapped.getBlockEmptinessMap();
+    }
+
+    @Override
+    public void setBlockEmptinessMap(final boolean[] emptinessMap) {
+        this.wrapped.setBlockEmptinessMap(emptinessMap);
+    }
+    // Paper end - rewrite light engine
+
     public ImposterProtoChunk(LevelChunk wrapped, boolean bl) {
         super(wrapped.getPos(), UpgradeData.EMPTY, wrapped.levelHeightAccessor, wrapped.getLevel().registryAccess().registryOrThrow(Registries.BIOME), wrapped.getBlendingData());
         this.wrapped = wrapped;

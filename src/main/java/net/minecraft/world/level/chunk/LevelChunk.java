@@ -93,6 +93,10 @@ public class LevelChunk extends ChunkAccess {
 
     public LevelChunk(Level world, ChunkPos pos, UpgradeData upgradeData, LevelChunkTicks<Block> blockTickScheduler, LevelChunkTicks<Fluid> fluidTickScheduler, long inhabitedTime, @Nullable LevelChunkSection[] sectionArrayInitializer, @Nullable LevelChunk.PostLoadProcessor entityLoader, @Nullable BlendingData blendingData) {
         super(pos, upgradeData, world, world.registryAccess().registryOrThrow(Registries.BIOME), inhabitedTime, sectionArrayInitializer, blendingData);
+        // Paper start - rewrite light engine
+        this.setBlockNibbles(ca.spottedleaf.starlight.common.light.StarLightEngine.getFilledEmptyLight(world));
+        this.setSkyNibbles(ca.spottedleaf.starlight.common.light.StarLightEngine.getFilledEmptyLight(world));
+        // Paper end - rewrite light engine
         this.tickersInLevel = Maps.newHashMap();
         this.clientLightReady = false;
         this.level = (ServerLevel) world; // CraftBukkit - type
@@ -223,6 +227,12 @@ public class LevelChunk extends ChunkAccess {
 
     public LevelChunk(ServerLevel world, ProtoChunk protoChunk, @Nullable LevelChunk.PostLoadProcessor entityLoader) {
         this(world, protoChunk.getPos(), protoChunk.getUpgradeData(), protoChunk.unpackBlockTicks(), protoChunk.unpackFluidTicks(), protoChunk.getInhabitedTime(), protoChunk.getSections(), entityLoader, protoChunk.getBlendingData());
+        // Paper start - rewrite light engine
+        this.setBlockNibbles(protoChunk.getBlockNibbles());
+        this.setSkyNibbles(protoChunk.getSkyNibbles());
+        this.setSkyEmptinessMap(protoChunk.getSkyEmptinessMap());
+        this.setBlockEmptinessMap(protoChunk.getBlockEmptinessMap());
+        // Paper end - rewrite light engine
         Iterator iterator = protoChunk.getBlockEntities().values().iterator();
 
         while (iterator.hasNext()) {

@@ -293,6 +293,17 @@ public class ChunkStatus {
         return this.chunkType;
     }
 
+    // Paper start
+    public static ChunkStatus getStatus(String name) {
+        try {
+            // We need this otherwise we return EMPTY for invalid names
+            ResourceLocation key = new ResourceLocation(name);
+            return BuiltInRegistries.CHUNK_STATUS.getOptional(key).orElse(null);
+        } catch (Exception ex) {
+            return null; // invalid name
+        }
+    }
+    // Paper end
     public static ChunkStatus byName(String id) {
         return (ChunkStatus) BuiltInRegistries.CHUNK_STATUS.get(ResourceLocation.tryParse(id));
     }

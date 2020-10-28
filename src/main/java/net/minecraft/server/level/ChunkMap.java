@@ -134,7 +134,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
     private final LongSet entitiesInLevel;
     public final ServerLevel level;
     private final ThreadedLevelLightEngine lightEngine;
-    private final BlockableEventLoop<Runnable> mainThreadExecutor;
+    public final BlockableEventLoop<Runnable> mainThreadExecutor; // Paper - public
     public ChunkGenerator generator;
     private final RandomState randomState;
     private final ChunkGeneratorStructureState chunkGeneratorState;

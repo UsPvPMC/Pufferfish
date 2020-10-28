@@ -751,6 +751,7 @@ public abstract class BlockBehaviour implements FeatureElement {
             this.emissiveRendering = blockbase_info.emissiveRendering;
             this.offsetFunction = blockbase_info.offsetFunction;
             this.spawnParticlesOnBreak = blockbase_info.spawnParticlesOnBreak;
+            this.conditionallyFullOpaque = this.isOpaque() & this.isTransparentOnSomeFaces(); // Paper
         }
 
         // Paper start
@@ -759,6 +760,18 @@ public abstract class BlockBehaviour implements FeatureElement {
             return this.shapeExceedsCube;
         }
         // Paper end
+        // Paper start - starlight
+        protected int opacityIfCached = -1;
+        // ret -1 if opacity is dynamic, or -1 if the block is conditionally full opaque, else return opacity in [0, 15]
+        public final int getOpacityIfCached() {
+            return this.opacityIfCached;
+        }
+
+        protected final boolean conditionallyFullOpaque;
+        public final boolean isConditionallyFullOpaque() {
+            return this.conditionallyFullOpaque;
+        }
+        // Paper end - starlight
 
         public void initCache() {
             this.fluidState = ((Block) this.owner).getFluidState(this.asState());
@@ -767,6 +780,7 @@ public abstract class BlockBehaviour implements FeatureElement {
                 this.cache = new BlockBehaviour.BlockStateBase.Cache(this.asState());
             }
             this.shapeExceedsCube = this.cache == null || this.cache.largeCollisionShape; // Paper - moved from actual method to here
+            this.opacityIfCached = this.cache == null || this.isConditionallyFullOpaque() ? -1 : this.cache.lightBlock; // Paper - starlight - cache opacity for light
 
         }
 

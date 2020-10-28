@@ -55,6 +55,12 @@ public class ProtoChunk extends ChunkAccess {
 
     public ProtoChunk(ChunkPos pos, UpgradeData upgradeData, @Nullable LevelChunkSection[] sections, ProtoChunkTicks<Block> blockTickScheduler, ProtoChunkTicks<Fluid> fluidTickScheduler, LevelHeightAccessor world, Registry<Biome> biomeRegistry, @Nullable BlendingData blendingData) {
         super(pos, upgradeData, world, biomeRegistry, 0L, sections, blendingData);
+        // Paper start - rewrite light engine
+        if (!(this instanceof ImposterProtoChunk)) {
+            this.setBlockNibbles(ca.spottedleaf.starlight.common.light.StarLightEngine.getFilledEmptyLight(world));
+            this.setSkyNibbles(ca.spottedleaf.starlight.common.light.StarLightEngine.getFilledEmptyLight(world));
+        }
+        // Paper end - rewrite light engine
         this.blockTicks = blockTickScheduler;
         this.fluidTicks = fluidTickScheduler;
     }
