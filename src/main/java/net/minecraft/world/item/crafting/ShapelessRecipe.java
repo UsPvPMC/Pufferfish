@@ -27,8 +27,13 @@ public class ShapelessRecipe implements CraftingRecipe {
     final CraftingBookCategory category;
     final ItemStack result;
     final NonNullList<Ingredient> ingredients;
+    private final boolean isBukkit; // Pufferfish
 
+    // Pufferfish start
     public ShapelessRecipe(ResourceLocation id, String group, CraftingBookCategory category, ItemStack output, NonNullList<Ingredient> input) {
+        this(id, group, category, output, input, false);
+    }
+    public ShapelessRecipe(ResourceLocation id, String group, CraftingBookCategory category, ItemStack output, NonNullList<Ingredient> input, boolean isBukkit) { this.isBukkit = isBukkit; // Pufferfish end
         this.id = id;
         this.group = group;
         this.category = category;
@@ -82,6 +87,28 @@ public class ShapelessRecipe implements CraftingRecipe {
     }
 
     public boolean matches(CraftingContainer inventory, Level world) {
+        // Pufferfish start
+        if (!this.isBukkit) {
+            java.util.List<Ingredient> ingredients = com.google.common.collect.Lists.newArrayList(this.ingredients.toArray(new Ingredient[0]));
+
+            inventory: for (int index = 0; index < inventory.getContainerSize(); index++) {
+                ItemStack itemStack = inventory.getItem(index);
+
+                if (!itemStack.isEmpty()) {
+                    for (int i = 0; i < ingredients.size(); i++) {
+                        if (ingredients.get(i).test(itemStack)) {
+                            ingredients.remove(i);
+                            continue inventory;
+                        }
+                    }
+                    return false;
+                }
+            }
+
+            return ingredients.isEmpty();
+        }
+        // Pufferfish end
+
         StackedContents autorecipestackmanager = new StackedContents();
         int i = 0;
 
