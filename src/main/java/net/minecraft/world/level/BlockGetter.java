@@ -73,6 +73,16 @@ public interface BlockGetter extends LevelHeightAccessor {
         });
     }
 
+    // Pufferfish start - broken down variant of below rayTraceBlock, used by World#rayTraceDirect
+    default net.minecraft.world.phys.BlockHitResult.Type rayTraceBlockDirect(Vec3 vec3d, Vec3 vec3d1, BlockPos blockposition, BlockState iblockdata, net.minecraft.world.phys.shapes.CollisionContext voxelshapecoll) {
+        if (iblockdata.isAir()) return null; // Tuinity - optimise air cases
+        VoxelShape voxelshape = ClipContext.Block.COLLIDER.get(iblockdata, this, blockposition, voxelshapecoll);
+        net.minecraft.world.phys.BlockHitResult movingobjectpositionblock = this.clipWithInteractionOverride(vec3d, vec3d1, blockposition, voxelshape, iblockdata);
+
+        return movingobjectpositionblock == null ? null : movingobjectpositionblock.getType();
+    }
+    // Pufferfish end
+
     // CraftBukkit start - moved block handling into separate method for use by Block#rayTrace
     default BlockHitResult clip(ClipContext raytrace1, BlockPos blockposition) {
             // Paper start - Prevent raytrace from loading chunks

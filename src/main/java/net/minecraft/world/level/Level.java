@@ -413,6 +413,91 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         return null;
     }
 
+    // Pufferfish start - broken down method of raytracing for EntityLiving#hasLineOfSight, replaces IBlockAccess#rayTrace(RayTrace)
+    public net.minecraft.world.phys.BlockHitResult.Type rayTraceDirect(net.minecraft.world.phys.Vec3 vec3d, net.minecraft.world.phys.Vec3 vec3d1, net.minecraft.world.phys.shapes.CollisionContext voxelshapecoll) {
+        // most of this code comes from IBlockAccess#a(RayTrace, BiFunction, Function), but removes the needless functions
+        if (vec3d.equals(vec3d1)) {
+            return net.minecraft.world.phys.BlockHitResult.Type.MISS;
+        }
+
+        double endX = Mth.lerp(-1.0E-7D, vec3d1.x, vec3d.x);
+        double endY = Mth.lerp(-1.0E-7D, vec3d1.y, vec3d.y);
+        double endZ = Mth.lerp(-1.0E-7D, vec3d1.z, vec3d.z);
+
+        double startX = Mth.lerp(-1.0E-7D, vec3d.x, vec3d1.x);
+        double startY = Mth.lerp(-1.0E-7D, vec3d.y, vec3d1.y);
+        double startZ = Mth.lerp(-1.0E-7D, vec3d.z, vec3d1.z);
+
+        int currentX = Mth.floor(startX);
+        int currentY = Mth.floor(startY);
+        int currentZ = Mth.floor(startZ);
+
+        BlockPos.MutableBlockPos currentBlock = new BlockPos.MutableBlockPos(currentX, currentY, currentZ);
+
+        LevelChunk chunk = this.getChunkIfLoaded(currentBlock);
+        if (chunk == null) {
+            return net.minecraft.world.phys.BlockHitResult.Type.MISS;
+        }
+
+        net.minecraft.world.phys.BlockHitResult.Type initialCheck = this.rayTraceBlockDirect(vec3d, vec3d1, currentBlock, chunk.getBlockState(currentBlock), voxelshapecoll);
+
+        if (initialCheck != null) {
+            return initialCheck;
+        }
+
+        double diffX = endX - startX;
+        double diffY = endY - startY;
+        double diffZ = endZ - startZ;
+
+        int xDirection = Mth.sign(diffX);
+        int yDirection = Mth.sign(diffY);
+        int zDirection = Mth.sign(diffZ);
+
+        double normalizedX = xDirection == 0 ? Double.MAX_VALUE : (double) xDirection / diffX;
+        double normalizedY = yDirection == 0 ? Double.MAX_VALUE : (double) yDirection / diffY;
+        double normalizedZ = zDirection == 0 ? Double.MAX_VALUE : (double) zDirection / diffZ;
+
+        double normalizedXDirection = normalizedX * (xDirection > 0 ? 1.0D - Mth.frac(startX) : Mth.frac(startX));
+        double normalizedYDirection = normalizedY * (yDirection > 0 ? 1.0D - Mth.frac(startY) : Mth.frac(startY));
+        double normalizedZDirection = normalizedZ * (zDirection > 0 ? 1.0D - Mth.frac(startZ) : Mth.frac(startZ));
+
+        net.minecraft.world.phys.BlockHitResult.Type result;
+
+        do {
+            if (normalizedXDirection > 1.0D && normalizedYDirection > 1.0D && normalizedZDirection > 1.0D) {
+                return net.minecraft.world.phys.BlockHitResult.Type.MISS;
+            }
+
+            if (normalizedXDirection < normalizedYDirection) {
+                if (normalizedXDirection < normalizedZDirection) {
+                    currentX += xDirection;
+                    normalizedXDirection += normalizedX;
+                } else {
+                    currentZ += zDirection;
+                    normalizedZDirection += normalizedZ;
+                }
+            } else if (normalizedYDirection < normalizedZDirection) {
+                currentY += yDirection;
+                normalizedYDirection += normalizedY;
+            } else {
+                currentZ += zDirection;
+                normalizedZDirection += normalizedZ;
+            }
+
+            currentBlock.set(currentX, currentY, currentZ);
+            if (chunk.getPos().x != currentBlock.getX() >> 4 || chunk.getPos().z != currentBlock.getZ() >> 4) {
+                chunk = this.getChunkIfLoaded(currentBlock);
+                if (chunk == null) {
+                    return net.minecraft.world.phys.BlockHitResult.Type.MISS;
+                }
+            }
+            result = this.rayTraceBlockDirect(vec3d, vec3d1, currentBlock, chunk.getBlockState(currentBlock), voxelshapecoll);
+        } while (result == null);
+
+        return result;
+    }
+    // Pufferfish end
+
     public boolean isInWorldBounds(BlockPos pos) {
         return pos.isInsideBuildHeightAndWorldBoundsHorizontal(this); // Paper - use better/optimized check
     }
