@@ -187,6 +187,7 @@ public abstract class StoredUserList<K, V extends StoredUserEntry<K>> {
 
             try {
                 JsonArray jsonarray = (JsonArray) StoredUserList.GSON.fromJson(bufferedreader, JsonArray.class);
+                com.google.common.base.Preconditions.checkState(jsonarray != null, "The file \"" + this.file.getName() + "\" is either empty or corrupt"); // Paper
 
                 this.map.clear();
                 Iterator iterator = jsonarray.iterator();
