@@ -10,6 +10,12 @@ import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 
 public class CraftItem extends CraftEntity implements Item {
+
+    // Paper start
+    private final static int NO_AGE_TIME = (int) Short.MIN_VALUE;
+    private final static int NO_PICKUP_TIME = (int) Short.MAX_VALUE;
+    // Paper end
+
     private final ItemEntity item;
 
     public CraftItem(CraftServer server, Entity entity, ItemEntity item) {
@@ -76,6 +82,26 @@ public class CraftItem extends CraftEntity implements Item {
     public void setCanMobPickup(boolean canMobPickup) {
         item.canMobPickup = canMobPickup;
     }
+
+     @Override
+     public boolean canPlayerPickup() {
+        return item.pickupDelay != NO_PICKUP_TIME;
+     }
+
+     @Override
+     public void setCanPlayerPickup(boolean canPlayerPickup) {
+        item.pickupDelay = canPlayerPickup ? 0 : NO_PICKUP_TIME;
+     }
+
+     @Override
+     public boolean willAge() {
+        return item.age != NO_AGE_TIME;
+     }
+
+     @Override
+     public void setWillAge(boolean willAge) {
+        item.age = willAge ? 0 : NO_AGE_TIME;
+     }
     // Paper End
 
     @Override
