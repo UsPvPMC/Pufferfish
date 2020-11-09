@@ -19,6 +19,7 @@ public class MerchantOffer {
     public int demand;
     public float priceMultiplier;
     public int xp;
+    public boolean ignoreDiscounts; // Paper
     // CraftBukkit start
     private CraftMerchantRecipe bukkitHandle;
 
@@ -31,7 +32,15 @@ public class MerchantOffer {
     }
 
     public MerchantOffer(ItemStack itemstack, ItemStack itemstack1, ItemStack itemstack2, int uses, int maxUses, int experience, float priceMultiplier, int demand, CraftMerchantRecipe bukkit) {
-        this(itemstack, itemstack1, itemstack2, uses, maxUses, experience, priceMultiplier, demand);
+        // Paper start - add ignoreDiscounts param
+        this(itemstack, itemstack1, itemstack2, uses, maxUses, experience, priceMultiplier, demand, false, bukkit);
+    }
+    public MerchantOffer(ItemStack itemstack, ItemStack itemstack1, ItemStack itemstack2, int uses, int maxUses, int experience, float priceMultiplier, boolean ignoreDiscounts, CraftMerchantRecipe bukkit) {
+        this(itemstack, itemstack1, itemstack2, uses, maxUses, experience, priceMultiplier, 0, ignoreDiscounts, bukkit);
+    }
+    public MerchantOffer(ItemStack itemstack, ItemStack itemstack1, ItemStack itemstack2, int uses, int maxUses, int experience, float priceMultiplier, int demand, boolean ignoreDiscounts, CraftMerchantRecipe bukkit) {
+        this(itemstack, itemstack1, itemstack2, uses, maxUses, experience, priceMultiplier, demand, ignoreDiscounts);
+        // Paper end
         this.bukkitHandle = bukkit;
     }
     // CraftBukkit end
@@ -63,6 +72,7 @@ public class MerchantOffer {
 
         this.specialPriceDiff = nbt.getInt("specialPrice");
         this.demand = nbt.getInt("demand");
+        this.ignoreDiscounts = nbt.getBoolean("Paper.IgnoreDiscounts"); // Paper
     }
 
     public MerchantOffer(ItemStack buyItem, ItemStack sellItem, int maxUses, int merchantExperience, float priceMultiplier) {
@@ -74,10 +84,19 @@ public class MerchantOffer {
     }
 
     public MerchantOffer(ItemStack firstBuyItem, ItemStack secondBuyItem, ItemStack sellItem, int uses, int maxUses, int merchantExperience, float priceMultiplier) {
-        this(firstBuyItem, secondBuyItem, sellItem, uses, maxUses, merchantExperience, priceMultiplier, 0);
+        // Paper start - add ignoreDiscounts param
+        this(firstBuyItem, secondBuyItem, sellItem, uses, maxUses, merchantExperience, priceMultiplier, false);
+    }
+    public MerchantOffer(ItemStack firstBuyItem, ItemStack secondBuyItem, ItemStack sellItem, int uses, int maxUses, int merchantExperience, float priceMultiplier, boolean ignoreDiscounts) {
+        this(firstBuyItem, secondBuyItem, sellItem, uses, maxUses, merchantExperience, priceMultiplier, 0, ignoreDiscounts);
     }
 
     public MerchantOffer(ItemStack firstBuyItem, ItemStack secondBuyItem, ItemStack sellItem, int uses, int maxUses, int merchantExperience, float priceMultiplier, int demandBonus) {
+        this(firstBuyItem, secondBuyItem, sellItem, uses, maxUses, merchantExperience, priceMultiplier, demandBonus, false);
+    }
+    public MerchantOffer(ItemStack firstBuyItem, ItemStack secondBuyItem, ItemStack sellItem, int uses, int maxUses, int merchantExperience, float priceMultiplier, int demandBonus, boolean ignoreDiscounts) {
+        this.ignoreDiscounts = ignoreDiscounts;
+        // Paper end
         this.rewardExp = true;
         this.xp = 1;
         this.baseCostA = firstBuyItem;
@@ -193,6 +212,7 @@ public class MerchantOffer {
         nbttagcompound.putFloat("priceMultiplier", this.priceMultiplier);
         nbttagcompound.putInt("specialPrice", this.specialPriceDiff);
         nbttagcompound.putInt("demand", this.demand);
+        nbttagcompound.putBoolean("Paper.IgnoreDiscounts", this.ignoreDiscounts); // Paper
         return nbttagcompound;
     }
 

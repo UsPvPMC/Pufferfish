@@ -501,6 +501,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 
             while (iterator.hasNext()) {
                 MerchantOffer merchantrecipe = (MerchantOffer) iterator.next();
+                if (merchantrecipe.ignoreDiscounts) continue; // Paper
 
                 merchantrecipe.addToSpecialPriceDiff(-Mth.floor((float) i * merchantrecipe.getPriceMultiplier()));
             }
@@ -513,6 +514,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 
             while (iterator1.hasNext()) {
                 MerchantOffer merchantrecipe1 = (MerchantOffer) iterator1.next();
+                if (merchantrecipe1.ignoreDiscounts) continue; // Paper
                 double d0 = 0.3D + 0.0625D * (double) j;
                 int k = (int) Math.floor(d0 * (double) merchantrecipe1.getBaseCostA().getCount());
 
