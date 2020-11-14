@@ -832,6 +832,7 @@ public abstract class AbstractMinecart extends Entity {
     public void push(Entity entity) {
         if (!this.level.isClientSide) {
             if (!entity.noPhysics && !this.noPhysics) {
+                if (!this.level.paperConfig().collisions.allowVehicleCollisions && this.level.paperConfig().collisions.onlyPlayersCollide && !(entity instanceof Player)) return; // Paper
                 if (!this.hasPassenger(entity)) {
                     // CraftBukkit start
                     VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), entity.getBukkitEntity());

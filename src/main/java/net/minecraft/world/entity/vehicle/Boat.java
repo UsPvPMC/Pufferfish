@@ -245,6 +245,7 @@ public class Boat extends Entity implements VariantHolder<Boat.Type> {
 
     @Override
     public void push(Entity entity) {
+        if (!this.level.paperConfig().collisions.allowVehicleCollisions && this.level.paperConfig().collisions.onlyPlayersCollide && !(entity instanceof Player)) return; // Paper
         if (entity instanceof Boat) {
             if (entity.getBoundingBox().minY < this.getBoundingBox().maxY) {
                 // CraftBukkit start
