@@ -173,12 +173,15 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
 
             this.handlingFault = true;
             if (this.channel.isOpen()) {
+                net.minecraft.server.level.ServerPlayer player = this.getPlayer(); // Paper
                 if (throwable instanceof TimeoutException) {
                     Connection.LOGGER.debug("Timeout", throwable);
+                    if (player != null) player.quitReason = org.bukkit.event.player.PlayerQuitEvent.QuitReason.TIMED_OUT; // Paper
                     this.disconnect(Component.translatable("disconnect.timeout"));
                 } else {
                     MutableComponent ichatmutablecomponent = Component.translatable("disconnect.genericReason", "Internal Exception: " + throwable);
 
+                    if (player != null) player.quitReason = org.bukkit.event.player.PlayerQuitEvent.QuitReason.ERRONEOUS_STATE; // Paper
                     if (flag) {
                         Connection.LOGGER.debug("Failed to sent packet", throwable);
                         ConnectionProtocol enumprotocol = this.getCurrentProtocol();

@@ -506,6 +506,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         final Component ichatbasecomponent = PaperAdventure.asVanilla(event.reason()); // Paper - Adventure
         // CraftBukkit end
 
+        this.player.quitReason = org.bukkit.event.player.PlayerQuitEvent.QuitReason.KICKED; // Paper
         this.connection.send(new ClientboundDisconnectPacket(ichatbasecomponent), PacketSendListener.thenRun(() -> {
             this.connection.disconnect(ichatbasecomponent);
         }));
