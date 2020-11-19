@@ -110,7 +110,18 @@ public class EntityStorage implements EntityPersistentStorage<Entity> {
         }
 
         ListTag listTag = new ListTag();
+        final java.util.Map<net.minecraft.world.entity.EntityType<?>, Integer> savedEntityCounts = new java.util.HashMap<>(); // Paper
         entities.forEach((entity) -> { // diff here: use entities parameter
+            // Paper start
+            final EntityType<?> entityType = entity.getType();
+            final int saveLimit = level.paperConfig().chunks.entityPerChunkSaveLimit.getOrDefault(entityType, -1);
+            if (saveLimit > -1) {
+                if (savedEntityCounts.getOrDefault(entityType, 0) >= saveLimit) {
+                    return;
+                }
+                savedEntityCounts.merge(entityType, 1, Integer::sum);
+            }
+            // Paper end
             CompoundTag compoundTag = new CompoundTag();
             if (entity.save(compoundTag)) {
                 listTag.add(compoundTag);
