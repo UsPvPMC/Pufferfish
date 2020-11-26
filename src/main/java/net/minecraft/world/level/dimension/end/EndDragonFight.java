@@ -370,7 +370,7 @@ public class EndDragonFight {
             this.dragonEvent.setVisible(false);
             this.spawnExitPortal(true);
             this.spawnNewGateway();
-            if (!this.previouslyKilled) {
+            if (this.level.paperConfig().entities.behavior.enderDragonsDeathAlwaysPlacesDragonEgg || !this.previouslyKilled) { // Paper - always place dragon egg
                 this.level.setBlockAndUpdate(this.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, EndPodiumFeature.END_PODIUM_LOCATION), Blocks.DRAGON_EGG.defaultBlockState());
             }
 
