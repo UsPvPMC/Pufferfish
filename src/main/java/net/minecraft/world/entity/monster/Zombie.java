@@ -514,7 +514,7 @@ public class Zombie extends Monster {
         Object object = super.finalizeSpawn(world, difficulty, spawnReason, entityData, entityNbt);
         float f = difficulty.getSpecialMultiplier();
 
-        this.setCanPickUpLoot(randomsource.nextFloat() < 0.55F * f);
+        this.setCanPickUpLoot(this.level.paperConfig().entities.behavior.mobsCanAlwaysPickUpLoot.zombies || randomsource.nextFloat() < 0.55F * f); // Paper
         if (object == null) {
             object = new Zombie.ZombieGroupData(Zombie.getSpawnAsBabyOdds(randomsource), true);
         }
