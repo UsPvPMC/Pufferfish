@@ -477,6 +477,7 @@ public class PiglinAi {
     }
 
     public static void angerNearbyPiglins(Player player, boolean blockOpen) {
+        if (!player.level.paperConfig().entities.behavior.piglinsGuardChests) return; // Paper
         List<Piglin> list = player.level.getEntitiesOfClass(Piglin.class, player.getBoundingBox().inflate(16.0D));
 
         list.stream().filter(PiglinAi::isIdle).filter((entitypiglin) -> {
