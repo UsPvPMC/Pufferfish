@@ -1193,7 +1193,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
     @Override
     public void setStorm(boolean hasStorm) {
-        world.levelData.setRaining(hasStorm);
+        world.serverLevelData.setRaining(hasStorm, org.bukkit.event.weather.WeatherChangeEvent.Cause.PLUGIN); // Paper
         this.setWeatherDuration(0); // Reset weather duration (legacy behaviour)
         this.setClearWeatherDuration(0); // Reset clear weather duration (reset "/weather clear" commands)
     }
@@ -1215,7 +1215,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
     @Override
     public void setThundering(boolean thundering) {
-        world.serverLevelData.setThundering(thundering);
+        world.serverLevelData.setThundering(thundering, org.bukkit.event.weather.ThunderChangeEvent.Cause.PLUGIN); // Paper
         this.setThunderDuration(0); // Reset weather duration (legacy behaviour)
         this.setClearWeatherDuration(0); // Reset clear weather duration (reset "/weather clear" commands)
     }

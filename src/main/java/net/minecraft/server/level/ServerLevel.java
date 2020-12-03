@@ -531,8 +531,8 @@ public class ServerLevel extends Level implements WorldGenLevel {
         this.serverLevelData.setClearWeatherTime(clearDuration);
         this.serverLevelData.setRainTime(rainDuration);
         this.serverLevelData.setThunderTime(rainDuration);
-        this.serverLevelData.setRaining(raining);
-        this.serverLevelData.setThundering(thundering);
+        this.serverLevelData.setRaining(raining, org.bukkit.event.weather.WeatherChangeEvent.Cause.COMMAND); // Paper
+        this.serverLevelData.setThundering(thundering, org.bukkit.event.weather.ThunderChangeEvent.Cause.COMMAND); // Paper
     }
 
     @Override
@@ -944,8 +944,8 @@ public class ServerLevel extends Level implements WorldGenLevel {
                 this.serverLevelData.setThunderTime(j);
                 this.serverLevelData.setRainTime(k);
                 this.serverLevelData.setClearWeatherTime(i);
-                this.serverLevelData.setThundering(flag1);
-                this.serverLevelData.setRaining(flag2);
+                this.serverLevelData.setThundering(flag1, org.bukkit.event.weather.ThunderChangeEvent.Cause.NATURAL); // Paper
+                this.serverLevelData.setRaining(flag2, org.bukkit.event.weather.WeatherChangeEvent.Cause.NATURAL); // Paper
             }
 
             this.oThunderLevel = this.thunderLevel;
@@ -1011,14 +1011,14 @@ public class ServerLevel extends Level implements WorldGenLevel {
 
     private void resetWeatherCycle() {
         // CraftBukkit start
-        this.serverLevelData.setRaining(false);
+        this.serverLevelData.setRaining(false, org.bukkit.event.weather.WeatherChangeEvent.Cause.SLEEP); // Paper - when passing the night
         // If we stop due to everyone sleeping we should reset the weather duration to some other random value.
         // Not that everyone ever manages to get the whole server to sleep at the same time....
         if (!this.serverLevelData.isRaining()) {
             this.serverLevelData.setRainTime(0);
         }
         // CraftBukkit end
-        this.serverLevelData.setThundering(false);
+        this.serverLevelData.setThundering(false, org.bukkit.event.weather.ThunderChangeEvent.Cause.SLEEP); // Paper - when passing the night
         // CraftBukkit start
         // If we stop due to everyone sleeping we should reset the weather duration to some other random value.
         // Not that everyone ever manages to get the whole server to sleep at the same time....
