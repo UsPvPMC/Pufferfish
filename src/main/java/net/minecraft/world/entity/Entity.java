@@ -4099,6 +4099,16 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
             return;
         }
         // Paper end - rewrite chunk system
+        // Paper start - fix MC-4
+        if (this instanceof ItemEntity) {
+            if (io.papermc.paper.configuration.GlobalConfiguration.get().misc.fixEntityPositionDesync) {
+                // encode/decode from ClientboundMoveEntityPacket
+                x = Mth.lfloor(x * 4096.0D) * (1 / 4096.0D);
+                y = Mth.lfloor(y * 4096.0D) * (1 / 4096.0D);
+                z = Mth.lfloor(z * 4096.0D) * (1 / 4096.0D);
+            }
+        }
+        // Paper end - fix MC-4
         if (this.position.x != x || this.position.y != y || this.position.z != z) {
             this.position = new Vec3(x, y, z);
             int i = Mth.floor(x);
