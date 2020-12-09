@@ -992,6 +992,15 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
     @Override
     public void onReputationEventFrom(ReputationEventType interaction, Entity entity) {
         if (interaction == ReputationEventType.ZOMBIE_VILLAGER_CURED) {
+            // Paper start - fix MC-181190
+            if (level.paperConfig().fixes.fixCuringZombieVillagerDiscountExploit) {
+                final GossipContainer.EntityGossips playerReputation = this.getGossips().gossips.get(entity.getUUID());
+                if (playerReputation != null) {
+                    playerReputation.remove(GossipType.MAJOR_POSITIVE);
+                    playerReputation.remove(GossipType.MINOR_POSITIVE);
+                }
+            }
+            // Paper end
             this.gossips.add(entity.getUUID(), GossipType.MAJOR_POSITIVE, 20);
             this.gossips.add(entity.getUUID(), GossipType.MINOR_POSITIVE, 25);
         } else if (interaction == ReputationEventType.TRADE) {
