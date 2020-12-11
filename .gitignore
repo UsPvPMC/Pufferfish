@@ -1,3 +1,6 @@
+.gradle/
+build/
+
 # Eclipse stuff
 /.classpath
 /.project
@@ -38,3 +41,7 @@ dependency-reduced-pom.xml
 
 /src/main/resources/achievement
 /src/main/resources/lang
+
+# vs code
+/.vscode
+/.factorypath
