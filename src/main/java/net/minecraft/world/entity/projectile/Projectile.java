@@ -44,6 +44,36 @@ public abstract class Projectile extends Entity implements TraceableEntity {
         super(type, world);
     }
 
+    // Pufferfish start
+    private static int loadedThisTick = 0;
+    private static int loadedTick;
+
+    private int loadedLifetime = 0;
+    @Override
+    public void setPos(double x, double y, double z) {
+        int currentTick = net.minecraft.server.MinecraftServer.currentTick;
+        if (loadedTick != currentTick) {
+            loadedTick = currentTick;
+            loadedThisTick = 0;
+        }
+        int previousX = Mth.floor(this.getX()) >> 4, previousZ = Mth.floor(this.getZ()) >> 4;
+        int newX = Mth.floor(x) >> 4, newZ = Mth.floor(z) >> 4;
+        if (previousX != newX || previousZ != newZ) {
+            boolean isLoaded = ((net.minecraft.server.level.ServerChunkCache) this.level.getChunkSource()).getChunkAtIfLoadedMainThread(newX, newZ) != null;
+            if (!isLoaded) {
+                if (Projectile.loadedThisTick > gg.pufferfish.pufferfish.PufferfishConfig.maxProjectileLoadsPerTick) {
+                    if (++this.loadedLifetime > gg.pufferfish.pufferfish.PufferfishConfig.maxProjectileLoadsPerProjectile) {
+                        this.discard();
+                    }
+                    return;
+                }
+                Projectile.loadedThisTick++;
+            }
+        }
+        super.setPos(x, y, z);
+    }
+    // Pufferfish start
+
     public void setOwner(@Nullable Entity entity) {
         if (entity != null) {
             this.ownerUUID = entity.getUUID();

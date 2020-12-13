@@ -198,4 +198,15 @@ public class PufferfishConfig {
 		}
 	}
 	
+    public static int maxProjectileLoadsPerTick;
+    public static int maxProjectileLoadsPerProjectile;
+    private static void projectileLoading() {
+        maxProjectileLoadsPerTick = getInt("projectile.max-loads-per-tick", 10, "Controls how many chunks are allowed", "to be sync loaded by projectiles in a tick.");
+        maxProjectileLoadsPerProjectile = getInt("projectile.max-loads-per-projectile", 10, "Controls how many chunks a projectile", "can load in its lifetime before it gets", "automatically removed.");
+
+        setComment("projectile", "Optimizes projectile settings");
+    }
+
+
 }
+
