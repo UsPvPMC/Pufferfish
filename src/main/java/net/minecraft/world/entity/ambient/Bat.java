@@ -251,13 +251,22 @@ public class Bat extends AmbientCreature {
         }
     }
 
+    // Pufferfish start - only check for spooky season once an hour
+    private static boolean isSpookySeason = false;
+    private static final int ONE_HOUR = 20 * 60 * 60;
+    private static int lastSpookyCheck = -ONE_HOUR;
     private static boolean isHalloween() {
+        if (net.minecraft.server.MinecraftServer.currentTick - lastSpookyCheck > ONE_HOUR) {
         LocalDate localdate = LocalDate.now();
         int i = localdate.get(ChronoField.DAY_OF_MONTH);
         int j = localdate.get(ChronoField.MONTH_OF_YEAR);
 
-        return j == 10 && i >= 20 || j == 11 && i <= 3;
+        isSpookySeason = j == 10 && i >= 20 || j == 11 && i <= 3;
+        lastSpookyCheck = net.minecraft.server.MinecraftServer.currentTick;
+        }
+        return isSpookySeason;
     }
+    // Pufferfish end
 
     @Override
     protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
