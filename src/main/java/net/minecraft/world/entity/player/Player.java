@@ -181,7 +181,7 @@ public abstract class Player extends LivingEntity {
     private Optional<GlobalPos> lastDeathLocation;
     @Nullable
     public FishingHook fishing;
-    protected float hurtDir;
+    public float hurtDir; // Paper - protected -> public
     // Paper start
     public boolean affectsSpawning = true;
     // Paper end
