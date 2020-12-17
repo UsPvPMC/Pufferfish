@@ -27,4 +27,10 @@ public class CraftSound {
     public static Sound getBukkit(SoundEvent soundEffect) {
         return Registry.SOUNDS.get(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.SOUND_EVENT.getKey(soundEffect)));
     }
+
+    // Paper start
+    public static String getSound(Sound sound) {
+        return sound.getKey().getKey();
+    }
+    // Paper end
 }
