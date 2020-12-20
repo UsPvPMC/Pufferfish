@@ -22,7 +22,8 @@ public class MinecraftInternalPlugin extends PluginBase {
     private boolean enabled = true;
 
     private final String pluginName;
-    private PluginDescriptionFile pdf;
+    private org.bukkit.plugin.PluginLogger logger;
+    private PluginDescriptionFile pdf; // Pufferfish
 
     public MinecraftInternalPlugin() {
         this.pluginName = "Minecraft";
@@ -81,7 +82,12 @@ public class MinecraftInternalPlugin extends PluginBase {
 
     @Override
     public PluginLogger getLogger() {
-        throw new UnsupportedOperationException("Not supported.");
+        // Pufferfish start
+        if (this.logger == null) {
+            this.logger = new org.bukkit.plugin.PluginLogger(this); // Pufferfish
+        }
+        return this.logger;
+        // Pufferfish end
     }
 
     @Override
@@ -91,7 +97,7 @@ public class MinecraftInternalPlugin extends PluginBase {
 
     @Override
     public Server getServer() {
-        throw new UnsupportedOperationException("Not supported.");
+        return org.bukkit.Bukkit.getServer(); // Pufferfish - impl
     }
 
     @Override

@@ -11,6 +11,7 @@ public class ServerShutdownThread extends Thread {
 
     @Override
     public void run() {
+        try { gg.pufferfish.pufferfish.flare.ProfilingManager.stop(); } catch (Throwable t) {} // Pufferfish - shut down Flare if it's running
         try {
             // Paper start - try to shutdown on main
             server.safeShutdown(false, false);

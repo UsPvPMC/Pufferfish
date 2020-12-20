@@ -52,6 +52,7 @@ dependencies {
         exclude(group="org.yaml", module="snakeyaml")
     }
     // Pufferfish end
+    implementation("com.github.technove:Flare:34637f3f87") // Pufferfish - flare
 
     testImplementation("io.github.classgraph:classgraph:4.8.47") // Paper - mob goal test
     testImplementation("junit:junit:4.13.2")

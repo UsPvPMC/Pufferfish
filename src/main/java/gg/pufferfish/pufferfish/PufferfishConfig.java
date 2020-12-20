@@ -12,6 +12,7 @@ import net.minecraft.world.entity.EntityType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
+import gg.pufferfish.pufferfish.flare.FlareCommand;
 import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.Level;
 import org.bukkit.configuration.ConfigurationSection;
@@ -20,6 +21,13 @@ import org.jetbrains.annotations.Nullable;
 import org.simpleyaml.configuration.comments.CommentType;
 import org.simpleyaml.configuration.file.YamlFile;
 import org.simpleyaml.exceptions.InvalidConfigurationException;
+import org.bukkit.command.SimpleCommandMap;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import java.net.URI;
+import java.util.Collections;
 
 public class PufferfishConfig {
 	
@@ -244,6 +252,30 @@ public class PufferfishConfig {
                 }, () -> MinecraftServer.LOGGER.warn("Unknown entity \"" + name + "\"")));
 
         setComment("dab", "Optimizes entity brains when", "they're far away from the player");
+    }
+
+    public static URI profileWebUrl;
+    private static void profilerOptions() {
+        profileWebUrl = URI.create(getString("flare.url", "https://flare.airplane.gg", "Sets the server to use for profiles."));
+
+        setComment("flare", "Configures Flare, the built-in profiler");
+    }
+
+
+    public static String accessToken;
+    private static void airplaneWebServices() {
+        accessToken = getString("web-services.token", "");
+        // todo lookup token (off-thread) and let users know if their token is valid
+        if (accessToken.length() > 0) {
+            gg.pufferfish.pufferfish.flare.FlareSetup.init(); // Pufferfish
+            SimpleCommandMap commandMap = MinecraftServer.getServer().server.getCommandMap();
+            if (commandMap.getCommand("flare") == null) {
+                commandMap.register("flare", "Pufferfish", new FlareCommand());
+            }
+        }
+
+        setComment("web-services", "Options for connecting to Pufferfish/Airplane's online utilities");
+
     }
 
 
