@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class Dynamic<T> extends DynamicLike<T> {
+    private static final boolean DEBUG_MISSING_KEYS = Boolean.getBoolean("Paper.debugDynamicMissingKeys"); // Paper
     private final T value;
 
     public Dynamic(final DynamicOps<T> ops) {
@@ -113,7 +114,7 @@ public class Dynamic<T> extends DynamicLike<T> {
         return new OptionalDynamic<>(ops, ops.getMap(value).flatMap(m -> {
             final T value = m.get(key);
             if (value == null) {
-                return DataResult.error(() -> "key missing: " + key + " in " + this.value);
+                return DataResult.error(() -> DEBUG_MISSING_KEYS ? "key missing: " + key + " in " + this.value : "key missing: " + key); // Paper
             }
             return DataResult.success(new Dynamic<>(ops, value));
         }));
