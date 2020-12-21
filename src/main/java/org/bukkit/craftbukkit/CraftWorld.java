@@ -1818,8 +1818,13 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
         if (!this.isGameRule(rule)) return false;
 
+        // Paper start
+        GameRule<?> gameRule = GameRule.getByName(rule);
+        io.papermc.paper.event.world.WorldGameRuleChangeEvent event = new io.papermc.paper.event.world.WorldGameRuleChangeEvent(this, null, gameRule, value);
+        if (!event.callEvent()) return false;
+        // Paper end
         GameRules.Value<?> handle = this.getHandle().getGameRules().getRule(CraftWorld.getGameRulesNMS().get(rule));
-        handle.deserialize(value);
+        handle.deserialize(event.getValue()); // Paper
         handle.onChanged(this.getHandle().getServer());
         return true;
     }
@@ -1854,8 +1859,12 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
         if (!this.isGameRule(rule.getName())) return false;
 
+        // Paper start
+        io.papermc.paper.event.world.WorldGameRuleChangeEvent event = new io.papermc.paper.event.world.WorldGameRuleChangeEvent(this, null, rule, String.valueOf(newValue));
+        if (!event.callEvent()) return false;
+        // Paper end
         GameRules.Value<?> handle = this.getHandle().getGameRules().getRule(CraftWorld.getGameRulesNMS().get(rule.getName()));
-        handle.deserialize(newValue.toString());
+        handle.deserialize(event.getValue()); // Paper
         handle.onChanged(this.getHandle().getServer());
         return true;
     }
