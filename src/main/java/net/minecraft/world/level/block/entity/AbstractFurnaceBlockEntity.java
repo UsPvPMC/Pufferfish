@@ -133,7 +133,13 @@ public abstract class AbstractFurnaceBlockEntity extends BaseContainerBlockEntit
         this.recipeType = recipeType; // Paper
     }
 
+    private static Map<Item, Integer> cachedBurnDurations = null; // Paper - cache burn durations
     public static Map<Item, Integer> getFuel() {
+        // Paper start - cache burn durations
+        if(cachedBurnDurations != null) {
+            return cachedBurnDurations;
+        }
+        // Paper end
         Map<Item, Integer> map = Maps.newLinkedHashMap();
 
         AbstractFurnaceBlockEntity.add(map, (ItemLike) Items.LAVA_BUCKET, 20000);
@@ -195,7 +201,10 @@ public abstract class AbstractFurnaceBlockEntity extends BaseContainerBlockEntit
         AbstractFurnaceBlockEntity.add(map, (ItemLike) Blocks.AZALEA, 100);
         AbstractFurnaceBlockEntity.add(map, (ItemLike) Blocks.FLOWERING_AZALEA, 100);
         AbstractFurnaceBlockEntity.add(map, (ItemLike) Blocks.MANGROVE_ROOTS, 300);
-        return map;
+        // Paper start - cache burn durations
+        cachedBurnDurations = com.google.common.collect.ImmutableMap.copyOf(map);
+        return cachedBurnDurations;
+        // Paper end
     }
 
     // CraftBukkit start - add fields and methods
