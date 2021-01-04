@@ -51,7 +51,7 @@ public abstract class PathfinderMob extends Mob {
                 if (f > entity.level.paperConfig().misc.maxLeashDistance) { // Paper
                     // Paper start - drop leash variable
                     EntityUnleashEvent event = new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE, true);
-                    this.level.getCraftServer().getPluginManager().callEvent(event); // CraftBukkit
+                    if (!event.callEvent()) { return; }
                     this.dropLeash(true, event.isDropLeash());
                     // Paper end
                 }
@@ -63,7 +63,7 @@ public abstract class PathfinderMob extends Mob {
             if (f > entity.level.paperConfig().misc.maxLeashDistance) { // Paper
                 // Paper start - drop leash variable
                 EntityUnleashEvent event = new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE, true);
-                this.level.getCraftServer().getPluginManager().callEvent(event); // CraftBukkit
+                if (!event.callEvent()) return;
                 this.dropLeash(true, event.isDropLeash());
                 // Paper end
                 this.goalSelector.disableControlFlag(Goal.Flag.MOVE);

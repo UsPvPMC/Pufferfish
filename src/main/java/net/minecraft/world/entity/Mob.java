@@ -1541,7 +1541,7 @@ public abstract class Mob extends LivingEntity implements Targeting {
         if (flag1 && this.isLeashed()) {
             // Paper start - drop leash variable
             EntityUnleashEvent event = new EntityUnleashEvent(this.getBukkitEntity(), UnleashReason.UNKNOWN, true);
-            this.level.getCraftServer().getPluginManager().callEvent(event); // CraftBukkit
+            if (!event.callEvent()) { return flag1; }
             this.dropLeash(true, event.isDropLeash());
             // Paper end
         }
