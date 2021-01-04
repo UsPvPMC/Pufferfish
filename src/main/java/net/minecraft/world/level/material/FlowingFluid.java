@@ -294,7 +294,7 @@ public abstract class FlowingFluid extends Fluid {
             ((LiquidBlockContainer) state.getBlock()).placeLiquid(world, pos, state, fluidState);
         } else {
             if (!state.isAir()) {
-                this.beforeDestroyingBlock(world, pos, state);
+                this.beforeDestroyingBlock(world, pos, state, pos.relative(direction.getOpposite())); // Paper
             }
 
             world.setBlock(pos, fluidState.createLegacyBlock(), 3);
@@ -302,6 +302,7 @@ public abstract class FlowingFluid extends Fluid {
 
     }
 
+    protected void beforeDestroyingBlock(LevelAccessor world, BlockPos pos, BlockState state, BlockPos source) { beforeDestroyingBlock(world, pos, state); } // Paper - add source parameter
     protected abstract void beforeDestroyingBlock(LevelAccessor world, BlockPos pos, BlockState state);
 
     private static short getCacheKey(BlockPos blockposition, BlockPos blockposition1) {
