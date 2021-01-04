@@ -517,7 +517,7 @@ public class ServerPlayerGameMode {
             cancelledBlock = true;
         }
 
-        PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, blockposition, hitResult.getDirection(), stack, cancelledBlock, hand);
+        PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, blockposition, hitResult.getDirection(), stack, cancelledBlock, hand, hitResult.getLocation()); // Paper
         this.firedInteract = true;
         this.interactResult = event.useItemInHand() == Event.Result.DENY;
         this.interactPosition = blockposition.immutable();
