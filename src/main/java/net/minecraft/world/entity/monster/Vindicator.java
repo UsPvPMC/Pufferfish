@@ -197,7 +197,7 @@ public class Vindicator extends AbstractIllager {
 
     static class VindicatorBreakDoorGoal extends BreakDoorGoal {
         public VindicatorBreakDoorGoal(Mob mob) {
-            super(mob, 6, Vindicator.DOOR_BREAKING_PREDICATE);
+            super(mob, 6, com.google.common.base.Predicates.in(mob.level.paperConfig().entities.behavior.doorBreakingDifficulty.getOrDefault(mob.getType(), mob.level.paperConfig().entities.behavior.doorBreakingDifficulty.get(EntityType.VINDICATOR)))); // Paper
             this.setFlags(EnumSet.of(Goal.Flag.MOVE));
         }
 
