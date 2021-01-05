@@ -18,6 +18,11 @@ public class DedicatedPlayerList extends PlayerList {
         this.setViewDistance(dedicatedServerProperties.viewDistance);
         this.setSimulationDistance(dedicatedServerProperties.simulationDistance);
         super.setUsingWhiteList(dedicatedServerProperties.whiteList.get());
+        // Paper start - moved from constructor
+    }
+    @Override
+    public void loadAndSaveFiles() {
+        // Paper end
         this.loadUserBanList();
         this.saveUserBanList();
         this.loadIpBanList();

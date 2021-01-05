@@ -198,6 +198,12 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
         io.papermc.paper.util.ObfHelper.INSTANCE.getClass(); // Paper - load mappings for stacktrace deobf and etc.
         paperConfigurations.initializeGlobalConfiguration();
         paperConfigurations.initializeWorldDefaultsConfiguration();
+        // Paper start - moved up to right after PlayerList creation but before file load/save
+        if (this.convertOldUsers()) {
+            this.getProfileCache().save(false); // Paper
+        }
+        this.getPlayerList().loadAndSaveFiles(); // Must be after convertNames
+        // Paper end - moved up
         org.spigotmc.WatchdogThread.doStart(org.spigotmc.SpigotConfig.timeoutTime, org.spigotmc.SpigotConfig.restartOnCrash);
         io.papermc.paper.command.PaperCommands.registerCommands(this);
         com.destroystokyo.paper.Metrics.PaperMetrics.startMetrics();
@@ -253,9 +259,6 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
             DedicatedServer.LOGGER.warn("To change this, set \"online-mode\" to \"true\" in the server.properties file.");
         }
 
-        if (this.convertOldUsers()) {
-            this.getProfileCache().save(false); // Paper
-        }
 
         if (!OldUsersConverter.serverReadyAfterUserconversion(this)) {
             return false;

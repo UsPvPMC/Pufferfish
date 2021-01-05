@@ -184,6 +184,7 @@ public abstract class PlayerList {
         this.maxPlayers = maxPlayers;
         this.playerIo = saveHandler;
     }
+    abstract public void loadAndSaveFiles(); // Paper - moved from DedicatedPlayerList constructor
 
     public void placeNewPlayer(Connection connection, ServerPlayer player) {
         player.isRealPlayer = true; // Paper
