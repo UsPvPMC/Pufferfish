@@ -706,6 +706,7 @@ public class ServerChunkCache extends ChunkSource {
             ProfilerFiller gameprofilerfiller = this.level.getProfiler();
 
             gameprofilerfiller.push("pollingChunks");
+            this.level.resetIceAndSnowTick(); // Pufferfish - reset ice & snow tick random
             int k = this.level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING);
             boolean flag1 = level.ticksPerSpawnCategory.getLong(org.bukkit.entity.SpawnCategory.ANIMAL) != 0L && worlddata.getGameTime() % level.ticksPerSpawnCategory.getLong(org.bukkit.entity.SpawnCategory.ANIMAL) == 0L; // CraftBukkit
 
