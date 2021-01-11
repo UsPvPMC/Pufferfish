@@ -589,6 +589,14 @@ public abstract class PlayerList {
                 PlayerList.LOGGER.debug("Removing player mount");
                 entityplayer.stopRiding();
                 entity.getPassengersAndSelf().forEach((entity1) -> {
+                    // Paper start
+                    if (entity1 instanceof net.minecraft.world.entity.npc.AbstractVillager villager) {
+                        final net.minecraft.world.entity.player.Player human = villager.getTradingPlayer();
+                        if (human != null) {
+                            villager.setTradingPlayer(null);
+                        }
+                    }
+                    // Paper end
                     entity1.setRemoved(Entity.RemovalReason.UNLOADED_WITH_PLAYER);
                 });
             }
