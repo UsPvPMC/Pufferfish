@@ -415,6 +415,11 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
         return this.originWorld;
     }
     // Paper end
+    // Pufferfish start
+    public boolean activatedPriorityReset = false; // DAB
+    public int activatedPriority = gg.pufferfish.pufferfish.PufferfishConfig.maximumActivationPrio; // golf score
+    // Pufferfish end
+    
     public float getBukkitYaw() {
         return this.yRot;
     }

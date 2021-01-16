@@ -37,7 +37,11 @@ public class VillagerPanicTrigger extends Behavior<Villager> {
 
     @Override
     protected void tick(ServerLevel world, Villager entity, long time) {
-        if (time % 100L == 0L) {
+        // Pufferfish start
+        if (entity.nextGolemPanic < 0) entity.nextGolemPanic = time + 100;
+        if (--entity.nextGolemPanic < time) {
+            entity.nextGolemPanic = -1;
+            // Pufferfish end
             entity.spawnGolemIfNeeded(world, time, 3);
         }
 

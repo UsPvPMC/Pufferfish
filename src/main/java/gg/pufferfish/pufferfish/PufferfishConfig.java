@@ -3,6 +3,12 @@ package gg.pufferfish.pufferfish;
 import gg.pufferfish.pufferfish.simd.SIMDDetection;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.MinecraftServer;
+import org.apache.logging.log4j.Level;
+import org.bukkit.configuration.ConfigurationSection;
+import net.minecraft.world.entity.EntityType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -208,5 +214,37 @@ public class PufferfishConfig {
     }
 
 
-}
+    public static boolean dearEnabled;
+    public static int startDistance;
+    public static int startDistanceSquared;
+    public static int maximumActivationPrio;
+    public static int activationDistanceMod;
 
+    private static void dynamicActivationOfBrains() throws IOException {
+        dearEnabled = getBoolean("dab.enabled", "activation-range.enabled", true);
+        startDistance = getInt("dab.start-distance", "activation-range.start-distance", 12,
+                "This value determines how far away an entity has to be",
+                "from the player to start being effected by DEAR.");
+        startDistanceSquared = startDistance * startDistance;
+        maximumActivationPrio = getInt("dab.max-tick-freq", "activation-range.max-tick-freq", 20,
+                "This value defines how often in ticks, the furthest entity",
+                "will get their pathfinders and behaviors ticked. 20 = 1s");
+        activationDistanceMod = getInt("dab.activation-dist-mod", "activation-range.activation-dist-mod", 8,
+                "This value defines how much distance modifies an entity's",
+                "tick frequency. freq = (distanceToPlayer^2) / (2^value)",
+                "If you want further away entities to tick less often, use 7.",
+                "If you want further away entities to tick more often, try 9.");
+
+        for (EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
+            entityType.dabEnabled = true; // reset all, before setting the ones to true
+        }
+        getStringList("dab.blacklisted-entities", "activation-range.blacklisted-entities", Collections.emptyList(), "A list of entities to ignore for activation")
+                .forEach(name -> EntityType.byString(name).ifPresentOrElse(entityType -> {
+                    entityType.dabEnabled = false;
+                }, () -> MinecraftServer.LOGGER.warn("Unknown entity \"" + name + "\"")));
+
+        setComment("dab", "Optimizes entity brains when", "they're far away from the player");
+    }
+
+
+}

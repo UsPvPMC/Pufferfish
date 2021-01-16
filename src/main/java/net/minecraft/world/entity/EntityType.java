@@ -300,6 +300,7 @@ public class EntityType<T extends Entity> implements FeatureElement, EntityTypeT
     private final boolean canSpawnFarFromPlayer;
     private final int clientTrackingRange;
     private final int updateInterval;
+    public boolean dabEnabled = false; // Pufferfish
     @Nullable
     private String descriptionId;
     @Nullable

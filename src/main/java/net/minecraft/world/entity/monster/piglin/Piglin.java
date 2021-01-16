@@ -308,9 +308,11 @@ public class Piglin extends AbstractPiglin implements CrossbowAttackMob, Invento
         return !this.cannotHunt;
     }
 
+    private int behaviorTick; // Pufferfish
     @Override
     protected void customServerAiStep() {
         this.level.getProfiler().push("piglinBrain");
+        if (this.behaviorTick++ % this.activatedPriority == 0) // Pufferfish
         this.getBrain().tick((ServerLevel) this.level, this);
         this.level.getProfiler().pop();
         PiglinAi.updateActivity(this);

@@ -709,6 +709,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
             org.spigotmc.ActivationRange.activateEntities(this); // Spigot
             timings.entityTick.startTiming(); // Spigot
             this.entityTickList.forEach((entity) -> {
+                entity.activatedPriorityReset = false; // Pufferfish - DAB
                 if (!entity.isRemoved()) {
                     if (false && this.shouldDiscardEntity(entity)) { // CraftBukkit - We prevent spawning in general, so this butchering is not needed
                         entity.discard();

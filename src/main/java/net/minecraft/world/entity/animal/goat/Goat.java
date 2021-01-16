@@ -188,9 +188,11 @@ public class Goat extends Animal {
         return (Brain<Goat>) super.getBrain(); // CraftBukkit - decompile error
     }
 
+    private int behaviorTick = 0; // Pufferfish
     @Override
     protected void customServerAiStep() {
         this.level.getProfiler().push("goatBrain");
+        if (this.behaviorTick++ % this.activatedPriority == 0) // Pufferfish
         this.getBrain().tick((ServerLevel) this.level, this);
         this.level.getProfiler().pop();
         this.level.getProfiler().push("goatActivityUpdate");

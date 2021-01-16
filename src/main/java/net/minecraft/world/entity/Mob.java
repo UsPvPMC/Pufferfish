@@ -219,10 +219,10 @@ public abstract class Mob extends LivingEntity implements Targeting {
     @Override
     public void inactiveTick() {
         super.inactiveTick();
-        if (this.goalSelector.inactiveTick()) {
+        if (this.goalSelector.inactiveTick(this.activatedPriority, true)) { // Pufferfish - pass activated priroity
             this.goalSelector.tick();
         }
-        if (this.targetSelector.inactiveTick()) {
+        if (this.targetSelector.inactiveTick(this.activatedPriority, true)) { // Pufferfish - pass activated priority
             this.targetSelector.tick();
         }
     }
@@ -907,16 +907,20 @@ public abstract class Mob extends LivingEntity implements Targeting {
 
         if (i % 2 != 0 && this.tickCount > 1) {
             this.level.getProfiler().push("targetSelector");
+            if (this.targetSelector.inactiveTick(this.activatedPriority, false)) // Pufferfish - use this to alternate ticking
             this.targetSelector.tickRunningGoals(false);
             this.level.getProfiler().pop();
             this.level.getProfiler().push("goalSelector");
+            if (this.goalSelector.inactiveTick(this.activatedPriority, false)) // Pufferfish - use this to alternate ticking
             this.goalSelector.tickRunningGoals(false);
             this.level.getProfiler().pop();
         } else {
             this.level.getProfiler().push("targetSelector");
+            if (this.targetSelector.inactiveTick(this.activatedPriority, false)) // Pufferfish - use this to alternate ticking
             this.targetSelector.tick();
             this.level.getProfiler().pop();
             this.level.getProfiler().push("goalSelector");
+            if (this.goalSelector.inactiveTick(this.activatedPriority, false)) // Pufferfish - use this to alternate ticking
             this.goalSelector.tick();
             this.level.getProfiler().pop();
         }
