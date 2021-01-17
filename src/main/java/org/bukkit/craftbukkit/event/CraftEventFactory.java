@@ -1917,5 +1917,11 @@ public class CraftEventFactory {
         io.papermc.paper.event.block.BlockFailedDispenseEvent event = new io.papermc.paper.event.block.BlockFailedDispenseEvent(block);
         return event.callEvent();
     }
+
+    public static boolean handleBlockPreDispenseEvent(ServerLevel serverLevel, BlockPos pos, ItemStack itemStack, int slot) {
+        org.bukkit.block.Block block = serverLevel.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+        io.papermc.paper.event.block.BlockPreDispenseEvent event = new io.papermc.paper.event.block.BlockPreDispenseEvent(block, org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(itemStack), slot);
+        return event.callEvent();
+    }
     // Paper end
 }

@@ -93,6 +93,7 @@ public class DispenserBlock extends BaseEntityBlock {
             DispenseItemBehavior idispensebehavior = this.getDispenseMethod(itemstack);
 
             if (idispensebehavior != DispenseItemBehavior.NOOP) {
+                if (!org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockPreDispenseEvent(world, pos, itemstack, i)) return; // Paper - BlockPreDispenseEvent is called here
                 DispenserBlock.eventFired = false; // CraftBukkit - reset event status
                 tileentitydispenser.setItem(i, idispensebehavior.dispense(sourceblock, itemstack));
             }
