@@ -655,4 +655,15 @@ public class CraftScheduler implements BukkitScheduler {
     public BukkitTask runTaskTimerAsynchronously(Plugin plugin, BukkitRunnable task, long delay, long period) throws IllegalArgumentException {
         throw new UnsupportedOperationException("Use BukkitRunnable#runTaskTimerAsynchronously(Plugin, long, long)");
     }
+
+    // Paper start - add getMainThreadExecutor
+    @Override
+    public Executor getMainThreadExecutor(Plugin plugin) {
+        Validate.notNull(plugin, "Plugin cannot be null");
+        return command -> {
+            Validate.notNull(command, "Command cannot be null");
+            this.runTask(plugin, command);
+        };
+    }
+    // Paper end
 }
