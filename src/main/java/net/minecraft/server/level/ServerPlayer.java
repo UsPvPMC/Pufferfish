@@ -1198,6 +1198,11 @@ public class ServerPlayer extends Player {
                 this.level.getCraftServer().getPluginManager().callEvent(changeEvent);
                 // CraftBukkit end
             }
+            // Paper start
+            if (this.isBlocking()) {
+                this.stopUsingItem();
+            }
+            // Paper end
 
             return this;
         }
