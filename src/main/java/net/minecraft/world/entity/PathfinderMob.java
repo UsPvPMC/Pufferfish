@@ -49,8 +49,11 @@ public abstract class PathfinderMob extends Mob {
 
             if (this instanceof TamableAnimal && ((TamableAnimal) this).isInSittingPose()) {
                 if (f > entity.level.paperConfig().misc.maxLeashDistance) { // Paper
-                    this.level.getCraftServer().getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE)); // CraftBukkit
-                    this.dropLeash(true, true);
+                    // Paper start - drop leash variable
+                    EntityUnleashEvent event = new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE, true);
+                    this.level.getCraftServer().getPluginManager().callEvent(event); // CraftBukkit
+                    this.dropLeash(true, event.isDropLeash());
+                    // Paper end
                 }
 
                 return;
@@ -58,8 +61,11 @@ public abstract class PathfinderMob extends Mob {
 
             this.onLeashDistance(f);
             if (f > entity.level.paperConfig().misc.maxLeashDistance) { // Paper
-                this.level.getCraftServer().getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE)); // CraftBukkit
-                this.dropLeash(true, true);
+                // Paper start - drop leash variable
+                EntityUnleashEvent event = new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE, true);
+                this.level.getCraftServer().getPluginManager().callEvent(event); // CraftBukkit
+                this.dropLeash(true, event.isDropLeash());
+                // Paper end
                 this.goalSelector.disableControlFlag(Goal.Flag.MOVE);
             } else if (f > 6.0F) {
                 double d0 = (entity.getX() - this.getX()) / (double) f;
