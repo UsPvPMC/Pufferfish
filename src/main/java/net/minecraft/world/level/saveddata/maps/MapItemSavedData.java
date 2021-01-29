@@ -33,6 +33,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 import org.slf4j.Logger;
 
 // CraftBukkit start
+import io.papermc.paper.adventure.PaperAdventure; // Paper
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.CraftServer;
@@ -598,7 +599,7 @@ public class MapItemSavedData extends SavedData {
 
                 for (org.bukkit.map.MapCursor cursor : render.cursors) {
                     if (cursor.isVisible()) {
-                        icons.add(new MapDecoration(MapDecoration.Type.byIcon(cursor.getRawType()), cursor.getX(), cursor.getY(), cursor.getDirection(), CraftChatMessage.fromStringOrNull(cursor.getCaption())));
+                        icons.add(new MapDecoration(MapDecoration.Type.byIcon(cursor.getRawType()), cursor.getX(), cursor.getY(), cursor.getDirection(), PaperAdventure.asVanilla(cursor.caption()))); // Paper - Adventure
                     }
                 }
                 collection = icons;

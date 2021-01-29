@@ -7,6 +7,10 @@ import net.minecraft.network.protocol.Packet;
 public class ClientboundTabListPacket implements Packet<ClientGamePacketListener> {
     public final Component header;
     public final Component footer;
+    // Paper start
+    public net.kyori.adventure.text.Component adventure$header;
+    public net.kyori.adventure.text.Component adventure$footer;
+    // Paper end
 
     public ClientboundTabListPacket(Component header, Component footer) {
         this.header = header;
@@ -20,6 +24,13 @@ public class ClientboundTabListPacket implements Packet<ClientGamePacketListener
 
     @Override
     public void write(FriendlyByteBuf buf) {
+        // Paper start
+        if (this.adventure$header != null && this.adventure$footer != null) {
+            buf.writeComponent(this.adventure$header);
+            buf.writeComponent(this.adventure$footer);
+            return;
+        }
+        // Paper end
         buf.writeComponent(this.header);
         buf.writeComponent(this.footer);
     }

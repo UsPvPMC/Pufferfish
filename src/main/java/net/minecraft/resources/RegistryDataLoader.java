@@ -61,6 +61,11 @@ public class RegistryDataLoader {
         RegistryOps.RegistryInfoLookup registryInfoLookup = createContext(baseRegistryManager, list);
         list.forEach((loader) -> {
             loader.getSecond().load(resourceManager, registryInfoLookup);
+            // Paper start
+            if (loader.getFirst().key() == Registries.CHAT_TYPE) {
+                Registry.register((Registry<ChatType>) loader.getFirst(), ChatType.RAW, new ChatType(new net.minecraft.network.chat.ChatTypeDecoration("%s", List.of(net.minecraft.network.chat.ChatTypeDecoration.Parameter.CONTENT), net.minecraft.network.chat.Style.EMPTY), new net.minecraft.network.chat.ChatTypeDecoration("%s", List.of(net.minecraft.network.chat.ChatTypeDecoration.Parameter.CONTENT), net.minecraft.network.chat.Style.EMPTY))); // CraftBukkit
+            }
+            // Paper end
         });
         list.forEach((loader) -> {
             Registry<?> registry = loader.getFirst();

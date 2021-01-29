@@ -6,6 +6,7 @@ import net.minecraft.network.protocol.Packet;
 
 public class ClientboundSetSubtitleTextPacket implements Packet<ClientGamePacketListener> {
     private final Component text;
+    public net.kyori.adventure.text.Component adventure$text; // Paper
 
     public ClientboundSetSubtitleTextPacket(Component subtitle) {
         this.text = subtitle;
@@ -17,6 +18,11 @@ public class ClientboundSetSubtitleTextPacket implements Packet<ClientGamePacket
 
     @Override
     public void write(FriendlyByteBuf buf) {
+        // Paper start
+        if (this.adventure$text != null) {
+            buf.writeComponent(this.adventure$text);
+        } else
+        // Paper end
         buf.writeComponent(this.text);
     }
 

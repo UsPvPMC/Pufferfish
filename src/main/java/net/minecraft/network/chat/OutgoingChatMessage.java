@@ -7,6 +7,12 @@ public interface OutgoingChatMessage {
 
     void sendToPlayer(ServerPlayer sender, boolean filterMaskEnabled, ChatType.Bound params);
 
+    // Paper start
+    default void sendToPlayer(ServerPlayer sender, boolean filterMaskEnabled, ChatType.Bound params, @javax.annotation.Nullable Component unsigned) {
+        this.sendToPlayer(sender, filterMaskEnabled, params);
+    }
+    // Paper end
+
     static OutgoingChatMessage create(PlayerChatMessage message) {
         return (OutgoingChatMessage)(message.isSystem() ? new OutgoingChatMessage.Disguised(message.decoratedContent()) : new OutgoingChatMessage.Player(message));
     }
@@ -14,7 +20,12 @@ public interface OutgoingChatMessage {
     public static record Disguised(Component content) implements OutgoingChatMessage {
         @Override
         public void sendToPlayer(ServerPlayer sender, boolean filterMaskEnabled, ChatType.Bound params) {
-            sender.connection.sendDisguisedChatMessage(this.content, params);
+           // Paper start
+            this.sendToPlayer(sender, filterMaskEnabled, params, null);
+        }
+        public void sendToPlayer(ServerPlayer sender, boolean filterMaskEnabled, ChatType.Bound params, @javax.annotation.Nullable Component unsigned) {
+            sender.connection.sendDisguisedChatMessage(unsigned != null ? unsigned : this.content, params);
+            // Paper end
         }
     }
 
@@ -26,7 +37,13 @@ public interface OutgoingChatMessage {
 
         @Override
         public void sendToPlayer(ServerPlayer sender, boolean filterMaskEnabled, ChatType.Bound params) {
+            // Paper start
+            this.sendToPlayer(sender, filterMaskEnabled, params, null);
+        }
+        public void sendToPlayer(ServerPlayer sender, boolean filterMaskEnabled, ChatType.Bound params, @javax.annotation.Nullable Component unsigned) {
+            // Paper end
             PlayerChatMessage playerChatMessage = this.message.filter(filterMaskEnabled);
+            playerChatMessage = unsigned != null ? playerChatMessage.withUnsignedContent(unsigned) : playerChatMessage; // Paper
             if (!playerChatMessage.isFullyFiltered()) {
                 sender.connection.sendPlayerChatMessage(playerChatMessage, params);
             }

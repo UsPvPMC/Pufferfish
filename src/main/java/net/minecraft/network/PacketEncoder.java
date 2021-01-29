@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import io.papermc.paper.adventure.PaperAdventure; // Paper
 import java.io.IOException;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
@@ -33,6 +34,7 @@ public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
             } else {
                 FriendlyByteBuf friendlyByteBuf = new FriendlyByteBuf(byteBuf);
                 friendlyByteBuf.writeVarInt(i);
+                friendlyByteBuf.adventure$locale = channelHandlerContext.channel().attr(PaperAdventure.LOCALE_ATTRIBUTE).get(); // Paper
 
                 try {
                     int j = friendlyByteBuf.writerIndex();

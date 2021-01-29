@@ -42,6 +42,11 @@ public class ComponentUtils {
         if (depth > 100) {
             return text.copy();
         } else {
+            // Paper start
+            if (text instanceof io.papermc.paper.adventure.AdventureComponent adventureComponent) {
+                text = adventureComponent.deepConverted();
+            }
+            // Paper end
             MutableComponent mutableComponent = text.getContents().resolve(source, sender, depth + 1);
 
             for(Component component : text.getSiblings()) {

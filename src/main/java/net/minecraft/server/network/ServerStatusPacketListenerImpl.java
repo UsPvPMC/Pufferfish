@@ -57,7 +57,7 @@ public class ServerStatusPacketListenerImpl implements ServerStatusPacketListene
                 CraftIconCache icon = server.server.getServerIcon();
 
                 ServerListPingEvent() {
-                    super(connection.hostname, ((InetSocketAddress) ServerStatusPacketListenerImpl.this.connection.getRemoteAddress()).getAddress(), server.getMotd(), server.getPlayerList().getMaxPlayers());
+                    super(connection.hostname, ((InetSocketAddress) ServerStatusPacketListenerImpl.this.connection.getRemoteAddress()).getAddress(), server.server.motd(), server.getPlayerList().getMaxPlayers()); // Paper - Adventure
                 }
 
                 @Override

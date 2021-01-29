@@ -13,34 +13,60 @@ import org.bukkit.entity.Player;
 public class CraftSign<T extends SignBlockEntity> extends CraftBlockEntityState<T> implements Sign {
 
     // Lazily initialized only if requested:
-    private String[] originalLines = null;
-    private String[] lines = null;
+    // Paper start
+    private java.util.ArrayList<net.kyori.adventure.text.Component> originalLines = null; // ArrayList for RandomAccess
+    private java.util.ArrayList<net.kyori.adventure.text.Component> lines = null; // ArrayList for RandomAccess
+    // Paper end
 
     public CraftSign(World world, T tileEntity) {
         super(world, tileEntity);
     }
 
+    // Paper start
     @Override
-    public String[] getLines() {
-        if (this.lines == null) {
-            // Lazy initialization:
-            SignBlockEntity sign = this.getSnapshot();
-            this.lines = new String[sign.messages.length];
-            System.arraycopy(CraftSign.revertComponents(sign.messages), 0, lines, 0, lines.length);
-            this.originalLines = new String[lines.length];
-            System.arraycopy(lines, 0, originalLines, 0, originalLines.length);
-        }
+    public java.util.List<net.kyori.adventure.text.Component> lines() {
+        this.loadLines();
         return this.lines;
     }
 
     @Override
+    public net.kyori.adventure.text.Component line(int index) {
+        this.loadLines();
+        return this.lines.get(index);
+    }
+
+    @Override
+    public void line(int index, net.kyori.adventure.text.Component line) {
+        this.loadLines();
+        this.lines.set(index, line);
+    }
+
+    private void loadLines() {
+        if (lines != null) {
+            return;
+        }
+        // Lazy initialization:
+        SignBlockEntity sign = this.getSnapshot();
+        lines = io.papermc.paper.adventure.PaperAdventure.asAdventure(com.google.common.collect.Lists.newArrayList(sign.messages));
+        originalLines = new java.util.ArrayList<>(lines);
+    }
+    // Paper end
+    @Override
+    public String[] getLines() {
+        this.loadLines();
+        return this.lines.stream().map(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection()::serialize).toArray(String[]::new); // Paper
+    }
+
+    @Override
     public String getLine(int index) throws IndexOutOfBoundsException {
-        return this.getLines()[index];
+        this.loadLines();
+        return net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(this.lines.get(index)); // Paper
     }
 
     @Override
     public void setLine(int index, String line) throws IndexOutOfBoundsException {
-        this.getLines()[index] = line;
+        this.loadLines();
+        this.lines.set(index, line != null ? net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(line) : net.kyori.adventure.text.Component.empty()); // Paper
     }
 
     @Override
@@ -78,13 +104,16 @@ public class CraftSign<T extends SignBlockEntity> extends CraftBlockEntityState<
         super.applyTo(sign);
 
         if (this.lines != null) {
-            for (int i = 0; i < lines.length; i++) {
-                String line = (this.lines[i] == null) ? "" : this.lines[i];
-                if (line.equals(this.originalLines[i])) {
+            // Paper start
+            for (int i = 0; i < this.lines.size(); ++i) {
+                net.kyori.adventure.text.Component component = this.lines.get(i);
+                net.kyori.adventure.text.Component origComp = this.originalLines.get(i);
+                if (component.equals(origComp)) {
                     continue; // The line contents are still the same, skip.
                 }
-                sign.setMessage(i, CraftChatMessage.fromString(line)[0]);
+                sign.setMessage(i, io.papermc.paper.adventure.PaperAdventure.asVanilla(component));
             }
+            // Paper end
         }
     }
 
@@ -98,6 +127,20 @@ public class CraftSign<T extends SignBlockEntity> extends CraftBlockEntityState<
 
         ((CraftPlayer) player).getHandle().openTextEdit(handle);
     }
+
+    // Paper start
+    public static Component[] sanitizeLines(java.util.List<? extends net.kyori.adventure.text.Component> lines) {
+        Component[] components = new Component[4];
+        for (int i = 0; i < 4; i++) {
+            if (i < lines.size() && lines.get(i) != null) {
+                components[i] = io.papermc.paper.adventure.PaperAdventure.asVanilla(lines.get(i));
+            } else {
+                components[i] = net.minecraft.network.chat.Component.literal("");
+            }
+        }
+        return components;
+    }
+    // Paper end
 
     public static Component[] sanitizeLines(String[] lines) {
         Component[] components = new Component[4];

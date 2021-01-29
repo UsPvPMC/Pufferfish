@@ -62,6 +62,7 @@ public class CommandSourceStack implements SharedSuggestionProvider {
     private final CommandSigningContext signingContext;
     private final TaskChainer chatMessageChainer;
     public volatile CommandNode currentCommand; // CraftBukkit
+    public boolean bypassSelectorPermissions = false; // Paper
 
     public CommandSourceStack(CommandSource output, Vec3 pos, Vec2 rot, ServerLevel world, int level, String name, Component displayName, MinecraftServer server, @Nullable Entity entity) {
         this(output, pos, rot, world, level, name, displayName, server, entity, false, (commandcontext, flag, j) -> {

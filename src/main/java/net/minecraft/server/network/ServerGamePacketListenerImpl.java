@@ -187,6 +187,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.slf4j.Logger;
 
 // CraftBukkit start
+import io.papermc.paper.adventure.ChatProcessor; // Paper
+import io.papermc.paper.adventure.PaperAdventure; // Paper
 import com.mojang.datafixers.util.Pair;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
@@ -251,7 +253,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     private static final int NO_BLOCK_UPDATES_TO_ACK = -1;
     private static final int TRACKED_MESSAGE_DISCONNECT_THRESHOLD = 4096;
     private static final Component CHAT_VALIDATION_FAILED = Component.translatable("multiplayer.disconnect.chat_validation_failed");
-    private final Connection connection;
+    public final Connection connection; // Paper
     private final MinecraftServer server;
     public ServerPlayer player;
     private int tickCount;
@@ -439,14 +441,17 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         return this.server.isSingleplayerOwner(this.player.getGameProfile());
     }
 
-    // CraftBukkit start
-    @Deprecated
-    public void disconnect(Component reason) {
-        this.disconnect(CraftChatMessage.fromComponent(reason));
-    }
-    // CraftBukkit end
-
     public void disconnect(String s) {
+        // Paper start
+        this.disconnect(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(s));
+    }
+
+    public void disconnect(final Component reason) {
+        this.disconnect(PaperAdventure.asAdventure(reason));
+    }
+
+    public void disconnect(net.kyori.adventure.text.Component reason) {
+        // Paper end
         // CraftBukkit start - fire PlayerKickEvent
         if (this.processedDisconnect) {
             return;
@@ -455,7 +460,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             Waitable waitable = new Waitable() {
                 @Override
                 protected Object evaluate() {
-                    ServerGamePacketListenerImpl.this.disconnect(s);
+                    ServerGamePacketListenerImpl.this.disconnect(reason); // Paper - adventure
                     return null;
                 }
             };
@@ -472,9 +477,9 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             return;
         }
 
-        String leaveMessage = ChatFormatting.YELLOW + this.player.getScoreboardName() + " left the game.";
+        net.kyori.adventure.text.Component leaveMessage = net.kyori.adventure.text.Component.translatable("multiplayer.player.left", net.kyori.adventure.text.format.NamedTextColor.YELLOW, io.papermc.paper.configuration.GlobalConfiguration.get().messages.useDisplayNameInQuitMessage ? this.player.getBukkitEntity().displayName() : net.kyori.adventure.text.Component.text(this.player.getScoreboardName())); // Paper - Adventure
 
-        PlayerKickEvent event = new PlayerKickEvent(this.player.getBukkitEntity(), s, leaveMessage);
+        PlayerKickEvent event = new PlayerKickEvent(this.player.getBukkitEntity(), reason, leaveMessage); // Paper - Adventure
 
         if (this.cserver.getServer().isRunning()) {
             this.cserver.getPluginManager().callEvent(event);
@@ -486,7 +491,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
         this.player.kickLeaveMessage = event.getLeaveMessage(); // CraftBukkit - SPIGOT-3034: Forward leave message to PlayerQuitEvent
         // Send the possibly modified leave message
-        final Component ichatbasecomponent = CraftChatMessage.fromString(event.getReason(), true)[0];
+        final Component ichatbasecomponent = PaperAdventure.asVanilla(event.reason()); // Paper - Adventure
         // CraftBukkit end
 
         this.connection.send(new ClientboundDisconnectPacket(ichatbasecomponent), PacketSendListener.thenRun(() -> {
@@ -1783,9 +1788,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         */
 
         this.player.disconnect();
-        String quitMessage = this.server.getPlayerList().remove(this.player);
-        if ((quitMessage != null) && (quitMessage.length() > 0)) {
-            this.server.getPlayerList().broadcastMessage(CraftChatMessage.fromString(quitMessage));
+        // Paper start - Adventure
+        net.kyori.adventure.text.Component quitMessage = this.server.getPlayerList().remove(this.player);
+        if ((quitMessage != null) && !quitMessage.equals(net.kyori.adventure.text.Component.empty())) {
+            this.server.getPlayerList().broadcastSystemMessage(PaperAdventure.asVanilla(quitMessage), false);
+            // Paper end
         }
         // CraftBukkit end
         this.player.getTextFilter().leave();
@@ -1882,11 +1889,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                     }
 
                     CompletableFuture<FilteredText> completablefuture = this.filterTextPacket(playerchatmessage.signedContent());
-                    CompletableFuture<Component> completablefuture1 = this.server.getChatDecorator().decorate(this.player, playerchatmessage.decoratedContent());
+                    CompletableFuture<net.minecraft.network.chat.ChatDecorator.Result> completablefuture1 = this.server.getChatDecorator().decorate(this.player, null, playerchatmessage.decoratedContent()); // Paper
 
                     this.chatMessageChain.append((executor) -> {
                         return CompletableFuture.allOf(completablefuture, completablefuture1).thenAcceptAsync((ovoid) -> {
-                            PlayerChatMessage playerchatmessage1 = playerchatmessage.withUnsignedContent((Component) completablefuture1.join()).filter(((FilteredText) completablefuture.join()).mask());
+                            PlayerChatMessage playerchatmessage1 = playerchatmessage.filter(((FilteredText) completablefuture.join()).mask()).withResult(completablefuture1.join()); // Paper
 
                             this.broadcastChatMessage(playerchatmessage1);
                         }, this.server.chatExecutor); // CraftBukkit - async chat
@@ -1986,7 +1993,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             Optional<LastSeenMessages> optional = this.unpackAndApplyLastSeen(acknowledgment);
 
             if (this.player.isRemoved() || this.player.getChatVisibility() == ChatVisiblity.HIDDEN) { // CraftBukkit - dead men tell no tales
-                this.send(new ClientboundSystemChatPacket(Component.translatable("chat.disabled.options").withStyle(ChatFormatting.RED), false));
+                this.send(new ClientboundSystemChatPacket(PaperAdventure.asAdventure(Component.translatable("chat.disabled.options").withStyle(ChatFormatting.RED)), false)); // Paper - Adventure
                 return Optional.empty();
             } else {
                 this.player.resetLastActionTime();
@@ -2044,7 +2051,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             this.handleCommand(s);
         } else if (this.player.getChatVisibility() == ChatVisiblity.SYSTEM) {
             // Do nothing, this is coming from a plugin
-        } else {
+        // Paper start
+        } else if (true) {
+            final ChatProcessor cp = new ChatProcessor(this.server, this.player, original, async);
+            cp.process();
+            // Paper end
+        } else if (false) { // Paper
             Player player = this.getCraftPlayer();
             AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, player, s, new LazyPlayerSet(this.server));
             String originalFormat = event.getFormat(), originalMessage = event.getMessage();
@@ -2174,7 +2186,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                 }
             });
         } else if (this.player.getChatVisibility() == ChatVisiblity.SYSTEM) { // Re-add "Command Only" flag check
-            this.send(new ClientboundSystemChatPacket(Component.translatable("chat.cannotSend").withStyle(ChatFormatting.RED), false));
+            this.send(new ClientboundSystemChatPacket(PaperAdventure.asAdventure(Component.translatable("chat.cannotSend").withStyle(ChatFormatting.RED)), false)); // Paper - Adventure
         } else {
             this.chat(s, message, true);
         }
@@ -2996,30 +3008,30 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                 return;
             }
 
-            // CraftBukkit start
+            // CraftBukkit start // Paper start - Adventure
             Player player = this.player.getBukkitEntity();
             int x = packet.getPos().getX();
             int y = packet.getPos().getY();
             int z = packet.getPos().getZ();
-            String[] lines = new String[4];
+            List<net.kyori.adventure.text.Component> lines = new java.util.ArrayList<>();
 
             for (int i = 0; i < signText.size(); ++i) {
                 FilteredText filteredtext = (FilteredText) signText.get(i);
 
                 if (this.player.isTextFilteringEnabled()) {
-                    lines[i] = ChatFormatting.stripFormatting(filteredtext.filteredOrEmpty());
+                    lines.add(net.kyori.adventure.text.Component.text(filteredtext.filteredOrEmpty())); // Paper - adventure
                 } else {
-                    lines[i] = ChatFormatting.stripFormatting(filteredtext.raw());
+                    lines.add(net.kyori.adventure.text.Component.text(filteredtext.raw())); // Paper - adventure
                 }
             }
             SignChangeEvent event = new SignChangeEvent((org.bukkit.craftbukkit.block.CraftBlock) player.getWorld().getBlockAt(x, y, z), this.player.getBukkitEntity(), lines);
             this.cserver.getPluginManager().callEvent(event);
 
             if (!event.isCancelled()) {
-                Component[] components = org.bukkit.craftbukkit.block.CraftSign.sanitizeLines(event.getLines());
-                for (int i = 0; i < components.length; i++) {
-                    tileentitysign.setMessage(i, components[i]);
+                for (int i = 0; i < 4; i++) {
+                    tileentitysign.setMessage(i, PaperAdventure.asVanilla(event.line(i)));
                 }
+                // Paper end
                 tileentitysign.isEditable = false;
             }
             // CraftBukkit end
