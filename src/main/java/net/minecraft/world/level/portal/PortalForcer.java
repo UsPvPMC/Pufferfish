@@ -51,18 +51,39 @@ public class PortalForcer {
         // int i = flag ? 16 : 128;
         // CraftBukkit end
 
-        villageplace.ensureLoadedAndValid(this.level, blockposition, i);
-        Optional<PoiRecord> optional = villageplace.getInSquare((holder) -> {
-            return holder.is(PoiTypes.NETHER_PORTAL);
-        }, blockposition, i, PoiManager.Occupancy.ANY).filter((villageplacerecord) -> {
-            return worldborder.isWithinBounds(villageplacerecord.getPos()) && !this.level.paperConfig().environment.netherCeilingVoidDamageHeight.test(v -> villageplacerecord.getPos().getY() >= v); // Paper - don't teleport into void damage
-        }).sorted(Comparator.comparingDouble((PoiRecord villageplacerecord) -> { // CraftBukkit - decompile error
-            return villageplacerecord.getPos().distSqr(blockposition);
-        }).thenComparingInt((villageplacerecord) -> {
-            return villageplacerecord.getPos().getY();
-        })).filter((villageplacerecord) -> {
-            return this.level.getBlockState(villageplacerecord.getPos()).hasProperty(BlockStateProperties.HORIZONTAL_AXIS);
-        }).findFirst();
+        // Paper start - optimise portals
+        Optional<PoiRecord> optional;
+        java.util.List<PoiRecord> records = new java.util.ArrayList<>();
+        io.papermc.paper.util.PoiAccess.findClosestPoiDataRecords(
+            villageplace,
+            type -> type.is(PoiTypes.NETHER_PORTAL),
+            (BlockPos pos) -> {
+                net.minecraft.world.level.chunk.ChunkAccess lowest = this.level.getChunk(pos.getX() >> 4, pos.getZ() >> 4, net.minecraft.world.level.chunk.ChunkStatus.EMPTY);
+                if (!lowest.getStatus().isOrAfter(net.minecraft.world.level.chunk.ChunkStatus.FULL)
+                    && (lowest.getBelowZeroRetrogen() == null || !lowest.getBelowZeroRetrogen().targetStatus().isOrAfter(net.minecraft.world.level.chunk.ChunkStatus.HEIGHTMAPS))) {
+                    // why would we generate the chunk?
+                    return false;
+                }
+                if (!worldborder.isWithinBounds(pos) || this.level.paperConfig().environment.netherCeilingVoidDamageHeight.test(v -> pos.getY() >= v)) { // Paper - don't teleport into void damage
+                    return false;
+                }
+                return lowest.getBlockState(pos).hasProperty(BlockStateProperties.HORIZONTAL_AXIS);
+            },
+            blockposition, i, Double.MAX_VALUE, PoiManager.Occupancy.ANY, true, records
+        );
+
+        // this gets us most of the way there, but we bias towards lower y values.
+        PoiRecord lowestYRecord = null;
+        for (PoiRecord record : records) {
+            if (lowestYRecord == null) {
+                lowestYRecord = record;
+            } else if (lowestYRecord.getPos().getY() > record.getPos().getY()) {
+                lowestYRecord = record;
+            }
+        }
+        // now we're done
+        optional = Optional.ofNullable(lowestYRecord);
+        // Paper end - optimise portals
 
         return optional.map((villageplacerecord) -> {
             BlockPos blockposition1 = villageplacerecord.getPos();

@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 public class PoiSection {
     private static final Logger LOGGER = LogUtils.getLogger();
     private final Short2ObjectMap<PoiRecord> records = new Short2ObjectOpenHashMap<>();
-    private final Map<Holder<PoiType>, Set<PoiRecord>> byType = Maps.newHashMap();
+    private final Map<Holder<PoiType>, Set<PoiRecord>> byType = Maps.newHashMap(); public final Map<Holder<PoiType>, Set<PoiRecord>> getData() { return this.byType; } // Paper - public accessor
     private final Runnable setDirty;
     private boolean isValid;
     public final Optional<PoiSection> noAllocateOptional = Optional.of(this); // Paper - rewrite chunk system

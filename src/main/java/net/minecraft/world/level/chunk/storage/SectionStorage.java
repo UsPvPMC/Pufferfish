@@ -71,11 +71,11 @@ public class SectionStorage<R> extends RegionFileStorage implements AutoCloseabl
     }
 
     @Nullable
-    protected Optional<R> get(long pos) {
+    public Optional<R> get(long pos) { // Paper - public
         return this.storage.get(pos);
     }
 
-    protected Optional<R> getOrLoad(long pos) {
+    public Optional<R> getOrLoad(long pos) { // Paper - public
         if (this.outsideStoredRange(pos)) {
             return Optional.empty();
         } else {
