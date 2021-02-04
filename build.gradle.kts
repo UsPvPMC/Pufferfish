@@ -7,8 +7,12 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":paper-api"))
-    implementation(project(":paper-mojangapi"))
+    implementation(project(":pufferfish-api")) // Pufferfish // Paper
+    // Pufferfish start
+    implementation("io.papermc.paper:paper-mojangapi:1.19.2-R0.1-SNAPSHOT") {
+        exclude("io.papermc.paper", "paper-api")
+    }
+    // Pufferfish end
     // Paper start
     implementation("org.jline:jline-terminal-jansi:3.21.0")
     implementation("net.minecrell:terminalconsoleappender:1.3.0")
@@ -62,7 +66,7 @@ tasks.jar {
         attributes(
             "Main-Class" to "org.bukkit.craftbukkit.Main",
             "Implementation-Title" to "CraftBukkit",
-            "Implementation-Version" to "git-Paper-$implementationVersion",
+            "Implementation-Version" to "git-Pufferfish-$implementationVersion", // Pufferfish
             "Implementation-Vendor" to date, // Paper
             "Specification-Title" to "Bukkit",
             "Specification-Version" to project.version,

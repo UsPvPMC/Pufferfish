@@ -256,7 +256,7 @@ import javax.annotation.Nullable; // Paper
 import javax.annotation.Nonnull; // Paper
 
 public final class CraftServer implements Server {
-    private final String serverName = "Paper"; // Paper
+    private final String serverName = "Pufferfish"; // Paper // Pufferfish
     private final String serverVersion;
     private final String bukkitVersion = Versioning.getBukkitVersion();
     private final Logger logger = Logger.getLogger("Minecraft");
