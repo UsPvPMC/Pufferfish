@@ -198,13 +198,13 @@ public class GrindstoneMenu extends AbstractContainerMenu {
                 i = Math.max(item.getMaxDamage() - l, 0);
                 itemstack2 = this.mergeEnchants(itemstack, itemstack1);
                 if (!itemstack2.isDamageableItem()) {
-                    if (!ItemStack.matches(itemstack, itemstack1)) {
+                    if (!ItemStack.matches(itemstack, itemstack1) || (itemstack2.getMaxStackSize() == 1 && !io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowGrindstoneOverstacking)) { // Paper - add max stack size check & config value
                         org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareGrindstoneEvent(this.getBukkitView(), ItemStack.EMPTY); // CraftBukkit
                         this.broadcastChanges();
                         return;
                     }
 
-                    b0 = 2;
+                    b0 = 2; // Paper - the problem line for above change, causing over-stacking
                 }
             } else {
                 boolean flag3 = !itemstack.isEmpty();
