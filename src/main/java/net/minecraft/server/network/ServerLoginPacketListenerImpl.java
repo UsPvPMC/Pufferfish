@@ -183,6 +183,11 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
             } catch (Exception exception) {
                 ServerLoginPacketListenerImpl.LOGGER.error("Couldn't place player in world", exception);
                 MutableComponent ichatmutablecomponent = Component.translatable("multiplayer.disconnect.invalid_player_data");
+                // Paper start
+                if (MinecraftServer.getServer().isDebugging()) {
+                    exception.printStackTrace();
+                }
+                // Paper end
 
                 this.connection.send(new ClientboundDisconnectPacket(ichatmutablecomponent));
                 this.connection.disconnect(ichatmutablecomponent);
