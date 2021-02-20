@@ -1707,7 +1707,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     @Override
     public void sendSystemMessage(Component message) {
-        MinecraftServer.LOGGER.info(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(io.papermc.paper.adventure.PaperAdventure.asAdventure(message))); // Paper - Log message with colors
+        MinecraftServer.LOGGER.info(io.papermc.paper.console.HexFormattingConverter.SERIALIZER.serialize(io.papermc.paper.adventure.PaperAdventure.asAdventure(message))); // Paper - Log message with colors
     }
 
     public KeyPair getKeyPair() {

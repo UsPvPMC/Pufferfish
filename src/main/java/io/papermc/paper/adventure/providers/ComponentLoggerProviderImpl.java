@@ -1,9 +1,11 @@
 package io.papermc.paper.adventure.providers;
 
-import io.papermc.paper.adventure.PaperAdventure;
+import io.papermc.paper.console.HexFormattingConverter;
+import java.util.Locale;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.logger.slf4j.ComponentLoggerProvider;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +16,6 @@ public class ComponentLoggerProviderImpl implements ComponentLoggerProvider {
     }
 
     private String serialize(final Component message) {
-        return PaperAdventure.asPlain(message, null);
+        return HexFormattingConverter.SERIALIZER.serialize(GlobalTranslator.render(message, Locale.getDefault()));
     }
 }
