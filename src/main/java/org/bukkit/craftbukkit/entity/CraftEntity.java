@@ -1348,5 +1348,18 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
     public boolean isTicking() {
         return getHandle().isTicking();
     }
+
+    @Override
+    public Set<org.bukkit.entity.Player> getTrackedPlayers() {
+        if (this.entity.tracker == null) {
+            return java.util.Collections.emptySet();
+        }
+
+        Set<org.bukkit.entity.Player> set = new java.util.HashSet<>(this.entity.tracker.seenBy.size());
+        for (net.minecraft.server.network.ServerPlayerConnection connection : this.entity.tracker.seenBy) {
+            set.add(connection.getPlayer().getBukkitEntity().getPlayer());
+        }
+        return set;
+    }
     // Paper end
 }
