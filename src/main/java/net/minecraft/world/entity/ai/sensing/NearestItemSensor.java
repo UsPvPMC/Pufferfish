@@ -28,11 +28,15 @@ public class NearestItemSensor extends Sensor<Mob> {
             return true;
         });
         list.sort(Comparator.comparingDouble(entity::distanceToSqr));
-        Optional<ItemEntity> optional = list.stream().filter((itemEntity) -> {
-            return entity.wantsToPickUp(itemEntity.getItem());
-        }).filter((itemEntity) -> {
-            return itemEntity.closerThan(entity, 32.0D);
-        }).filter(entity::hasLineOfSight).findFirst();
-        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_WANTED_ITEM, optional);
+        // Paper start - remove streams in favour of lists
+        ItemEntity nearest = null;
+        for (ItemEntity entityItem : list) {
+            if (entity.wantsToPickUp(entityItem.getItem()) && entityItem.closerThan(entity, 32.0D) && entity.hasLineOfSight(entityItem)) {
+                nearest = entityItem;
+                break;
+            }
+        }
+        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_WANTED_ITEM, Optional.ofNullable(nearest));
+        // Paper end
     }
 }

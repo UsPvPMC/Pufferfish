@@ -21,18 +21,25 @@ public class PlayerSensor extends Sensor<LivingEntity> {
 
     @Override
     protected void doTick(ServerLevel world, LivingEntity entity) {
-        List<Player> list = world.players().stream().filter(EntitySelector.NO_SPECTATORS).filter((player) -> {
-            return entity.closerThan(player, 16.0D);
-        }).sorted(Comparator.comparingDouble(entity::distanceToSqr)).collect(Collectors.toList());
+        List<Player> players = new java.util.ArrayList<>(world.players());
+        players.removeIf(player -> !EntitySelector.NO_SPECTATORS.test(player) || !entity.closerThan(player, 16.0D));
+        players.sort(Comparator.comparingDouble(entity::distanceTo));
         Brain<?> brain = entity.getBrain();
-        brain.setMemory(MemoryModuleType.NEAREST_PLAYERS, list);
-        List<Player> list2 = list.stream().filter((player) -> {
-            return isEntityTargetable(entity, player);
-        }).collect(Collectors.toList());
-        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_PLAYER, list2.isEmpty() ? null : list2.get(0));
-        Optional<Player> optional = list2.stream().filter((player) -> {
-            return isEntityAttackable(entity, player);
-        }).findFirst();
-        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_ATTACKABLE_PLAYER, optional);
+
+        brain.setMemory(MemoryModuleType.NEAREST_PLAYERS, players);
+
+        Player nearest = null, nearestTargetable = null;
+        for (Player player : players) {
+            if (Sensor.isEntityTargetable(entity, player)) {
+                if (nearest == null) nearest = player;
+                if (Sensor.isEntityAttackable(entity, player)) {
+                    nearestTargetable = player;
+                    break; // Both variables are assigned, no reason to loop further
+                }
+            }
+        }
+        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_PLAYER, nearest);
+        brain.setMemory(MemoryModuleType.NEAREST_VISIBLE_ATTACKABLE_PLAYER, nearestTargetable);
+        // Paper end
     }
 }
