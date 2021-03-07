@@ -84,6 +84,7 @@ public interface BlockGetter extends LevelHeightAccessor {
                 return BlockHitResult.miss(raytrace1.getTo(), Direction.getNearest(vec3d.x, vec3d.y, vec3d.z), BlockPos.containing(raytrace1.getTo()));
             }
             // Paper end
+            if (iblockdata.isAir()) return null; // Paper - optimise air cases
             FluidState fluid = iblockdata.getFluidState(); // Paper - don't need to go to world state again
             Vec3 vec3d = raytrace1.getFrom();
             Vec3 vec3d1 = raytrace1.getTo();
