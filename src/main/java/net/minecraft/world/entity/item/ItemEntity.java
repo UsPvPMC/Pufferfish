@@ -252,6 +252,14 @@ public class ItemEntity extends Entity implements TraceableEntity {
                 ItemEntity entityitem = (ItemEntity) iterator.next();
 
                 if (entityitem.isMergable()) {
+                    // Paper Start - Fix items merging through walls
+                        if (this.level.paperConfig().fixes.fixItemsMergingThroughWalls) {
+                            net.minecraft.world.level.ClipContext rayTrace = new net.minecraft.world.level.ClipContext(this.position(), entityitem.position(),
+                                net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, this);
+                            net.minecraft.world.phys.BlockHitResult rayTraceResult = level.clip(rayTrace);
+                            if (rayTraceResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) continue;
+                        }
+                    // Paper End
                     this.tryToMerge(entityitem);
                     if (this.isRemoved()) {
                         break;
