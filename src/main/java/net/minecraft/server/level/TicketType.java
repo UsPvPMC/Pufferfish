@@ -8,6 +8,7 @@ import net.minecraft.world.level.ChunkPos;
 
 public class TicketType<T> {
     public static final TicketType<Long> FUTURE_AWAIT = create("future_await", Long::compareTo); // Paper
+    public static final TicketType<Long> ASYNC_LOAD = create("async_load", Long::compareTo); // Paper
 
     private final String name;
     private final Comparator<T> comparator;
@@ -27,6 +28,13 @@ public class TicketType<T> {
     public static final TicketType<Unit> PLUGIN = TicketType.create("plugin", (a, b) -> 0); // CraftBukkit
     public static final TicketType<org.bukkit.plugin.Plugin> PLUGIN_TICKET = TicketType.create("plugin_ticket", (plugin1, plugin2) -> plugin1.getClass().getName().compareTo(plugin2.getClass().getName())); // CraftBukkit
     public static final TicketType<Long> CHUNK_RELIGHT = create("light_update", Long::compareTo); // Paper - ensure chunks stay loaded for lighting
+    // Paper start - rewrite chunk system
+    public static final TicketType<Long> CHUNK_LOAD = create("chunk_load", Long::compareTo);
+    public static final TicketType<Long> STATUS_UPGRADE = create("status_upgrade", Long::compareTo);
+    public static final TicketType<Long> ENTITY_LOAD = create("entity_load", Long::compareTo);
+    public static final TicketType<Long> POI_LOAD = create("poi_load", Long::compareTo);
+    public static final TicketType<Unit> UNLOAD_COOLDOWN = create("unload_cooldown", (u1, u2) -> 0, 5 * 20);
+    // Paper end - rewrite chunk system
 
     public static <T> TicketType<T> create(String name, Comparator<T> argumentComparator) {
         return new TicketType<>(name, argumentComparator, 0L);

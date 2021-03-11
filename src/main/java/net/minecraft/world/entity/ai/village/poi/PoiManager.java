@@ -38,12 +38,28 @@ import net.minecraft.world.level.chunk.storage.SectionStorage;
 public class PoiManager extends SectionStorage<PoiSection> {
     public static final int MAX_VILLAGE_DISTANCE = 6;
     public static final int VILLAGE_SECTION_SIZE = 1;
-    private final PoiManager.DistanceTracker distanceTracker;
-    private final LongSet loadedChunks = new LongOpenHashSet();
+    // Paper start - rewrite chunk system
+    // the vanilla tracker needs to be replaced because it does not support level removes
+    public final net.minecraft.server.level.ServerLevel world;
+    private final io.papermc.paper.util.misc.Delayed26WayDistancePropagator3D villageDistanceTracker = new io.papermc.paper.util.misc.Delayed26WayDistancePropagator3D();
+    static final int POI_DATA_SOURCE = 7;
+    public static int convertBetweenLevels(final int level) {
+        return POI_DATA_SOURCE - level;
+    }
+
+    protected void updateDistanceTracking(long section) {
+        if (this.isVillageCenter(section)) {
+            this.villageDistanceTracker.setSource(section, POI_DATA_SOURCE);
+        } else {
+            this.villageDistanceTracker.removeSource(section);
+        }
+    }
+    // Paper end - rewrite chunk system
+
 
     public PoiManager(Path path, DataFixer dataFixer, boolean dsync, RegistryAccess registryManager, LevelHeightAccessor world) {
         super(path, PoiSection::codec, PoiSection::new, dataFixer, DataFixTypes.POI_CHUNK, dsync, registryManager, world);
-        this.distanceTracker = new PoiManager.DistanceTracker();
+        this.world = (net.minecraft.server.level.ServerLevel)world; // Paper - rewrite chunk system
     }
 
     public void add(BlockPos pos, Holder<PoiType> type) {
@@ -180,8 +196,8 @@ public class PoiManager extends SectionStorage<PoiSection> {
     }
 
     public int sectionsToVillage(SectionPos pos) {
-        this.distanceTracker.runAllUpdates();
-        return this.distanceTracker.getLevel(pos.asLong());
+        this.villageDistanceTracker.propagateUpdates(); // Paper - replace distance tracking util
+        return convertBetweenLevels(this.villageDistanceTracker.getLevel(io.papermc.paper.util.CoordinateUtils.getChunkSectionKey(pos))); // Paper - replace distance tracking util
     }
 
     boolean isVillageCenter(long pos) {
@@ -195,20 +211,105 @@ public class PoiManager extends SectionStorage<PoiSection> {
 
     @Override
     public void tick(BooleanSupplier shouldKeepTicking) {
-        super.tick(shouldKeepTicking);
-        this.distanceTracker.runAllUpdates();
+        this.villageDistanceTracker.propagateUpdates(); // Paper - rewrite chunk system
     }
 
     @Override
-    protected void setDirty(long pos) {
-        super.setDirty(pos);
-        this.distanceTracker.update(pos, this.distanceTracker.getLevelFromSource(pos), false);
+    public void setDirty(long pos) {
+        // Paper start - rewrite chunk system
+        int chunkX = io.papermc.paper.util.CoordinateUtils.getChunkSectionX(pos);
+        int chunkZ = io.papermc.paper.util.CoordinateUtils.getChunkSectionZ(pos);
+        io.papermc.paper.chunk.system.scheduling.ChunkHolderManager manager = this.world.chunkTaskScheduler.chunkHolderManager;
+        io.papermc.paper.chunk.system.poi.PoiChunk chunk = manager.getPoiChunkIfLoaded(chunkX, chunkZ, false);
+        if (chunk != null) {
+            chunk.setDirty(true);
+        }
+        this.updateDistanceTracking(pos);
+        // Paper end - rewrite chunk system
     }
 
     @Override
     protected void onSectionLoad(long pos) {
-        this.distanceTracker.update(pos, this.distanceTracker.getLevelFromSource(pos), false);
+        this.updateDistanceTracking(pos); // Paper - move to new distance tracking util
     }
+
+    @Override
+    public Optional<PoiSection> get(long pos) {
+        int chunkX = io.papermc.paper.util.CoordinateUtils.getChunkSectionX(pos);
+        int chunkY = io.papermc.paper.util.CoordinateUtils.getChunkSectionY(pos);
+        int chunkZ = io.papermc.paper.util.CoordinateUtils.getChunkSectionZ(pos);
+
+        io.papermc.paper.util.TickThread.ensureTickThread(this.world, chunkX, chunkZ, "Accessing poi chunk off-main");
+
+        io.papermc.paper.chunk.system.scheduling.ChunkHolderManager manager = this.world.chunkTaskScheduler.chunkHolderManager;
+        io.papermc.paper.chunk.system.poi.PoiChunk ret = manager.getPoiChunkIfLoaded(chunkX, chunkZ, true);
+
+        return ret == null ? Optional.empty() : ret.getSectionForVanilla(chunkY);
+    }
+
+    @Override
+    public Optional<PoiSection> getOrLoad(long pos) {
+        int chunkX = io.papermc.paper.util.CoordinateUtils.getChunkSectionX(pos);
+        int chunkY = io.papermc.paper.util.CoordinateUtils.getChunkSectionY(pos);
+        int chunkZ = io.papermc.paper.util.CoordinateUtils.getChunkSectionZ(pos);
+
+        io.papermc.paper.util.TickThread.ensureTickThread(this.world, chunkX, chunkZ, "Accessing poi chunk off-main");
+
+        io.papermc.paper.chunk.system.scheduling.ChunkHolderManager manager = this.world.chunkTaskScheduler.chunkHolderManager;
+
+        if (chunkY >= io.papermc.paper.util.WorldUtil.getMinSection(this.world) &&
+            chunkY <= io.papermc.paper.util.WorldUtil.getMaxSection(this.world)) {
+            io.papermc.paper.chunk.system.poi.PoiChunk ret = manager.getPoiChunkIfLoaded(chunkX, chunkZ, true);
+            if (ret != null) {
+                return ret.getSectionForVanilla(chunkY);
+            } else {
+                return manager.loadPoiChunk(chunkX, chunkZ).getSectionForVanilla(chunkY);
+            }
+        }
+        // retain vanilla behavior: do not load section if out of bounds!
+        return Optional.empty();
+    }
+
+    @Override
+    protected PoiSection getOrCreate(long pos) {
+        int chunkX = io.papermc.paper.util.CoordinateUtils.getChunkSectionX(pos);
+        int chunkY = io.papermc.paper.util.CoordinateUtils.getChunkSectionY(pos);
+        int chunkZ = io.papermc.paper.util.CoordinateUtils.getChunkSectionZ(pos);
+
+        io.papermc.paper.util.TickThread.ensureTickThread(this.world, chunkX, chunkZ, "Accessing poi chunk off-main");
+
+        io.papermc.paper.chunk.system.scheduling.ChunkHolderManager manager = this.world.chunkTaskScheduler.chunkHolderManager;
+
+        io.papermc.paper.chunk.system.poi.PoiChunk ret = manager.getPoiChunkIfLoaded(chunkX, chunkZ, true);
+        if (ret != null) {
+            return ret.getOrCreateSection(chunkY);
+        } else {
+            return manager.loadPoiChunk(chunkX, chunkZ).getOrCreateSection(chunkY);
+        }
+    }
+
+    public void onUnload(long coordinate) { // Paper - rewrite chunk system
+        int chunkX = io.papermc.paper.util.MCUtil.getCoordinateX(coordinate);
+        int chunkZ = io.papermc.paper.util.MCUtil.getCoordinateZ(coordinate);
+        io.papermc.paper.util.TickThread.ensureTickThread(this.world, chunkX, chunkZ, "Unloading poi chunk off-main");
+        for (int section = this.levelHeightAccessor.getMinSection(); section < this.levelHeightAccessor.getMaxSection(); ++section) {
+            long sectionPos = SectionPos.asLong(chunkX, section, chunkZ);
+            this.updateDistanceTracking(sectionPos);
+        }
+    }
+
+    public void loadInPoiChunk(io.papermc.paper.chunk.system.poi.PoiChunk poiChunk) {
+        int chunkX = poiChunk.chunkX;
+        int chunkZ = poiChunk.chunkZ;
+        io.papermc.paper.util.TickThread.ensureTickThread(this.world, chunkX, chunkZ, "Loading poi chunk off-main");
+        for (int sectionY = this.levelHeightAccessor.getMinSection(); sectionY < this.levelHeightAccessor.getMaxSection(); ++sectionY) {
+            PoiSection section = poiChunk.getSection(sectionY);
+            if (section != null && !section.isEmpty()) {
+                this.onSectionLoad(SectionPos.asLong(chunkX, sectionY, chunkZ));
+            }
+        }
+    }
+    // Paper end - rewrite chunk system
 
     public void checkConsistencyWithBlocks(ChunkPos chunkPos, LevelChunkSection chunkSection) {
         SectionPos sectionPos = SectionPos.of(chunkPos, SectionPos.blockToSectionCoord(chunkSection.bottomBlockY()));
@@ -249,7 +350,7 @@ public class PoiManager extends SectionStorage<PoiSection> {
         }).map((pair) -> {
             return pair.getFirst().chunk();
         }).filter((chunkPos) -> {
-            return this.loadedChunks.add(chunkPos.toLong());
+            return true; // Paper - rewrite chunk system
         }).forEach((chunkPos) -> {
             world.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY);
         });
@@ -265,7 +366,7 @@ public class PoiManager extends SectionStorage<PoiSection> {
 
         @Override
         protected int getLevelFromSource(long id) {
-            return PoiManager.this.isVillageCenter(id) ? 0 : 7;
+            return PoiManager.this.isVillageCenter(id) ? 0 : 7; // Paper - rewrite chunk system - diff on change, this specifies the source level to use for distance tracking
         }
 
         @Override
@@ -287,6 +388,35 @@ public class PoiManager extends SectionStorage<PoiSection> {
             super.runUpdates(Integer.MAX_VALUE);
         }
     }
+
+    // Paper start - Asynchronous chunk io
+    @javax.annotation.Nullable
+    @Override
+    public net.minecraft.nbt.CompoundTag read(ChunkPos chunkcoordintpair) throws java.io.IOException {
+        // Paper start - rewrite chunk system
+        if (!io.papermc.paper.chunk.system.io.RegionFileIOThread.isRegionFileThread()) {
+            return io.papermc.paper.chunk.system.io.RegionFileIOThread.loadData(
+                this.world, chunkcoordintpair.x, chunkcoordintpair.z, io.papermc.paper.chunk.system.io.RegionFileIOThread.RegionFileType.POI_DATA,
+                io.papermc.paper.chunk.system.io.RegionFileIOThread.getIOBlockingPriorityForCurrentThread()
+            );
+        }
+        // Paper end - rewrite chunk system
+        return super.read(chunkcoordintpair);
+    }
+
+    @Override
+    public void write(ChunkPos chunkcoordintpair, net.minecraft.nbt.CompoundTag nbttagcompound) throws java.io.IOException {
+        // Paper start - rewrite chunk system
+        if (!io.papermc.paper.chunk.system.io.RegionFileIOThread.isRegionFileThread()) {
+            io.papermc.paper.chunk.system.io.RegionFileIOThread.scheduleSave(
+                this.world, chunkcoordintpair.x, chunkcoordintpair.z, nbttagcompound,
+                io.papermc.paper.chunk.system.io.RegionFileIOThread.RegionFileType.POI_DATA);
+            return;
+        }
+        // Paper end - rewrite chunk system
+        super.write(chunkcoordintpair, nbttagcompound);
+    }
+    // Paper end
 
     public static enum Occupancy {
         HAS_SPACE(PoiRecord::hasSpace),

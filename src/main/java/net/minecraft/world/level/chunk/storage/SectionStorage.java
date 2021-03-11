@@ -34,27 +34,28 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import org.slf4j.Logger;
 
-public class SectionStorage<R> implements AutoCloseable {
+public class SectionStorage<R> extends RegionFileStorage implements AutoCloseable { // Paper - nuke IOWorker
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String SECTIONS_TAG = "Sections";
-    private final IOWorker worker;
+    // Paper - remove mojang I/O thread
     private final Long2ObjectMap<Optional<R>> storage = new Long2ObjectOpenHashMap<>();
     private final LongLinkedOpenHashSet dirty = new LongLinkedOpenHashSet();
     private final Function<Runnable, Codec<R>> codec;
     private final Function<Runnable, R> factory;
     private final DataFixer fixerUpper;
     private final DataFixTypes type;
-    private final RegistryAccess registryAccess;
+    public final RegistryAccess registryAccess; // Paper - rewrite chunk system
     protected final LevelHeightAccessor levelHeightAccessor;
 
     public SectionStorage(Path path, Function<Runnable, Codec<R>> codecFactory, Function<Runnable, R> factory, DataFixer dataFixer, DataFixTypes dataFixTypes, boolean dsync, RegistryAccess dynamicRegistryManager, LevelHeightAccessor world) {
+        super(path, dsync); // Paper - remove mojang I/O thread
         this.codec = codecFactory;
         this.factory = factory;
         this.fixerUpper = dataFixer;
         this.type = dataFixTypes;
         this.registryAccess = dynamicRegistryManager;
         this.levelHeightAccessor = world;
-        this.worker = new IOWorker(path, dsync, path.getFileName().toString());
+        // Paper - remove mojang I/O thread
     }
 
     protected void tick(BooleanSupplier shouldKeepTicking) {
@@ -116,23 +117,21 @@ public class SectionStorage<R> implements AutoCloseable {
     }
 
     private void readColumn(ChunkPos pos) {
-        Optional<CompoundTag> optional = this.tryRead(pos).join();
-        RegistryOps<Tag> registryOps = RegistryOps.create(NbtOps.INSTANCE, this.registryAccess);
-        this.readColumn(pos, registryOps, optional.orElse((CompoundTag)null));
+        throw new IllegalStateException("Only chunk system can load in state, offending class:" + this.getClass().getName()); // Paper - rewrite chunk system
     }
 
     private CompletableFuture<Optional<CompoundTag>> tryRead(ChunkPos pos) {
-        return this.worker.loadAsync(pos).exceptionally((throwable) -> {
-            if (throwable instanceof IOException iOException) {
-                LOGGER.error("Error reading chunk {} data from disk", pos, iOException);
-                return Optional.empty();
-            } else {
-                throw new CompletionException(throwable);
-            }
-        });
+        // Paper start - rewrite chunk system
+        try {
+            return CompletableFuture.completedFuture(Optional.ofNullable(this.read(pos)));
+        } catch (Throwable thr) {
+            return CompletableFuture.failedFuture(thr);
+        }
+        // Paper end - rewrite chunk system
     }
 
     private <T> void readColumn(ChunkPos pos, DynamicOps<T> ops, @Nullable T data) {
+        if (true) throw new IllegalStateException("Only chunk system can load in state, offending class:" + this.getClass().getName()); // Paper - rewrite chunk system
         if (data == null) {
             for(int i = this.levelHeightAccessor.getMinSection(); i < this.levelHeightAccessor.getMaxSection(); ++i) {
                 this.storage.put(getKey(pos, i), Optional.empty());
@@ -177,7 +176,7 @@ public class SectionStorage<R> implements AutoCloseable {
         Dynamic<Tag> dynamic = this.writeColumn(pos, registryOps);
         Tag tag = dynamic.getValue();
         if (tag instanceof CompoundTag) {
-            this.worker.store(pos, (CompoundTag)tag);
+            try { this.write(pos, (CompoundTag)tag); } catch (IOException ioexception) { SectionStorage.LOGGER.error("Error writing data to disk", ioexception); } // Paper - nuke IOWorker
         } else {
             LOGGER.error("Expected compound tag, got {}", (Object)tag);
         }
@@ -222,7 +221,7 @@ public class SectionStorage<R> implements AutoCloseable {
     }
 
     private static int getVersion(Dynamic<?> dynamic) {
-        return dynamic.get("DataVersion").asInt(1945);
+        return dynamic.get("DataVersion").asInt(1945); // Paper - diff on change, constant used in ChunkLoadTask
     }
 
     public void flush(ChunkPos pos) {
@@ -240,6 +239,9 @@ public class SectionStorage<R> implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        this.worker.close();
+        //this.worker.close(); // Paper - nuke I/O worker - don't call the worker
+        super.close(); // Paper - nuke I/O worker - call super.close method which is responsible for closing used files.
     }
+
+    // Paper - rewrite chunk system
 }

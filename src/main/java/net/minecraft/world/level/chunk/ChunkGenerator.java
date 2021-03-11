@@ -114,7 +114,7 @@ public abstract class ChunkGenerator {
         return CompletableFuture.supplyAsync(Util.wrapThreadWithTaskName("init_biomes", () -> {
             chunk.fillBiomesFromNoise(this.biomeSource, noiseConfig.sampler());
             return chunk;
-        }), Util.backgroundExecutor());
+        }), executor); // Paper - run with supplied executor
     }
 
     public abstract void applyCarvers(WorldGenRegion chunkRegion, long seed, RandomState noiseConfig, BiomeManager biomeAccess, StructureManager structureAccessor, ChunkAccess chunk, GenerationStep.Carving carverStep);

@@ -186,7 +186,11 @@ public class WorldUpgrader {
                             }
 
                             WorldUpgrader.LOGGER.error("Error upgrading chunk {}", chunkcoordintpair, throwable);
+                            // Paper start
+                        } catch (IOException e) {
+                            WorldUpgrader.LOGGER.error("Error upgrading chunk {}", chunkcoordintpair, e);
                         }
+                        // Paper end
 
                         if (flag1) {
                             ++this.converted;

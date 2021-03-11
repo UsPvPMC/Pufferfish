@@ -325,10 +325,14 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         ChunkHolder playerChunk = this.world.getChunkSource().chunkMap.getVisibleChunkIfPresent(ChunkPos.asLong(x, z));
         if (playerChunk == null) return false;
 
-        playerChunk.getTickingChunkFuture().thenAccept(either -> {
-            either.left().ifPresent(chunk -> {
+        // Paper start - rewrite player chunk loader
+        net.minecraft.world.level.chunk.LevelChunk chunk = playerChunk.getSendingChunk();
+        if (chunk == null) {
+            return false;
+        }
+        // Paper end - rewrite player chunk loader
                 List<ServerPlayer> playersInRange = playerChunk.playerProvider.getPlayers(playerChunk.getPos(), false);
-                if (playersInRange.isEmpty()) return;
+                if (playersInRange.isEmpty()) return true; // Paper - rewrite player chunk loader
 
                 ClientboundLevelChunkWithLightPacket refreshPacket = new ClientboundLevelChunkWithLightPacket(chunk, this.world.getLightEngine(), null, null, true);
                 for (ServerPlayer player : playersInRange) {
@@ -336,8 +340,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
                     player.connection.send(refreshPacket);
                 }
-            });
-        });
+        // Paper - rewrite player chunk loader
 
         return true;
     }
@@ -414,20 +417,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
     @Override
     public Collection<Plugin> getPluginChunkTickets(int x, int z) {
         DistanceManager chunkDistanceManager = this.world.getChunkSource().chunkMap.distanceManager;
-        SortedArraySet<Ticket<?>> tickets = chunkDistanceManager.tickets.get(ChunkPos.asLong(x, z));
-
-        if (tickets == null) {
-            return Collections.emptyList();
-        }
-
-        ImmutableList.Builder<Plugin> ret = ImmutableList.builder();
-        for (Ticket<?> ticket : tickets) {
-            if (ticket.getType() == TicketType.PLUGIN_TICKET) {
-                ret.add((Plugin) ticket.key);
-            }
-        }
-
-        return ret.build();
+        return chunkDistanceManager.getChunkHolderManager().getPluginChunkTickets(x, z); // Paper - rewrite chunk system
     }
 
     @Override
@@ -435,7 +425,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         Map<Plugin, ImmutableList.Builder<Chunk>> ret = new HashMap<>();
         DistanceManager chunkDistanceManager = this.world.getChunkSource().chunkMap.distanceManager;
 
-        for (Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> chunkTickets : chunkDistanceManager.tickets.long2ObjectEntrySet()) {
+        for (Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> chunkTickets : chunkDistanceManager.getChunkHolderManager().getTicketsCopy().long2ObjectEntrySet()) { // Paper - rewrite chunk system
             long chunkKey = chunkTickets.getLongKey();
             SortedArraySet<Ticket<?>> tickets = chunkTickets.getValue();
 
@@ -1931,14 +1921,53 @@ public class CraftWorld extends CraftRegionAccessor implements World {
     // Spigot start
     @Override
     public int getViewDistance() {
-        return world.spigotConfig.viewDistance;
+        return getHandle().getChunkSource().chunkMap.playerChunkManager.getTargetNoTickViewDistance(); // Paper - replace old player chunk management
     }
 
     @Override
     public int getSimulationDistance() {
-        return world.spigotConfig.simulationDistance;
+        return getHandle().getChunkSource().chunkMap.playerChunkManager.getTargetTickViewDistance(); // Paper - replace old player chunk management
     }
     // Spigot end
+    // Paper start - view distance api
+    @Override
+    public void setViewDistance(int viewDistance) {
+        if (viewDistance < 2 || viewDistance > 32) {
+            throw new IllegalArgumentException("View distance " + viewDistance + " is out of range of [2, 32]");
+        }
+        net.minecraft.server.level.ChunkMap chunkMap = getHandle().getChunkSource().chunkMap;
+        chunkMap.setViewDistance(viewDistance);
+    }
+
+    @Override
+    public void setSimulationDistance(int simulationDistance) {
+        if (simulationDistance < 2 || simulationDistance > 32) {
+            throw new IllegalArgumentException("Simulation distance " + simulationDistance + " is out of range of [2, 32]");
+        }
+        net.minecraft.server.level.ChunkMap chunkMap = getHandle().getChunkSource().chunkMap;
+        chunkMap.setTickViewDistance(simulationDistance);
+    }
+
+    @Override
+    public int getNoTickViewDistance() {
+        return this.getViewDistance();
+    }
+
+    @Override
+    public void setNoTickViewDistance(int viewDistance) {
+        this.setViewDistance(viewDistance);
+    }
+
+    @Override
+    public int getSendViewDistance() {
+        return getHandle().getChunkSource().chunkMap.playerChunkManager.getTargetSendDistance();
+    }
+
+    @Override
+    public void setSendViewDistance(int viewDistance) {
+        getHandle().getChunkSource().chunkMap.playerChunkManager.setSendDistance(viewDistance);
+    }
+    // Paper end - view distance api
 
     // Spigot start
     private final org.bukkit.World.Spigot spigot = new org.bukkit.World.Spigot()

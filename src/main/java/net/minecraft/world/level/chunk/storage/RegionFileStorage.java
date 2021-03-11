@@ -24,16 +24,37 @@ public class RegionFileStorage implements AutoCloseable {
     private final Path folder;
     private final boolean sync;
 
-    RegionFileStorage(Path directory, boolean dsync) {
+    protected RegionFileStorage(Path directory, boolean dsync) { // Paper - protected constructor
         this.folder = directory;
         this.sync = dsync;
     }
 
-    private RegionFile getRegionFile(ChunkPos chunkcoordintpair, boolean existingOnly) throws IOException { // CraftBukkit
+    // Paper start
+    public synchronized RegionFile getRegionFileIfLoaded(ChunkPos chunkcoordintpair) {
+        return this.regionCache.getAndMoveToFirst(ChunkPos.asLong(chunkcoordintpair.getRegionX(), chunkcoordintpair.getRegionZ()));
+    }
+
+    public synchronized boolean chunkExists(ChunkPos pos) throws IOException {
+        RegionFile regionfile = getRegionFile(pos, true);
+
+        return regionfile != null ? regionfile.hasChunk(pos) : false;
+    }
+
+    public synchronized RegionFile getRegionFile(ChunkPos chunkcoordintpair, boolean existingOnly) throws IOException { // CraftBukkit
+        return this.getRegionFile(chunkcoordintpair, existingOnly, false);
+    }
+    public synchronized RegionFile getRegionFile(ChunkPos chunkcoordintpair, boolean existingOnly, boolean lock) throws IOException {
+        // Paper end
         long i = ChunkPos.asLong(chunkcoordintpair.getRegionX(), chunkcoordintpair.getRegionZ());
         RegionFile regionfile = (RegionFile) this.regionCache.getAndMoveToFirst(i);
 
         if (regionfile != null) {
+            // Paper start
+            if (lock) {
+                // must be in this synchronized block
+                regionfile.fileLock.lock();
+            }
+            // Paper end
             return regionfile;
         } else {
             if (this.regionCache.size() >= 256) {
@@ -48,6 +69,12 @@ public class RegionFileStorage implements AutoCloseable {
             RegionFile regionfile1 = new RegionFile(path1, this.folder, this.sync);
 
             this.regionCache.putAndMoveToFirst(i, regionfile1);
+            // Paper start
+            if (lock) {
+                // must be in this synchronized block
+                regionfile1.fileLock.lock();
+            }
+            // Paper end
             return regionfile1;
         }
     }
@@ -55,11 +82,12 @@ public class RegionFileStorage implements AutoCloseable {
     @Nullable
     public CompoundTag read(ChunkPos pos) throws IOException {
         // CraftBukkit start - SPIGOT-5680: There's no good reason to preemptively create files on read, save that for writing
-        RegionFile regionfile = this.getRegionFile(pos, true);
+        RegionFile regionfile = this.getRegionFile(pos, true, true); // Paper
         if (regionfile == null) {
             return null;
         }
         // CraftBukkit end
+        try { // Paper
         DataInputStream datainputstream = regionfile.getChunkDataInputStream(pos);
 
         CompoundTag nbttagcompound;
@@ -96,6 +124,9 @@ public class RegionFileStorage implements AutoCloseable {
         }
 
         return nbttagcompound;
+        } finally { // Paper start
+            regionfile.fileLock.unlock();
+        } // Paper end
     }
 
     public void scanChunk(ChunkPos chunkPos, StreamTagVisitor scanner) throws IOException {
@@ -130,7 +161,12 @@ public class RegionFileStorage implements AutoCloseable {
     }
 
     protected void write(ChunkPos pos, @Nullable CompoundTag nbt) throws IOException {
-        RegionFile regionfile = this.getRegionFile(pos, false); // CraftBukkit
+        RegionFile regionfile = this.getRegionFile(pos, nbt == null, true); // CraftBukkit // Paper // Paper start - rewrite chunk system
+        if (nbt == null && regionfile == null) {
+            return;
+        }
+        // Paper end - rewrite chunk system
+        try { // Paper
 
         if (nbt == null) {
             regionfile.clear(pos);
@@ -156,9 +192,12 @@ public class RegionFileStorage implements AutoCloseable {
             }
         }
 
+        } finally { // Paper start
+            regionfile.fileLock.unlock();
+        } // Paper end
     }
 
-    public void close() throws IOException {
+    public synchronized void close() throws IOException { // Paper -> synchronized
         ExceptionCollector<IOException> exceptionsuppressor = new ExceptionCollector<>();
         ObjectIterator objectiterator = this.regionCache.values().iterator();
 
@@ -175,7 +214,7 @@ public class RegionFileStorage implements AutoCloseable {
         exceptionsuppressor.throwIfPresent();
     }
 
-    public void flush() throws IOException {
+    public synchronized void flush() throws IOException { // Paper - synchronize
         ObjectIterator objectiterator = this.regionCache.values().iterator();
 
         while (objectiterator.hasNext()) {

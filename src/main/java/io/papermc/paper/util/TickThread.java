@@ -6,7 +6,7 @@ import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class TickThread extends Thread {
+public class TickThread extends Thread {
 
     public static final boolean STRICT_THREAD_CHECKS = Boolean.getBoolean("paper.strict-thread-checks");
 
@@ -16,6 +16,10 @@ public final class TickThread extends Thread {
         }
     }
 
+    /**
+     * @deprecated
+     */
+    @Deprecated
     public static void softEnsureTickThread(final String reason) {
         if (!STRICT_THREAD_CHECKS) {
             return;
@@ -23,6 +27,10 @@ public final class TickThread extends Thread {
         ensureTickThread(reason);
     }
 
+    /**
+     * @deprecated
+     */
+    @Deprecated
     public static void ensureTickThread(final String reason) {
         if (!isTickThread()) {
             MinecraftServer.LOGGER.error("Thread " + Thread.currentThread().getName() + " failed main thread check: " + reason, new Throwable());
@@ -66,14 +74,14 @@ public final class TickThread extends Thread {
     }
 
     public static boolean isTickThread() {
-        return Bukkit.isPrimaryThread();
+        return Thread.currentThread() instanceof TickThread;
     }
 
     public static boolean isTickThreadFor(final ServerLevel world, final int chunkX, final int chunkZ) {
-        return Bukkit.isPrimaryThread();
+        return Thread.currentThread() instanceof TickThread;
     }
 
     public static boolean isTickThreadFor(final Entity entity) {
-        return Bukkit.isPrimaryThread();
+        return Thread.currentThread() instanceof TickThread;
     }
 }

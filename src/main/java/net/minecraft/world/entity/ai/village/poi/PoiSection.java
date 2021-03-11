@@ -29,6 +29,7 @@ public class PoiSection {
     private final Map<Holder<PoiType>, Set<PoiRecord>> byType = Maps.newHashMap();
     private final Runnable setDirty;
     private boolean isValid;
+    public final Optional<PoiSection> noAllocateOptional = Optional.of(this); // Paper - rewrite chunk system
 
     public static Codec<PoiSection> codec(Runnable updateListener) {
         return RecordCodecBuilder.<PoiSection>create((instance) -> {
@@ -45,6 +46,12 @@ public class PoiSection {
     public PoiSection(Runnable updateListener) {
         this(updateListener, true, ImmutableList.of());
     }
+
+    // Paper start - isEmpty
+    public boolean isEmpty() {
+        return this.isValid && this.records.isEmpty() && this.byType.isEmpty();
+    }
+    // Paper end
 
     private PoiSection(Runnable updateListener, boolean valid, List<PoiRecord> pois) {
         this.setDirty = updateListener;

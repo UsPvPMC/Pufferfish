@@ -176,6 +176,43 @@ public class LevelChunk extends ChunkAccess {
 
     protected void onNeighbourChange(final long bitsetBefore, final long bitsetAfter) {
 
+        // Paper start - no-tick view distance
+        ServerChunkCache chunkProviderServer = ((ServerLevel)this.level).getChunkSource();
+        net.minecraft.server.level.ChunkMap chunkMap = chunkProviderServer.chunkMap;
+        // this code handles the addition of ticking tickets - the distance map handles the removal
+        if (!areNeighboursLoaded(bitsetBefore, 2) && areNeighboursLoaded(bitsetAfter, 2)) {
+            if (chunkMap.playerChunkManager.tickMap.getObjectsInRange(this.coordinateKey) != null) { // Paper - replace old player chunk loading system
+                // now we're ready for entity ticking
+                chunkProviderServer.mainThreadProcessor.execute(() -> {
+                    // double check that this condition still holds.
+                    if (LevelChunk.this.areNeighboursLoaded(2) && chunkMap.playerChunkManager.tickMap.getObjectsInRange(LevelChunk.this.coordinateKey) != null) { // Paper - replace old player chunk loading system
+                        chunkMap.playerChunkManager.onChunkPlayerTickReady(this.chunkPos.x, this.chunkPos.z); // Paper - replace old player chunk
+                        chunkProviderServer.addTicketAtLevel(net.minecraft.server.level.TicketType.PLAYER, LevelChunk.this.chunkPos, 31, LevelChunk.this.chunkPos); // 31 -> entity ticking, TODO check on update
+                    }
+                });
+            }
+        }
+
+        // this code handles the chunk sending
+        if (!areNeighboursLoaded(bitsetBefore, 1) && areNeighboursLoaded(bitsetAfter, 1)) {
+            // Paper start - replace old player chunk loading system
+            if (chunkMap.playerChunkManager.isChunkNearPlayers(this.chunkPos.x, this.chunkPos.z)) {
+                // the post processing is expensive, so we don't want to run it unless we're actually near
+                // a player.
+                chunkProviderServer.mainThreadProcessor.execute(() -> {
+                    if (!LevelChunk.this.areNeighboursLoaded(1)) {
+                        return;
+                    }
+                    LevelChunk.this.postProcessGeneration();
+                    if (!LevelChunk.this.areNeighboursLoaded(1)) {
+                        return;
+                    }
+                    chunkMap.playerChunkManager.onChunkSendReady(this.chunkPos.x, this.chunkPos.z);
+                });
+            }
+            // Paper end - replace old player chunk loading system
+        }
+        // Paper end - no-tick view distance
     }
 
     public final boolean isAnyNeighborsLoaded() {
@@ -653,9 +690,26 @@ public class LevelChunk extends ChunkAccess {
 
     }
 
-    // CraftBukkit start
-    public void loadCallback() {
-        // Paper start - neighbour cache
+    // Paper start - new load callbacks
+    private io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder;
+    public io.papermc.paper.chunk.system.scheduling.NewChunkHolder getChunkHolder() {
+        return this.chunkHolder;
+    }
+
+    public void setChunkHolder(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
+        if (chunkHolder == null) {
+            throw new NullPointerException("Chunkholder cannot be null");
+        }
+        if (this.chunkHolder != null) {
+            throw new IllegalStateException("Already have chunkholder: " + this.chunkHolder + ", cannot replace with " + chunkHolder);
+        }
+        this.chunkHolder = chunkHolder;
+        this.playerChunk = chunkHolder.vanillaChunkHolder;
+    }
+
+    /* Note: We skip the light neighbour chunk loading done for the vanilla full chunk */
+    /* Starlight does not need these chunks for lighting purposes because of edge checks */
+    public void pushChunkIntoLoadedMap() {
         int chunkX = this.chunkPos.x;
         int chunkZ = this.chunkPos.z;
         ServerChunkCache chunkProvider = this.level.getChunkSource();
@@ -670,10 +724,56 @@ public class LevelChunk extends ChunkAccess {
             }
         }
         this.setNeighbourLoaded(0, 0, this);
+        this.level.getChunkSource().addLoadedChunk(this);
+    }
+
+    public void onChunkLoad(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
+        // figure out how this should interface with:
+        // the entity chunk load event // -> moved to the FULL status
+        // the chunk load event // -> stays here
+        // any entity add to world events // -> in FULL status
+        this.loadCallback();
+        io.papermc.paper.chunk.system.ChunkSystem.onChunkBorder(this, chunkHolder.vanillaChunkHolder);
+    }
+
+    public void onChunkUnload(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
+        // figure out how this should interface with:
+        // the entity chunk load event // -> moved to chunk unload to disk (not written yet)
+        // the chunk load event // -> stays here
+        // any entity add to world events // -> goes into the unload logic, it will completely explode
+        // etc later
+        this.unloadCallback();
+        io.papermc.paper.chunk.system.ChunkSystem.onChunkNotBorder(this, chunkHolder.vanillaChunkHolder);
+    }
+
+    public void onChunkTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
+        this.postProcessGeneration();
+        this.level.startTickingChunk(this);
+        io.papermc.paper.chunk.system.ChunkSystem.onChunkTicking(this, chunkHolder.vanillaChunkHolder);
+    }
+
+    public void onChunkNotTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
+        io.papermc.paper.chunk.system.ChunkSystem.onChunkNotTicking(this, chunkHolder.vanillaChunkHolder);
+    }
+
+    public void onChunkEntityTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
+        io.papermc.paper.chunk.system.ChunkSystem.onChunkEntityTicking(this, chunkHolder.vanillaChunkHolder);
+    }
+
+    public void onChunkNotEntityTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
+        io.papermc.paper.chunk.system.ChunkSystem.onChunkNotEntityTicking(this, chunkHolder.vanillaChunkHolder);
+    }
+    // Paper end - new load callbacks
+
+    // CraftBukkit start
+    public void loadCallback() {
+        if (this.loadedTicketLevel) { LOGGER.error("Double calling chunk load!", new Throwable()); } // Paper
+        // Paper - rewrite chunk system - move into separate callback
         this.loadedTicketLevel = true;
-        // Paper end - neighbour cache
+        // Paper - rewrite chunk system - move into separate callback
         org.bukkit.Server server = this.level.getCraftServer();
-        this.level.getChunkSource().addLoadedChunk(this); // Paper
+        // Paper - rewrite chunk system - move into separate callback
+        ((ServerLevel)this.level).getChunkSource().chunkMap.playerChunkManager.onChunkLoad(this.chunkPos.x, this.chunkPos.z); // Paper - rewrite player chunk management
         if (server != null) {
             /*
              * If it's a new world, the first few chunks are generated inside
@@ -682,6 +782,7 @@ public class LevelChunk extends ChunkAccess {
              */
             org.bukkit.Chunk bukkitChunk = new org.bukkit.craftbukkit.CraftChunk(this);
             server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(bukkitChunk, this.needsDecoration));
+            this.chunkHolder.getEntityChunk().callEntitiesLoadEvent(); // Paper - rewrite chunk system
 
             if (this.needsDecoration) {
                 try (co.aikar.timings.Timing ignored = this.level.timings.chunkLoadPopulate.startTiming()) { // Paper
@@ -710,9 +811,11 @@ public class LevelChunk extends ChunkAccess {
     }
 
     public void unloadCallback() {
+        if (!this.loadedTicketLevel) { LOGGER.error("Double calling chunk unload!", new Throwable()); } // Paper
         org.bukkit.Server server = this.level.getCraftServer();
+        this.chunkHolder.getEntityChunk().callEntitiesUnloadEvent(); // Paper - rewrite chunk system
         org.bukkit.Chunk bukkitChunk = new org.bukkit.craftbukkit.CraftChunk(this);
-        org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(bukkitChunk, this.isUnsaved());
+        org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(bukkitChunk, true); // Paper - rewrite chunk system - force save to true so that mustNotSave is correctly set below
         server.getPluginManager().callEvent(unloadEvent);
         // note: saving can be prevented, but not forced if no saving is actually required
         this.mustNotSave = !unloadEvent.isSaveChunk();
@@ -734,9 +837,26 @@ public class LevelChunk extends ChunkAccess {
         // Paper end
     }
 
+    // Paper start - add dirty system to tick lists
+    @Override
+    public void setUnsaved(boolean needsSaving) {
+        if (!needsSaving) {
+            this.blockTicks.clearDirty();
+            this.fluidTicks.clearDirty();
+        }
+        super.setUnsaved(needsSaving);
+    }
+    // Paper end - add dirty system to tick lists
+
     @Override
     public boolean isUnsaved() {
-        return super.isUnsaved() && !this.mustNotSave;
+        // Paper start - add dirty system to tick lists
+        long gameTime = this.level.getLevelData().getGameTime();
+        if (this.blockTicks.isDirty(gameTime) || this.fluidTicks.isDirty(gameTime)) {
+            return true;
+        }
+        // Paper end - add dirty system to tick lists
+        return super.isUnsaved(); // Paper - rewrite chunk system - do NOT clobber the dirty flag
     }
     // CraftBukkit end
 
@@ -811,7 +931,10 @@ public class LevelChunk extends ChunkAccess {
         });
     }
 
+    public boolean isPostProcessingDone; // Paper - replace chunk loader system
+
     public void postProcessGeneration() {
+        try { // Paper - replace chunk loader system
         ChunkPos chunkcoordintpair = this.getPos();
 
         for (int i = 0; i < this.postProcessing.length; ++i) {
@@ -849,6 +972,11 @@ public class LevelChunk extends ChunkAccess {
 
         this.pendingBlockEntities.clear();
         this.upgradeData.upgrade(this);
+        } finally { // Paper start - replace chunk loader system
+            this.isPostProcessingDone = true;
+            this.level.getChunkSource().chunkMap.playerChunkManager.onChunkPostProcessing(this.chunkPos.x, this.chunkPos.z);
+        }
+        // Paper end - replace chunk loader system
     }
 
     @Nullable
@@ -898,7 +1026,7 @@ public class LevelChunk extends ChunkAccess {
     }
 
     public ChunkHolder.FullChunkStatus getFullStatus() {
-        return this.fullStatus == null ? ChunkHolder.FullChunkStatus.BORDER : (ChunkHolder.FullChunkStatus) this.fullStatus.get();
+        return this.chunkHolder == null ? ChunkHolder.FullChunkStatus.INACCESSIBLE : this.chunkHolder.getChunkStatus(); // Paper - rewrite chunk system
     }
 
     public void setFullStatus(Supplier<ChunkHolder.FullChunkStatus> levelTypeProvider) {

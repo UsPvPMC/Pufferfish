@@ -302,7 +302,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     public static <S extends MinecraftServer> S spin(Function<Thread, S> serverFactory) {
         AtomicReference<S> atomicreference = new AtomicReference();
-        Thread thread = new Thread(() -> {
+        Thread thread = new io.papermc.paper.util.TickThread(() -> { // Paper - rewrite chunk system
             ((MinecraftServer) atomicreference.get()).runServer();
         }, "Server thread");
 
@@ -585,7 +585,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         this.forceDifficulty();
         for (ServerLevel worldserver : this.getAllLevels()) {
             this.prepareLevels(worldserver.getChunkSource().chunkMap.progressListener, worldserver);
-            worldserver.entityManager.tick(); // SPIGOT-6526: Load pending entities so they are available to the API
+            //worldserver.entityManager.tick(); // SPIGOT-6526: Load pending entities so they are available to the API // Paper - rewrite chunk system, not required to "tick" anything
             this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldLoadEvent(worldserver.getWorld()));
         }
 
@@ -787,6 +787,12 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     public abstract boolean shouldRconBroadcast();
 
     public boolean saveAllChunks(boolean suppressLogs, boolean flush, boolean force) {
+        // Paper start - rewrite chunk system - add close param
+        // This allows us to avoid double saving chunks by closing instead of saving then closing
+        return this.saveAllChunks(suppressLogs, flush, force, false);
+    }
+    public boolean saveAllChunks(boolean suppressLogs, boolean flush, boolean force, boolean close) {
+        // Paper end - rewrite chunk system - add close param
         boolean flag3 = false;
 
         for (Iterator iterator = this.getAllLevels().iterator(); iterator.hasNext(); flag3 = true) {
@@ -795,8 +801,12 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             if (!suppressLogs) {
                 MinecraftServer.LOGGER.info("Saving chunks for level '{}'/{}", worldserver, worldserver.dimension().location());
             }
-
-            worldserver.save((ProgressListener) null, flush, worldserver.noSave && !force);
+            // Paper start - rewrite chunk system
+            worldserver.save((ProgressListener) null, flush, worldserver.noSave && !force, close);
+            if (flush) {
+                MinecraftServer.LOGGER.info("ThreadedAnvilChunkStorage ({}): All chunks are saved", worldserver.getChunkSource().chunkMap.getStorageName());
+            }
+            // Paper end - rewrite chunk system
         }
 
         // CraftBukkit start - moved to WorldServer.save
@@ -815,7 +825,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             while (iterator1.hasNext()) {
                 ServerLevel worldserver2 = (ServerLevel) iterator1.next();
 
-                MinecraftServer.LOGGER.info("ThreadedAnvilChunkStorage ({}): All chunks are saved", worldserver2.getChunkSource().chunkMap.getStorageName());
+                //MinecraftServer.LOGGER.info("ThreadedAnvilChunkStorage ({}): All chunks are saved", worldserver2.getChunkSource().chunkMap.getStorageName()); // Paper - move up
             }
 
             MinecraftServer.LOGGER.info("ThreadedAnvilChunkStorage: All dimensions are saved");
@@ -895,36 +905,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             }
         }
 
-        while (this.levels.values().stream().anyMatch((worldserver1) -> {
-            return worldserver1.getChunkSource().chunkMap.hasWork();
-        })) {
-            this.nextTickTime = Util.getMillis() + 1L;
-            iterator = this.getAllLevels().iterator();
-
-            while (iterator.hasNext()) {
-                worldserver = (ServerLevel) iterator.next();
-                worldserver.getChunkSource().removeTicketsOnClosing();
-                worldserver.getChunkSource().tick(() -> {
-                    return true;
-                }, false);
-            }
-
-            this.waitUntilNextTick();
-        }
-
-        this.saveAllChunks(false, true, false);
-        iterator = this.getAllLevels().iterator();
-
-        while (iterator.hasNext()) {
-            worldserver = (ServerLevel) iterator.next();
-            if (worldserver != null) {
-                try {
-                    worldserver.close();
-                } catch (IOException ioexception) {
-                    MinecraftServer.LOGGER.error("Exception closing the level", ioexception);
-                }
-            }
-        }
+        this.saveAllChunks(false, true, false, true); // Paper - rewrite chunk system - move closing into here
 
         this.isSaving = false;
         this.resources.close();
@@ -943,7 +924,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             this.getProfileCache().save();
         }
         // Spigot end
-
+        io.papermc.paper.chunk.system.io.RegionFileIOThread.close(true); // Paper // Paper - rewrite chunk system
     }
 
     public String getLocalIp() {
@@ -977,6 +958,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     }
     // Spigot End
 
+    public static volatile RuntimeException chunkSystemCrash; // Paper - rewrite chunk system
+
     protected void runServer() {
         try {
             if (!this.initServer()) {
@@ -991,6 +974,12 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             Arrays.fill( recentTps, 20 );
             long curTime, tickSection = Util.getMillis(), tickCount = 1;
             while (this.running) {
+                // Paper start - rewrite chunk system
+                // guarantee that nothing can stop the server from halting if it can at least still tick
+                if (this.chunkSystemCrash != null) {
+                    throw this.chunkSystemCrash;
+                }
+                // Paper end - rewrite chunk system
                 long i = (curTime = Util.getMillis()) - this.nextTickTime;
 
                 if (i > 5000L && this.nextTickTime - this.lastOverloadWarning >= 30000L) { // CraftBukkit
@@ -1103,6 +1092,11 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     }
 
     private boolean haveTime() {
+        // Paper start
+        if (this.forceTicks) {
+            return true;
+        }
+        // Paper end
         // CraftBukkit start
         if (isOversleep) return canOversleep();// Paper - because of our changes, this logic is broken
         return this.forceTicks || this.runningTask() || Util.getMillis() < (this.mayHaveDelayedTasks ? this.delayedTasksMaxNextTickTime : this.nextTickTime);
@@ -2258,7 +2252,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
     // CraftBukkit start
     @Override
     public boolean isSameThread() {
-        return super.isSameThread() || this.isStopped(); // CraftBukkit - MC-142590
+        return io.papermc.paper.util.TickThread.isTickThread(); // Paper - rewrite chunk system
     }
 
     public boolean isDebugging() {

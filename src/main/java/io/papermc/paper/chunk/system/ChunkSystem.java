@@ -31,191 +31,41 @@ public final class ChunkSystem {
     }
 
     public static void scheduleChunkTask(final ServerLevel level, final int chunkX, final int chunkZ, final Runnable run, final PrioritisedExecutor.Priority priority) {
-        level.chunkSource.mainThreadProcessor.execute(run);
+        level.chunkTaskScheduler.scheduleChunkTask(chunkX, chunkZ, run, priority); // Paper - rewrite chunk system
     }
 
     public static void scheduleChunkLoad(final ServerLevel level, final int chunkX, final int chunkZ, final boolean gen,
                                          final ChunkStatus toStatus, final boolean addTicket, final PrioritisedExecutor.Priority priority,
                                          final Consumer<ChunkAccess> onComplete) {
-        if (gen) {
-            scheduleChunkLoad(level, chunkX, chunkZ, toStatus, addTicket, priority, onComplete);
-            return;
-        }
-        scheduleChunkLoad(level, chunkX, chunkZ, ChunkStatus.EMPTY, addTicket, priority, (final ChunkAccess chunk) -> {
-            if (chunk == null) {
-                onComplete.accept(null);
-            } else {
-                if (chunk.getStatus().isOrAfter(toStatus)) {
-                    scheduleChunkLoad(level, chunkX, chunkZ, toStatus, addTicket, priority, onComplete);
-                } else {
-                    onComplete.accept(null);
-                }
-            }
-        });
+        level.chunkTaskScheduler.scheduleChunkLoad(chunkX, chunkZ, gen, toStatus, addTicket, priority, onComplete); // Paper - rewrite chunk system
     }
 
-    static final TicketType<Long> CHUNK_LOAD = TicketType.create("chunk_load", Long::compareTo);
-
-    private static long chunkLoadCounter = 0L;
+    // Paper - rewrite chunk system
     public static void scheduleChunkLoad(final ServerLevel level, final int chunkX, final int chunkZ, final ChunkStatus toStatus,
                                          final boolean addTicket, final PrioritisedExecutor.Priority priority, final Consumer<ChunkAccess> onComplete) {
-        if (!Bukkit.isPrimaryThread()) {
-            scheduleChunkTask(level, chunkX, chunkZ, () -> {
-                scheduleChunkLoad(level, chunkX, chunkZ, toStatus, addTicket, priority, onComplete);
-            }, priority);
-            return;
-        }
-
-        final int minLevel = 33 + ChunkStatus.getDistance(toStatus);
-        final Long chunkReference = addTicket ? Long.valueOf(++chunkLoadCounter) : null;
-        final ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
-
-        if (addTicket) {
-            level.chunkSource.addTicketAtLevel(CHUNK_LOAD, chunkPos, minLevel, chunkReference);
-        }
-        level.chunkSource.runDistanceManagerUpdates();
-
-        final Consumer<ChunkAccess> loadCallback = (final ChunkAccess chunk) -> {
-            try {
-                if (onComplete != null) {
-                    onComplete.accept(chunk);
-                }
-            } catch (final ThreadDeath death) {
-                throw death;
-            } catch (final Throwable thr) {
-                LOGGER.error("Exception handling chunk load callback", thr);
-                SneakyThrow.sneaky(thr);
-            } finally {
-                if (addTicket) {
-                    level.chunkSource.addTicketAtLevel(TicketType.UNKNOWN, chunkPos, minLevel, chunkPos);
-                    level.chunkSource.removeTicketAtLevel(CHUNK_LOAD, chunkPos, minLevel, chunkReference);
-                }
-            }
-        };
-
-        final ChunkHolder holder = level.chunkSource.chunkMap.getUpdatingChunkIfPresent(CoordinateUtils.getChunkKey(chunkX, chunkZ));
-
-        if (holder == null || holder.getTicketLevel() > minLevel) {
-            loadCallback.accept(null);
-            return;
-        }
-
-        final CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> loadFuture = holder.getOrScheduleFuture(toStatus, level.chunkSource.chunkMap);
-
-        if (loadFuture.isDone()) {
-            loadCallback.accept(loadFuture.join().left().orElse(null));
-            return;
-        }
-
-        loadFuture.whenCompleteAsync((final Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure> either, final Throwable thr) -> {
-            if (thr != null) {
-                loadCallback.accept(null);
-                return;
-            }
-            loadCallback.accept(either.left().orElse(null));
-        }, (final Runnable r) -> {
-            scheduleChunkTask(level, chunkX, chunkZ, r, PrioritisedExecutor.Priority.HIGHEST);
-        });
+        level.chunkTaskScheduler.scheduleChunkLoad(chunkX, chunkZ, toStatus, addTicket, priority, onComplete); // Paper - rewrite chunk system
     }
 
     public static void scheduleTickingState(final ServerLevel level, final int chunkX, final int chunkZ,
                                             final ChunkHolder.FullChunkStatus toStatus, final boolean addTicket,
                                             final PrioritisedExecutor.Priority priority, final Consumer<LevelChunk> onComplete) {
-        if (toStatus == ChunkHolder.FullChunkStatus.INACCESSIBLE) {
-            throw new IllegalArgumentException("Cannot wait for INACCESSIBLE status");
-        }
-
-        if (!Bukkit.isPrimaryThread()) {
-            scheduleChunkTask(level, chunkX, chunkZ, () -> {
-                scheduleTickingState(level, chunkX, chunkZ, toStatus, addTicket, priority, onComplete);
-            }, priority);
-            return;
-        }
-
-        final int minLevel = 33 - (toStatus.ordinal() - 1);
-        final int radius = toStatus.ordinal() - 1;
-        final Long chunkReference = addTicket ? Long.valueOf(++chunkLoadCounter) : null;
-        final ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
-
-        if (addTicket) {
-            level.chunkSource.addTicketAtLevel(CHUNK_LOAD, chunkPos, minLevel, chunkReference);
-        }
-        level.chunkSource.runDistanceManagerUpdates();
-
-        final Consumer<LevelChunk> loadCallback = (final LevelChunk chunk) -> {
-            try {
-                if (onComplete != null) {
-                    onComplete.accept(chunk);
-                }
-            } catch (final ThreadDeath death) {
-                throw death;
-            } catch (final Throwable thr) {
-                LOGGER.error("Exception handling chunk load callback", thr);
-                SneakyThrow.sneaky(thr);
-            } finally {
-                if (addTicket) {
-                    level.chunkSource.addTicketAtLevel(TicketType.UNKNOWN, chunkPos, minLevel, chunkPos);
-                    level.chunkSource.removeTicketAtLevel(CHUNK_LOAD, chunkPos, minLevel, chunkReference);
-                }
-            }
-        };
-
-        final ChunkHolder holder = level.chunkSource.chunkMap.getUpdatingChunkIfPresent(CoordinateUtils.getChunkKey(chunkX, chunkZ));
-
-        if (holder == null || holder.getTicketLevel() > minLevel) {
-            loadCallback.accept(null);
-            return;
-        }
-
-        final CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> tickingState;
-        switch (toStatus) {
-            case BORDER: {
-                tickingState = holder.getFullChunkFuture();
-                break;
-            }
-            case TICKING: {
-                tickingState = holder.getTickingChunkFuture();
-                break;
-            }
-            case ENTITY_TICKING: {
-                tickingState = holder.getEntityTickingChunkFuture();
-                break;
-            }
-            default: {
-                throw new IllegalStateException("Cannot reach here");
-            }
-        }
-
-        if (tickingState.isDone()) {
-            loadCallback.accept(tickingState.join().left().orElse(null));
-            return;
-        }
-
-        tickingState.whenCompleteAsync((final Either<LevelChunk, ChunkHolder.ChunkLoadingFailure> either, final Throwable thr) -> {
-            if (thr != null) {
-                loadCallback.accept(null);
-                return;
-            }
-            loadCallback.accept(either.left().orElse(null));
-        }, (final Runnable r) -> {
-            scheduleChunkTask(level, chunkX, chunkZ, r, PrioritisedExecutor.Priority.HIGHEST);
-        });
+        level.chunkTaskScheduler.scheduleTickingState(chunkX, chunkZ, toStatus, addTicket, priority, onComplete); // Paper - rewrite chunk system
     }
 
     public static List<ChunkHolder> getVisibleChunkHolders(final ServerLevel level) {
-        return new ArrayList<>(level.chunkSource.chunkMap.visibleChunkMap.values());
+        return level.chunkTaskScheduler.chunkHolderManager.getOldChunkHolders(); // Paper - rewrite chunk system
     }
 
     public static List<ChunkHolder> getUpdatingChunkHolders(final ServerLevel level) {
-        return new ArrayList<>(level.chunkSource.chunkMap.updatingChunkMap.values());
+        return level.chunkTaskScheduler.chunkHolderManager.getOldChunkHolders(); // Paper - rewrite chunk system
     }
 
     public static int getVisibleChunkHolderCount(final ServerLevel level) {
-        return level.chunkSource.chunkMap.visibleChunkMap.size();
+        return level.chunkTaskScheduler.chunkHolderManager.size(); // Paper - rewrite chunk system
     }
 
     public static int getUpdatingChunkHolderCount(final ServerLevel level) {
-        return level.chunkSource.chunkMap.updatingChunkMap.size();
+        return level.chunkTaskScheduler.chunkHolderManager.size(); // Paper - rewrite chunk system
     }
 
     public static boolean hasAnyChunkHolders(final ServerLevel level) {
@@ -269,23 +119,15 @@ public final class ChunkSystem {
     }
 
     public static int getSendViewDistance(final ServerPlayer player) {
-        return getLoadViewDistance(player);
+        return io.papermc.paper.chunk.PlayerChunkLoader.getSendViewDistance(player);
     }
 
     public static int getLoadViewDistance(final ServerPlayer player) {
-        final ServerLevel level = player.getLevel();
-        if (level == null) {
-            return Bukkit.getViewDistance() + 1;
-        }
-        return level.chunkSource.chunkMap.getEffectiveViewDistance() + 1;
+        return io.papermc.paper.chunk.PlayerChunkLoader.getLoadViewDistance(player);
     }
 
     public static int getTickViewDistance(final ServerPlayer player) {
-        final ServerLevel level = player.getLevel();
-        if (level == null) {
-            return Bukkit.getSimulationDistance();
-        }
-        return level.chunkSource.chunkMap.distanceManager.getSimulationDistance();
+        return io.papermc.paper.chunk.PlayerChunkLoader.getTickViewDistance(player);
     }
 
     private ChunkSystem() {

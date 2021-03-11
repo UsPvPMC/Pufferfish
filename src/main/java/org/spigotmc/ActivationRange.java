@@ -132,7 +132,13 @@ public class ActivationRange
             ActivationType.ANIMAL.boundingBox = player.getBoundingBox().inflate( animalActivationRange, 256, animalActivationRange );
             ActivationType.MONSTER.boundingBox = player.getBoundingBox().inflate( monsterActivationRange, 256, monsterActivationRange );
 
-            world.getEntities().get(maxBB, ActivationRange::activateEntity);
+            // Paper start
+            java.util.List<Entity> entities = world.getEntities((Entity)null, maxBB, null);
+            for (int i = 0; i < entities.size(); i++) {
+                Entity entity = entities.get(i);
+                ActivationRange.activateEntity(entity);
+            }
+            // Paper end
         }
         MinecraftTimings.entityActivationCheckTimer.stopTiming();
     }

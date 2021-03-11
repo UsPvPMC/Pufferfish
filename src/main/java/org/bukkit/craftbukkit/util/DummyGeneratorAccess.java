@@ -258,4 +258,20 @@ public class DummyGeneratorAccess implements WorldGenLevel {
     public boolean destroyBlock(BlockPos pos, boolean drop, Entity breakingEntity, int maxUpdateDepth) {
         return false; // SPIGOT-6515
     }
+
+    // Paper start
+    @Override
+    public List<Entity> getHardCollidingEntities(Entity except, AABB box, Predicate<? super Entity> predicate) {
+        return java.util.Collections.emptyList();
+    }
+
+    @Override
+    public void getEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into) {}
+
+    @Override
+    public void getHardCollidingEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into) {}
+
+    @Override
+    public <T> void getEntitiesByClass(Class<? extends T> clazz, Entity except, AABB box, List<? super T> into, Predicate<? super T> predicate) {}
+    // Paper end
 }

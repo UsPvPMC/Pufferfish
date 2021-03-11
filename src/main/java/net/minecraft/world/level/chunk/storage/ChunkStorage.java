@@ -28,26 +28,33 @@ import net.minecraft.world.level.storage.DimensionDataStorage;
 public class ChunkStorage implements AutoCloseable {
 
     public static final int LAST_MONOLYTH_STRUCTURE_DATA_VERSION = 1493;
-    private final IOWorker worker;
+    // Paper - nuke IO worker
     protected final DataFixer fixerUpper;
     @Nullable
     private volatile LegacyStructureDataHandler legacyStructureHandler;
+    // Paper start - async chunk loading
+    private final Object persistentDataLock = new Object(); // Paper
+    public final RegionFileStorage regionFileCache;
+    // Paper end - async chunk loading
 
     public ChunkStorage(Path directory, DataFixer dataFixer, boolean dsync) {
         this.fixerUpper = dataFixer;
-        this.worker = new IOWorker(directory, dsync, "chunk");
+        // Paper start - async chunk io
+        // remove IO worker
+        this.regionFileCache = new RegionFileStorage(directory, dsync); // Paper - nuke IOWorker
+        // Paper end - async chunk io
     }
 
     public boolean isOldChunkAround(ChunkPos chunkPos, int checkRadius) {
-        return this.worker.isOldChunkAround(chunkPos, checkRadius);
+        return true; // Paper - (for now, old unoptimised behavior) TODO implement later? the chunk status that blender uses SHOULD already have this radius loaded, no need to go back for it...
     }
 
     // CraftBukkit start
     private boolean check(ServerChunkCache cps, int x, int z) {
         ChunkPos pos = new ChunkPos(x, z);
         if (cps != null) {
-            com.google.common.base.Preconditions.checkState(org.bukkit.Bukkit.isPrimaryThread(), "primary thread");
-            if (cps.hasChunk(x, z)) {
+            //com.google.common.base.Preconditions.checkState(org.bukkit.Bukkit.isPrimaryThread(), "primary thread"); // Paper - this function is now MT-Safe
+            if (cps.getChunkAtIfCachedImmediately(x, z) != null) { // Paper - isLoaded is a ticket level check, not a chunk loaded check!
                 return true;
             }
         }
@@ -75,6 +82,7 @@ public class ChunkStorage implements AutoCloseable {
 
     public CompoundTag upgradeChunkTag(ResourceKey<LevelStem> resourcekey, Supplier<DimensionDataStorage> supplier, CompoundTag nbttagcompound, Optional<ResourceKey<Codec<? extends ChunkGenerator>>> optional, ChunkPos pos, @Nullable LevelAccessor generatoraccess) {
         // CraftBukkit end
+        nbttagcompound = nbttagcompound.copy(); // Paper - defensive copy, another thread might modify this
         int i = ChunkStorage.getVersion(nbttagcompound);
 
         // CraftBukkit start
@@ -92,9 +100,11 @@ public class ChunkStorage implements AutoCloseable {
         if (i < 1493) {
             ca.spottedleaf.dataconverter.minecraft.MCDataConverter.convertTag(ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry.CHUNK, nbttagcompound, i, 1493); // Paper - replace chunk converter
             if (nbttagcompound.getCompound("Level").getBoolean("hasLegacyStructureData")) {
+                synchronized (this.persistentDataLock) { // Paper - Async chunk loading
                 LegacyStructureDataHandler persistentstructurelegacy = this.getLegacyStructureHandler(resourcekey, supplier);
 
                 nbttagcompound = persistentstructurelegacy.updateFromLegacy(nbttagcompound);
+                } // Paper - Async chunk loading
             }
         }
 
@@ -127,7 +137,7 @@ public class ChunkStorage implements AutoCloseable {
         LegacyStructureDataHandler persistentstructurelegacy = this.legacyStructureHandler;
 
         if (persistentstructurelegacy == null) {
-            synchronized (this) {
+            synchronized (this.persistentDataLock) { // Paper - async chunk loading
                 persistentstructurelegacy = this.legacyStructureHandler;
                 if (persistentstructurelegacy == null) {
                     this.legacyStructureHandler = persistentstructurelegacy = LegacyStructureDataHandler.getLegacyStructureHandler(worldKey, (DimensionDataStorage) stateManagerGetter.get());
@@ -153,26 +163,49 @@ public class ChunkStorage implements AutoCloseable {
     }
 
     public CompletableFuture<Optional<CompoundTag>> read(ChunkPos chunkPos) {
-        return this.worker.loadAsync(chunkPos);
+        // Paper start - async chunk io
+        try {
+            return CompletableFuture.completedFuture(Optional.ofNullable(this.readSync(chunkPos)));
+        } catch (Throwable thr) {
+            return CompletableFuture.failedFuture(thr);
+        }
     }
+    @Nullable
+    public CompoundTag readSync(ChunkPos chunkPos) throws IOException {
+        return this.regionFileCache.read(chunkPos);
+    }
+    // Paper end - async chunk io
 
-    public void write(ChunkPos chunkPos, CompoundTag nbt) {
-        this.worker.store(chunkPos, nbt);
+    // Paper start - async chunk io
+    public void write(ChunkPos chunkPos, CompoundTag nbt) throws IOException {
+        this.regionFileCache.write(chunkPos, nbt);
+        // Paper end - Async chunk loading
         if (this.legacyStructureHandler != null) {
+            synchronized (this.persistentDataLock) { // Paper - Async chunk loading
             this.legacyStructureHandler.removeIndex(chunkPos.toLong());
+            } // Paper - Async chunk loading
         }
 
     }
 
     public void flushWorker() {
-        this.worker.synchronize(true).join();
+        io.papermc.paper.chunk.system.io.RegionFileIOThread.flush(); // Paper - rewrite chunk system
     }
 
     public void close() throws IOException {
-        this.worker.close();
+        this.regionFileCache.close(); // Paper - nuke IO worker
     }
 
     public ChunkScanAccess chunkScanner() {
-        return this.worker;
+        // Paper start - nuke IO worker
+        return ((chunkPos, streamTagVisitor) -> {
+            try {
+                this.regionFileCache.scanChunk(chunkPos, streamTagVisitor);
+                return java.util.concurrent.CompletableFuture.completedFuture(null);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        // Paper end
     }
 }

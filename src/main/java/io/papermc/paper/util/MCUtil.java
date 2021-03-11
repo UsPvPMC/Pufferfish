@@ -2,16 +2,29 @@ package io.papermc.paper.util;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.papermc.paper.math.Position;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.internal.Streams;
+import com.google.gson.stream.JsonWriter;
+import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import java.lang.ref.Cleaner;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.Ticket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
@@ -21,8 +34,11 @@ import org.spigotmc.AsyncCatcher;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -508,6 +524,100 @@ public final class MCUtil {
                 return BlockFace.EAST;
             default:
                 return null;
+        }
+    }
+
+    public static ChunkStatus getChunkStatus(ChunkHolder chunk) {
+        return chunk.getChunkHolderStatus();
+    }
+
+    public static void dumpChunks(File file, boolean watchdog) throws IOException {
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+        ReferenceArrayList<org.bukkit.World> worlds = new ReferenceArrayList<>(org.bukkit.Bukkit.getWorlds());
+        ReferenceArrayList<org.bukkit.World> loadedWorlds = new ReferenceArrayList<>(worlds);
+        JsonObject data = new JsonObject();
+
+        data.addProperty("server-version", org.bukkit.Bukkit.getVersion());
+        data.addProperty("data-version", 1);
+
+        {
+            JsonArray players = new JsonArray();
+            data.add("all-players", players);
+            List<ServerPlayer> playerList = MinecraftServer.getServer().getPlayerList().players;
+            for (ServerPlayer player : playerList) {
+                JsonObject playerData = new JsonObject();
+                players.add(playerData);
+
+                Level playerWorld = player.getLevel();
+                org.bukkit.World craftWorld = playerWorld.getWorld();
+                Entity.RemovalReason removalReason = player.getRemovalReason();
+
+                playerData.addProperty("name", player.getScoreboardName());
+                playerData.addProperty("x", player.getX());
+                playerData.addProperty("y", player.getY());
+                playerData.addProperty("z", player.getZ());
+                playerData.addProperty("world", playerWorld == null ? "null world" : craftWorld.getName());
+                playerData.addProperty("removalReason", removalReason == null ? "null" : removalReason.name());
+
+                if (!worlds.contains(craftWorld)) {
+                    worlds.add(craftWorld);
+                }
+            }
+        }
+
+        JsonArray chunkWaitInformation = new JsonArray();
+        data.add("chunk-wait-infos", chunkWaitInformation);
+
+        for (io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler.ChunkInfo chunkInfo : io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler.getChunkInfos()) {
+            chunkWaitInformation.add(chunkInfo.toString());
+        }
+
+        JsonArray worldsData = new JsonArray();
+
+        for (org.bukkit.World bukkitWorld : worlds) {
+            JsonObject worldData = new JsonObject();
+
+            ServerLevel world = ((org.bukkit.craftbukkit.CraftWorld)bukkitWorld).getHandle();
+            List<ServerPlayer> players = world.players();
+
+            worldData.addProperty("is-loaded", loadedWorlds.contains(bukkitWorld));
+            worldData.addProperty("name", world.getWorld().getName());
+            worldData.addProperty("view-distance", world.getChunkSource().chunkMap.playerChunkManager.getTargetNoTickViewDistance()); // Paper - replace chunk loader system
+            worldData.addProperty("tick-view-distance", world.getChunkSource().chunkMap.playerChunkManager.getTargetTickViewDistance()); // Paper - replace chunk loader system
+            worldData.addProperty("keep-spawn-loaded", world.keepSpawnInMemory);
+            worldData.addProperty("keep-spawn-loaded-range", world.paperConfig().spawn.keepSpawnLoadedRange * 16);
+
+            JsonArray playersData = new JsonArray();
+
+            for (ServerPlayer player : players) {
+                JsonObject playerData = new JsonObject();
+
+                playerData.addProperty("name", player.getScoreboardName());
+                playerData.addProperty("x", player.getX());
+                playerData.addProperty("y", player.getY());
+                playerData.addProperty("z", player.getZ());
+
+                playersData.add(playerData);
+            }
+
+            worldData.add("players", playersData);
+            worldData.add("chunk-data", watchdog ? world.chunkTaskScheduler.chunkHolderManager.getDebugJsonForWatchdog() : world.chunkTaskScheduler.chunkHolderManager.getDebugJson());
+            worldsData.add(worldData);
+        }
+
+        data.add("worlds", worldsData);
+
+        StringWriter stringWriter = new StringWriter();
+        JsonWriter jsonWriter = new JsonWriter(stringWriter);
+        jsonWriter.setIndent(" ");
+        jsonWriter.setLenient(false);
+        Streams.write(data, jsonWriter);
+
+        String fileData = stringWriter.toString();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(file), false, StandardCharsets.UTF_8)) {
+            out.print(fileData);
         }
     }
 

@@ -779,6 +779,13 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             this.disconnect(Component.translatable("disconnect.spam"));
             return;
         }
+        // Paper start
+        String str = packet.getCommand(); int index = -1;
+        if (str.length() > 64 && ((index = str.indexOf(' ')) == -1 || index >= 64)) {
+            server.scheduleOnMain(() -> this.disconnect(Component.translatable("disconnect.spam", new Object[0]))); // Paper
+            return;
+        }
+        // Paper end
         // CraftBukkit end
         StringReader stringreader = new StringReader(packet.getCommand());
 

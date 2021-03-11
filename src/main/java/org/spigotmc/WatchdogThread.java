@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import net.minecraft.server.MinecraftServer;
 import org.bukkit.Bukkit;
 
-public class WatchdogThread extends Thread
+public final class WatchdogThread extends io.papermc.paper.util.TickThread // Paper - rewrite chunk system
 {
 
     private static WatchdogThread instance;
@@ -83,6 +83,7 @@ public class WatchdogThread extends Thread
                 //
                 log.log( Level.SEVERE, "------------------------------" );
                 log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Spigot!):" );
+                io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler.dumpAllChunkLoadInfo(isLongTimeout); // Paper // Paper - rewrite chunk system
                 WatchdogThread.dumpThread( ManagementFactory.getThreadMXBean().getThreadInfo( MinecraftServer.getServer().serverThread.getId(), Integer.MAX_VALUE ), log );
                 log.log( Level.SEVERE, "------------------------------" );
                 //

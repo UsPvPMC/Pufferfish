@@ -504,4 +504,21 @@ public class WorldGenRegion implements WorldGenLevel {
     public long nextSubTickCount() {
         return this.subTickCount.getAndIncrement();
     }
+
+    // Paper start
+    // No-op, this class doesn't provide entity access
+    @Override
+    public List<Entity> getHardCollidingEntities(Entity except, AABB box, Predicate<? super Entity> predicate) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void getEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into) {}
+
+    @Override
+    public void getHardCollidingEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into) {}
+
+    @Override
+    public <T> void getEntitiesByClass(Class<? extends T> clazz, Entity except, AABB box, List<? super T> into, Predicate<? super T> predicate) {}
+    // Paper end
 }

@@ -59,6 +59,16 @@ public class WorldTimingsHandler {
 
     public final Timing miscMobSpawning;
 
+    public final Timing poiUnload;
+    public final Timing chunkUnload;
+    public final Timing poiSaveDataSerialization;
+    public final Timing chunkSave;
+    public final Timing chunkSaveDataSerialization;
+    public final Timing chunkSaveIOWait;
+    public final Timing chunkUnloadPrepareSave;
+    public final Timing chunkUnloadPOISerialization;
+    public final Timing chunkUnloadDataSave;
+
     public WorldTimingsHandler(Level server) {
         String name = ((PrimaryLevelData) server.getLevelData()).getLevelName() + " - ";
 
@@ -112,6 +122,16 @@ public class WorldTimingsHandler {
 
 
         miscMobSpawning = Timings.ofSafe(name + "Mob spawning - Misc");
+
+        poiUnload = Timings.ofSafe(name + "Chunk unload - POI");
+        chunkUnload = Timings.ofSafe(name + "Chunk unload - Chunk");
+        poiSaveDataSerialization = Timings.ofSafe(name + "Chunk save - POI Data serialization");
+        chunkSave = Timings.ofSafe(name + "Chunk save - Chunk");
+        chunkSaveDataSerialization = Timings.ofSafe(name + "Chunk save - Chunk Data serialization");
+        chunkSaveIOWait = Timings.ofSafe(name + "Chunk save - Chunk IO Wait");
+        chunkUnloadPrepareSave = Timings.ofSafe(name + "Chunk unload - Async Save Prepare");
+        chunkUnloadPOISerialization = Timings.ofSafe(name + "Chunk unload - POI Data Serialization");
+        chunkUnloadDataSave = Timings.ofSafe(name + "Chunk unload - Data Serialization");
     }
 
     public static Timing getTickList(ServerLevel worldserver, String timingsType) {

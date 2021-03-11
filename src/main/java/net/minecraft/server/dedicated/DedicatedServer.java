@@ -400,7 +400,34 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
         return this.getProperties().allowNether;
     }
 
+    static final java.util.concurrent.atomic.AtomicInteger ASYNC_DEBUG_CHUNKS_COUNT = new java.util.concurrent.atomic.AtomicInteger(); // Paper - rewrite chunk system
+
     public void handleConsoleInput(String command, CommandSourceStack commandSource) {
+        // Paper start - rewrite chunk system
+        if (command.equalsIgnoreCase("paper debug chunks --async")) {
+            LOGGER.info("Scheduling async debug chunks");
+            Runnable run = () -> {
+                LOGGER.info("Async debug chunks executing");
+                io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler.dumpAllChunkLoadInfo(false);
+                CommandSender sender = MinecraftServer.getServer().console;
+                java.io.File file = new java.io.File(new java.io.File(new java.io.File("."), "debug"),
+                    "chunks-" + java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss").format(java.time.LocalDateTime.now()) + ".txt");
+                sender.sendMessage(net.kyori.adventure.text.Component.text("Writing chunk information dump to " + file, net.kyori.adventure.text.format.NamedTextColor.GREEN));
+                try {
+                    io.papermc.paper.util.MCUtil.dumpChunks(file, true);
+                    sender.sendMessage(net.kyori.adventure.text.Component.text("Successfully written chunk information!", net.kyori.adventure.text.format.NamedTextColor.GREEN));
+                } catch (Throwable thr) {
+                    MinecraftServer.LOGGER.warn("Failed to dump chunk information to file " + file.toString(), thr);
+                    sender.sendMessage(net.kyori.adventure.text.Component.text("Failed to dump chunk information, see console", net.kyori.adventure.text.format.NamedTextColor.RED));
+                }
+            };
+            Thread t = new Thread(run);
+            t.setName("Async debug thread #" + ASYNC_DEBUG_CHUNKS_COUNT.getAndIncrement());
+            t.setDaemon(true);
+            t.start();
+            return;
+        }
+        // Paper end - rewrite chunk system
         this.consoleInput.add(new ConsoleInput(command, commandSource));
     }
 

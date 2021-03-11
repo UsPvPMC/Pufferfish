@@ -178,6 +178,81 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         this.firstPlayed = System.currentTimeMillis();
     }
 
+    // Paper start - implement view distances
+    @Override
+    public int getViewDistance() {
+        net.minecraft.server.level.ChunkMap chunkMap = this.getHandle().getLevel().getChunkSource().chunkMap;
+        io.papermc.paper.chunk.PlayerChunkLoader.PlayerLoaderData data = chunkMap.playerChunkManager.getData(this.getHandle());
+        if (data == null) {
+            return chunkMap.playerChunkManager.getTargetNoTickViewDistance();
+        }
+        return data.getTargetNoTickViewDistance();
+    }
+
+    @Override
+    public void setViewDistance(int viewDistance) {
+        net.minecraft.server.level.ChunkMap chunkMap = this.getHandle().getLevel().getChunkSource().chunkMap;
+        io.papermc.paper.chunk.PlayerChunkLoader.PlayerLoaderData data = chunkMap.playerChunkManager.getData(this.getHandle());
+        if (data == null) {
+            throw new IllegalStateException("Player is not attached to world");
+        }
+
+        data.setTargetNoTickViewDistance(viewDistance);
+    }
+
+    @Override
+    public int getSimulationDistance() {
+        net.minecraft.server.level.ChunkMap chunkMap = this.getHandle().getLevel().getChunkSource().chunkMap;
+        io.papermc.paper.chunk.PlayerChunkLoader.PlayerLoaderData data = chunkMap.playerChunkManager.getData(this.getHandle());
+        if (data == null) {
+            return chunkMap.playerChunkManager.getTargetTickViewDistance();
+        }
+        return data.getTargetTickViewDistance();
+    }
+
+    @Override
+    public void setSimulationDistance(int simulationDistance) {
+        net.minecraft.server.level.ChunkMap chunkMap = this.getHandle().getLevel().getChunkSource().chunkMap;
+        io.papermc.paper.chunk.PlayerChunkLoader.PlayerLoaderData data = chunkMap.playerChunkManager.getData(this.getHandle());
+        if (data == null) {
+            throw new IllegalStateException("Player is not attached to world");
+        }
+
+        data.setTargetTickViewDistance(simulationDistance);
+    }
+
+    @Override
+    public int getNoTickViewDistance() {
+        return this.getViewDistance();
+    }
+
+    @Override
+    public void setNoTickViewDistance(int viewDistance) {
+        this.setViewDistance(viewDistance);
+    }
+
+    @Override
+    public int getSendViewDistance() {
+        net.minecraft.server.level.ChunkMap chunkMap = this.getHandle().getLevel().getChunkSource().chunkMap;
+        io.papermc.paper.chunk.PlayerChunkLoader.PlayerLoaderData data = chunkMap.playerChunkManager.getData(this.getHandle());
+        if (data == null) {
+            return chunkMap.playerChunkManager.getTargetSendDistance();
+        }
+        return data.getTargetSendViewDistance();
+    }
+
+    @Override
+    public void setSendViewDistance(int viewDistance) {
+        net.minecraft.server.level.ChunkMap chunkMap = this.getHandle().getLevel().getChunkSource().chunkMap;
+        io.papermc.paper.chunk.PlayerChunkLoader.PlayerLoaderData data = chunkMap.playerChunkManager.getData(this.getHandle());
+        if (data == null) {
+            throw new IllegalStateException("Player is not attached to world");
+        }
+
+        data.setTargetSendViewDistance(viewDistance);
+    }
+    // Paper end - implement view distances
+
     public GameProfile getProfile() {
         return this.getHandle().getGameProfile();
     }

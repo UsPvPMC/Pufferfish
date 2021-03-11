@@ -41,14 +41,14 @@ public final class StarLightInterface {
     protected final ArrayDeque<SkyStarLightEngine> cachedSkyPropagators;
     protected final ArrayDeque<BlockStarLightEngine> cachedBlockPropagators;
 
-    protected final LightQueue lightQueue = new LightQueue(this);
+    public final io.papermc.paper.chunk.system.light.LightQueue lightQueue; // Paper - replace light queue
 
     protected final LayerLightEventListener skyReader;
     protected final LayerLightEventListener blockReader;
     protected final boolean isClientSide;
 
-    protected final int minSection;
-    protected final int maxSection;
+    public final int minSection; // Paper - public
+    public final int maxSection; // Paper - public
     protected final int minLightSection;
     protected final int maxLightSection;
 
@@ -182,6 +182,7 @@ public final class StarLightInterface {
                 StarLightInterface.this.sectionChange(pos, notReady);
             }
         };
+        this.lightQueue = new io.papermc.paper.chunk.system.light.LightQueue(this); // Paper - replace light queue
     }
 
     protected int getSkyLightValue(final BlockPos blockPos, final ChunkAccess chunk) {
@@ -325,7 +326,7 @@ public final class StarLightInterface {
         return this.lightAccess;
     }
 
-    protected final SkyStarLightEngine getSkyLightEngine() {
+    public final SkyStarLightEngine getSkyLightEngine() { // Paper - public
         if (this.cachedSkyPropagators == null) {
             return null;
         }
@@ -340,7 +341,7 @@ public final class StarLightInterface {
         return ret;
     }
 
-    protected final void releaseSkyLightEngine(final SkyStarLightEngine engine) {
+    public final void releaseSkyLightEngine(final SkyStarLightEngine engine) { // Paper - public
         if (this.cachedSkyPropagators == null) {
             return;
         }
@@ -349,7 +350,7 @@ public final class StarLightInterface {
         }
     }
 
-    protected final BlockStarLightEngine getBlockLightEngine() {
+    public final BlockStarLightEngine getBlockLightEngine() { // Paper - public
         if (this.cachedBlockPropagators == null) {
             return null;
         }
@@ -364,7 +365,7 @@ public final class StarLightInterface {
         return ret;
     }
 
-    protected final void releaseBlockLightEngine(final BlockStarLightEngine engine) {
+    public final void releaseBlockLightEngine(final BlockStarLightEngine engine) { // Paper - public
         if (this.cachedBlockPropagators == null) {
             return;
         }
@@ -511,57 +512,15 @@ public final class StarLightInterface {
     }
 
     public void scheduleChunkLight(final ChunkPos pos, final Runnable run) {
-        this.lightQueue.queueChunkLighting(pos, run);
+        throw new UnsupportedOperationException("No longer implemented, use the new lightQueue field to queue tasks"); // Paper - replace light queue
     }
 
     public void removeChunkTasks(final ChunkPos pos) {
-        this.lightQueue.removeChunk(pos);
+        throw new UnsupportedOperationException("No longer implemented, use the new lightQueue field to queue tasks"); // Paper - replace light queue
     }
 
     public void propagateChanges() {
-        if (this.lightQueue.isEmpty()) {
-            return;
-        }
-
-        final SkyStarLightEngine skyEngine = this.getSkyLightEngine();
-        final BlockStarLightEngine blockEngine = this.getBlockLightEngine();
-
-        try {
-            LightQueue.ChunkTasks task;
-            while ((task = this.lightQueue.removeFirstTask()) != null) {
-                if (task.lightTasks != null) {
-                    for (final Runnable run : task.lightTasks) {
-                        run.run();
-                    }
-                }
-
-                final long coordinate = task.chunkCoordinate;
-                final int chunkX = CoordinateUtils.getChunkX(coordinate);
-                final int chunkZ = CoordinateUtils.getChunkZ(coordinate);
-
-                final Set<BlockPos> positions = task.changedPositions;
-                final Boolean[] sectionChanges = task.changedSectionSet;
-
-                if (skyEngine != null && (!positions.isEmpty() || sectionChanges != null)) {
-                    skyEngine.blocksChangedInChunk(this.lightAccess, chunkX, chunkZ, positions, sectionChanges);
-                }
-                if (blockEngine != null && (!positions.isEmpty() || sectionChanges != null)) {
-                    blockEngine.blocksChangedInChunk(this.lightAccess, chunkX, chunkZ, positions, sectionChanges);
-                }
-
-                if (skyEngine != null && task.queuedEdgeChecksSky != null) {
-                    skyEngine.checkChunkEdges(this.lightAccess, chunkX, chunkZ, task.queuedEdgeChecksSky);
-                }
-                if (blockEngine != null && task.queuedEdgeChecksBlock != null) {
-                    blockEngine.checkChunkEdges(this.lightAccess, chunkX, chunkZ, task.queuedEdgeChecksBlock);
-                }
-
-                task.onComplete.complete(null);
-            }
-        } finally {
-            this.releaseSkyLightEngine(skyEngine);
-            this.releaseBlockLightEngine(blockEngine);
-        }
+        throw new UnsupportedOperationException("No longer implemented, task draining is now performed by the light thread"); // Paper - replace light queue
     }
 
     protected static final class LightQueue {

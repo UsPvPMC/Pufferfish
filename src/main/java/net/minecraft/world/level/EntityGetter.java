@@ -18,6 +18,18 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public interface EntityGetter {
+
+    // Paper start
+    List<Entity> getHardCollidingEntities(Entity except, AABB box, Predicate<? super Entity> predicate);
+
+    void getEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into);
+
+    void getHardCollidingEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into);
+
+    <T> void getEntitiesByClass(Class<? extends T> clazz, Entity except, final AABB box, List<? super T> into,
+                                Predicate<? super T> predicate);
+    // Paper end
+
     List<Entity> getEntities(@Nullable Entity except, AABB box, Predicate<? super Entity> predicate);
 
     <T extends Entity> List<T> getEntities(EntityTypeTest<Entity, T> filter, AABB box, Predicate<? super T> predicate);

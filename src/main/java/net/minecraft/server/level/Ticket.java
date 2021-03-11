@@ -6,9 +6,12 @@ public final class Ticket<T> implements Comparable<Ticket<?>> {
     private final TicketType<T> type;
     private final int ticketLevel;
     public final T key;
-    private long createdTick;
+    // Paper start - rewrite chunk system
+    public final long removalTick;
 
-    protected Ticket(TicketType<T> type, int level, T argument) {
+    public Ticket(TicketType<T> type, int level, T argument, long removalTick) {
+        this.removalTick = removalTick;
+        // Paper end - rewrite chunk system
         this.type = type;
         this.ticketLevel = level;
         this.key = argument;
@@ -44,7 +47,7 @@ public final class Ticket<T> implements Comparable<Ticket<?>> {
 
     @Override
     public String toString() {
-        return "Ticket[" + this.type + " " + this.ticketLevel + " (" + this.key + ")] at " + this.createdTick;
+        return "Ticket[" + this.type + " " + this.ticketLevel + " (" + this.key + ")] to die on " + this.removalTick; // Paper - rewrite chunk system
     }
 
     public TicketType<T> getType() {
@@ -56,11 +59,10 @@ public final class Ticket<T> implements Comparable<Ticket<?>> {
     }
 
     protected void setCreatedTick(long tickCreated) {
-        this.createdTick = tickCreated;
+        throw new UnsupportedOperationException(); // Paper - rewrite chunk system
     }
 
     protected boolean timedOut(long currentTick) {
-        long l = this.type.timeout();
-        return l != 0L && currentTick - this.createdTick > l;
+        throw new UnsupportedOperationException(); // Paper - rewrite chunk system
     }
 }

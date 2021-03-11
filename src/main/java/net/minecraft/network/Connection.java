@@ -92,6 +92,28 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
     private int tickCount;
     private boolean handlingFault;
     public String hostname = ""; // CraftBukkit - add field
+    // Paper start - add pending task queue
+    private final Queue<Runnable> pendingTasks = new java.util.concurrent.ConcurrentLinkedQueue<>();
+    public void execute(final Runnable run) {
+        if (this.channel == null || !this.channel.isRegistered()) {
+            run.run();
+            return;
+        }
+        final boolean queue = !this.queue.isEmpty();
+        if (!queue) {
+            this.channel.eventLoop().execute(run);
+        } else {
+            this.pendingTasks.add(run);
+            if (this.queue.isEmpty()) {
+                // something flushed async, dump tasks now
+                Runnable r;
+                while ((r = this.pendingTasks.poll()) != null) {
+                    this.channel.eventLoop().execute(r);
+                }
+            }
+        }
+    }
+    // Paper end - add pending task queue
 
     public Connection(PacketFlow side) {
         this.receiving = side;
@@ -255,6 +277,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
     }
 
     private void flushQueue() {
+        try { // Paper - add pending task queue
         if (this.channel != null && this.channel.isOpen()) {
             Queue queue = this.queue;
 
@@ -267,6 +290,12 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
 
             }
         }
+        } finally { // Paper start - add pending task queue
+            Runnable r;
+            while ((r = this.pendingTasks.poll()) != null) {
+                this.channel.eventLoop().execute(r);
+            }
+        } // Paper end - add pending task queue
     }
 
     public void tick() {

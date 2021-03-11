@@ -460,6 +460,11 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 
             if ((i & 2) != 0 && (!this.isClientSide || (i & 4) == 0) && (this.isClientSide || chunk == null || (chunk.getFullStatus() != null && chunk.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING)))) { // allow chunk to be null here as chunk.isReady() is false when we send our notification during block placement
                 this.sendBlockUpdated(blockposition, iblockdata1, iblockdata, i);
+                // Paper start - per player view distance - allow block updates for non-ticking chunks in player view distance
+                // if copied from above
+            } else if ((i & 2) != 0 && (!this.isClientSide || (i & 4) == 0) && (this.isClientSide || chunk == null || ((ServerLevel)this).getChunkSource().chunkMap.playerChunkManager.broadcastMap.getObjectsInRange(io.papermc.paper.util.MCUtil.getCoordinateKey(blockposition)) != null)) { // Paper - replace old player chunk management
+                ((ServerLevel)this).getChunkSource().blockChanged(blockposition);
+                // Paper end - per player view distance
             }
 
             if ((i & 1) != 0) {
@@ -812,7 +817,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
             return this.capturedTileEntities.get(blockposition);
         }
         // CraftBukkit end
-        return this.isOutsideBuildHeight(blockposition) ? null : (!this.isClientSide && Thread.currentThread() != this.thread ? null : this.getChunkAt(blockposition).getBlockEntity(blockposition, LevelChunk.EntityCreationType.IMMEDIATE));
+        return this.isOutsideBuildHeight(blockposition) ? null : (!this.isClientSide && !io.papermc.paper.util.TickThread.isTickThread() ? null : this.getChunkAt(blockposition).getBlockEntity(blockposition, LevelChunk.EntityCreationType.IMMEDIATE)); // Paper - rewrite chunk system
     }
 
     public void setBlockEntity(BlockEntity blockEntity) {
@@ -903,26 +908,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     public List<Entity> getEntities(@Nullable Entity except, AABB box, Predicate<? super Entity> predicate) {
         this.getProfiler().incrementCounter("getEntities");
         List<Entity> list = Lists.newArrayList();
-
-        this.getEntities().get(box, (entity1) -> {
-            if (entity1 != except && predicate.test(entity1)) {
-                list.add(entity1);
-            }
-
-            if (entity1 instanceof EnderDragon) {
-                EnderDragonPart[] aentitycomplexpart = ((EnderDragon) entity1).getSubEntities();
-                int i = aentitycomplexpart.length;
-
-                for (int j = 0; j < i; ++j) {
-                    EnderDragonPart entitycomplexpart = aentitycomplexpart[j];
-
-                    if (entity1 != except && predicate.test(entitycomplexpart)) {
-                        list.add(entitycomplexpart);
-                    }
-                }
-            }
-
-        });
+        ((ServerLevel)this).getEntityLookup().getEntities(except, box, list, predicate); // Paper - optimise this call
         return list;
     }
 
@@ -940,34 +926,23 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 
     public <T extends Entity> void getEntities(EntityTypeTest<Entity, T> filter, AABB box, Predicate<? super T> predicate, List<? super T> result, int limit) {
         this.getProfiler().incrementCounter("getEntities");
-        this.getEntities().get(filter, box, (entity) -> {
-            if (predicate.test(entity)) {
-                result.add(entity);
-                if (result.size() >= limit) {
-                    return AbortableIterationConsumer.Continuation.ABORT;
-                }
+        // Paper start - optimise this call
+        //TODO use limit
+        if (filter instanceof net.minecraft.world.entity.EntityType entityTypeTest) {
+            ((ServerLevel) this).getEntityLookup().getEntities(entityTypeTest, box, result, predicate);
+        } else {
+            Predicate<? super T> test = (obj) -> {
+                return filter.tryCast(obj) != null;
+            };
+            predicate = predicate == null ? test : test.and((Predicate) predicate);
+            Class base;
+            if (filter == null || (base = filter.getBaseClass()) == null || base == Entity.class) {
+                ((ServerLevel) this).getEntityLookup().getEntities((Entity) null, box, (List) result, (Predicate)predicate);
+            } else {
+                ((ServerLevel) this).getEntityLookup().getEntities(base, null, box, (List) result, (Predicate)predicate); // Paper - optimise this call
             }
-
-            if (entity instanceof EnderDragon) {
-                EnderDragon entityenderdragon = (EnderDragon) entity;
-                EnderDragonPart[] aentitycomplexpart = entityenderdragon.getSubEntities();
-                int j = aentitycomplexpart.length;
-
-                for (int k = 0; k < j; ++k) {
-                    EnderDragonPart entitycomplexpart = aentitycomplexpart[k];
-                    T t0 = filter.tryCast(entitycomplexpart); // CraftBukkit - decompile error
-
-                    if (t0 != null && predicate.test(t0)) {
-                        result.add(t0);
-                        if (result.size() >= limit) {
-                            return AbortableIterationConsumer.Continuation.ABORT;
-                        }
-                    }
-                }
-            }
-
-            return AbortableIterationConsumer.Continuation.CONTINUE;
-        });
+        }
+        // Paper end - optimise this call
     }
 
     @Nullable
@@ -1305,4 +1280,45 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 
         private ExplosionInteraction() {}
     }
+    // Paper start
+    //protected final io.papermc.paper.world.EntitySliceManager entitySliceManager; // Paper - rewrite chunk system
+
+    public org.bukkit.entity.Entity[] getChunkEntities(int chunkX, int chunkZ) {
+        io.papermc.paper.world.ChunkEntitySlices slices = ((ServerLevel)this).getEntityLookup().getChunk(chunkX, chunkZ);
+        if (slices == null) {
+            return new org.bukkit.entity.Entity[0];
+        }
+        return slices.getChunkEntities();
+    }
+
+    @Override
+    public List<Entity> getHardCollidingEntities(Entity except, AABB box, Predicate<? super Entity> predicate) {
+        List<Entity> ret = new java.util.ArrayList<>();
+        ((ServerLevel)this).getEntityLookup().getHardCollidingEntities(except, box, ret, predicate);
+        return ret;
+    }
+
+    @Override
+    public void getEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into) {
+        ((ServerLevel)this).getEntityLookup().getEntities(except, box, into, predicate);
+    }
+
+    @Override
+    public void getHardCollidingEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into) {
+        ((ServerLevel)this).getEntityLookup().getHardCollidingEntities(except, box, into, predicate);
+    }
+
+    @Override
+    public <T> void getEntitiesByClass(Class<? extends T> clazz, Entity except, final AABB box, List<? super T> into,
+                                       Predicate<? super T> predicate) {
+        ((ServerLevel)this).getEntityLookup().getEntities((Class)clazz, except, box, (List)into, (Predicate)predicate);
+    }
+
+    @Override
+    public <T extends Entity> List<T> getEntitiesOfClass(Class<T> entityClass, AABB box, Predicate<? super T> predicate) {
+        List<T> ret = new java.util.ArrayList<>();
+        ((ServerLevel)this).getEntityLookup().getEntities(entityClass, null, box, ret, predicate);
+        return ret;
+    }
+    // Paper end
 }

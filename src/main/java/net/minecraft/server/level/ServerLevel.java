@@ -191,7 +191,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     private final MinecraftServer server;
     public final PrimaryLevelData serverLevelData; // CraftBukkit - type
     final EntityTickList entityTickList;
-    public final PersistentEntitySectionManager<Entity> entityManager;
+    //public final PersistentEntitySectionManager<Entity> entityManager; // Paper - rewrite chunk system
     private final GameEventDispatcher gameEventDispatcher;
     public boolean noSave;
     private final SleepStatus sleepStatus;
@@ -316,7 +316,108 @@ public class ServerLevel extends Level implements WorldGenLevel {
             }
         }
     }
-    // Paper end
+
+    // Paper start - rewrite chunk system
+    public final io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler chunkTaskScheduler;
+    public final io.papermc.paper.chunk.system.io.RegionFileIOThread.ChunkDataController chunkDataControllerNew
+        = new io.papermc.paper.chunk.system.io.RegionFileIOThread.ChunkDataController(io.papermc.paper.chunk.system.io.RegionFileIOThread.RegionFileType.CHUNK_DATA) {
+
+        @Override
+        public net.minecraft.world.level.chunk.storage.RegionFileStorage getCache() {
+            return ServerLevel.this.getChunkSource().chunkMap.regionFileCache;
+        }
+
+        @Override
+        public void writeData(int chunkX, int chunkZ, net.minecraft.nbt.CompoundTag compound) throws IOException {
+            ServerLevel.this.getChunkSource().chunkMap.write(new ChunkPos(chunkX, chunkZ), compound);
+        }
+
+        @Override
+        public net.minecraft.nbt.CompoundTag readData(int chunkX, int chunkZ) throws IOException {
+            return ServerLevel.this.getChunkSource().chunkMap.readSync(new ChunkPos(chunkX, chunkZ));
+        }
+    };
+    public final io.papermc.paper.chunk.system.io.RegionFileIOThread.ChunkDataController poiDataControllerNew
+        = new io.papermc.paper.chunk.system.io.RegionFileIOThread.ChunkDataController(io.papermc.paper.chunk.system.io.RegionFileIOThread.RegionFileType.POI_DATA) {
+
+        @Override
+        public net.minecraft.world.level.chunk.storage.RegionFileStorage getCache() {
+            return ServerLevel.this.getChunkSource().chunkMap.getPoiManager();
+        }
+
+        @Override
+        public void writeData(int chunkX, int chunkZ, net.minecraft.nbt.CompoundTag compound) throws IOException {
+            ServerLevel.this.getChunkSource().chunkMap.getPoiManager().write(new ChunkPos(chunkX, chunkZ), compound);
+        }
+
+        @Override
+        public net.minecraft.nbt.CompoundTag readData(int chunkX, int chunkZ) throws IOException {
+            return ServerLevel.this.getChunkSource().chunkMap.getPoiManager().read(new ChunkPos(chunkX, chunkZ));
+        }
+    };
+    public final io.papermc.paper.chunk.system.io.RegionFileIOThread.ChunkDataController entityDataControllerNew
+        = new io.papermc.paper.chunk.system.io.RegionFileIOThread.ChunkDataController(io.papermc.paper.chunk.system.io.RegionFileIOThread.RegionFileType.ENTITY_DATA) {
+
+        @Override
+        public net.minecraft.world.level.chunk.storage.RegionFileStorage getCache() {
+            return ServerLevel.this.entityStorage;
+        }
+
+        @Override
+        public void writeData(int chunkX, int chunkZ, net.minecraft.nbt.CompoundTag compound) throws IOException {
+            ServerLevel.this.writeEntityChunk(chunkX, chunkZ, compound);
+        }
+
+        @Override
+        public net.minecraft.nbt.CompoundTag readData(int chunkX, int chunkZ) throws IOException {
+            return ServerLevel.this.readEntityChunk(chunkX, chunkZ);
+        }
+    };
+    private final EntityRegionFileStorage entityStorage;
+
+    private static final class EntityRegionFileStorage extends net.minecraft.world.level.chunk.storage.RegionFileStorage {
+
+        public EntityRegionFileStorage(Path directory, boolean dsync) {
+            super(directory, dsync);
+        }
+
+        protected void write(ChunkPos pos, net.minecraft.nbt.CompoundTag nbt) throws IOException {
+            ChunkPos nbtPos = nbt == null ? null : EntityStorage.readChunkPos(nbt);
+            if (nbtPos != null && !pos.equals(nbtPos)) {
+                throw new IllegalArgumentException(
+                    "Entity chunk coordinate and serialized data do not have matching coordinates, trying to serialize coordinate " + pos.toString()
+                        + " but compound says coordinate is " + nbtPos + " for world: " + this
+                );
+            }
+            super.write(pos, nbt);
+        }
+    }
+
+    private void writeEntityChunk(int chunkX, int chunkZ, net.minecraft.nbt.CompoundTag compound) throws IOException {
+        if (!io.papermc.paper.chunk.system.io.RegionFileIOThread.isRegionFileThread()) {
+            io.papermc.paper.chunk.system.io.RegionFileIOThread.scheduleSave(
+                this, chunkX, chunkZ, compound,
+                io.papermc.paper.chunk.system.io.RegionFileIOThread.RegionFileType.ENTITY_DATA);
+            return;
+        }
+        this.entityStorage.write(new ChunkPos(chunkX, chunkZ), compound);
+    }
+
+    private net.minecraft.nbt.CompoundTag readEntityChunk(int chunkX, int chunkZ) throws IOException {
+        if (!io.papermc.paper.chunk.system.io.RegionFileIOThread.isRegionFileThread()) {
+            return io.papermc.paper.chunk.system.io.RegionFileIOThread.loadData(
+                this, chunkX, chunkZ, io.papermc.paper.chunk.system.io.RegionFileIOThread.RegionFileType.ENTITY_DATA,
+                io.papermc.paper.chunk.system.io.RegionFileIOThread.getIOBlockingPriorityForCurrentThread()
+            );
+        }
+        return this.entityStorage.read(new ChunkPos(chunkX, chunkZ));
+    }
+
+    private final io.papermc.paper.chunk.system.entity.EntityLookup entityLookup;
+    public final io.papermc.paper.chunk.system.entity.EntityLookup getEntityLookup() {
+        return this.entityLookup;
+    }
+    // Paper end - rewrite chunk system
 
     // Add env and gen to constructor, IWorldDataServer -> WorldDataServer
     public ServerLevel(MinecraftServer minecraftserver, Executor executor, LevelStorageSource.LevelStorageAccess convertable_conversionsession, PrimaryLevelData iworlddataserver, ResourceKey<Level> resourcekey, LevelStem worlddimension, ChunkProgressListener worldloadlistener, boolean flag, long i, List<CustomSpawner> list, boolean flag1, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) {
@@ -360,16 +461,16 @@ public class ServerLevel extends Level implements WorldGenLevel {
         // CraftBukkit end
         boolean flag2 = minecraftserver.forceSynchronousWrites();
         DataFixer datafixer = minecraftserver.getFixerUpper();
-        EntityPersistentStorage<Entity> entitypersistentstorage = new EntityStorage(this, convertable_conversionsession.getDimensionPath(resourcekey).resolve("entities"), datafixer, flag2, minecraftserver);
+        this.entityStorage = new EntityRegionFileStorage(convertable_conversionsession.getDimensionPath(resourcekey).resolve("entities"), flag2); // Paper - rewrite chunk system  //EntityPersistentStorage<Entity> entitypersistentstorage = new EntityStorage(this, convertable_conversionsession.getDimensionPath(resourcekey).resolve("entities"), datafixer, flag2, minecraftserver);
 
-        this.entityManager = new PersistentEntitySectionManager<>(Entity.class, new ServerLevel.EntityCallbacks(), entitypersistentstorage);
+        // this.entityManager = new PersistentEntitySectionManager<>(Entity.class, new ServerLevel.EntityCallbacks(), entitypersistentstorage, this.entitySliceManager); // Paper // Paper - rewrite chunk system
         StructureTemplateManager structuretemplatemanager = minecraftserver.getStructureManager();
         int j = this.spigotConfig.viewDistance; // Spigot
         int k = this.spigotConfig.simulationDistance; // Spigot
-        PersistentEntitySectionManager persistententitysectionmanager = this.entityManager;
+        //PersistentEntitySectionManager persistententitysectionmanager = this.entityManager; // Paper - rewrite chunk system
 
-        Objects.requireNonNull(this.entityManager);
-        this.chunkSource = new ServerChunkCache(this, convertable_conversionsession, datafixer, structuretemplatemanager, executor, chunkgenerator, j, k, flag2, worldloadlistener, persistententitysectionmanager::updateChunkStatus, () -> {
+        //Objects.requireNonNull(this.entityManager); // Paper - rewrite chunk system
+        this.chunkSource = new ServerChunkCache(this, convertable_conversionsession, datafixer, structuretemplatemanager, executor, chunkgenerator, j, k, flag2, worldloadlistener, null, () -> { // Paper - rewrite chunk system
             return minecraftserver.overworld().getDataStorage();
         });
         this.chunkSource.getGeneratorState().ensureStructuresGenerated();
@@ -399,6 +500,9 @@ public class ServerLevel extends Level implements WorldGenLevel {
         this.sleepStatus = new SleepStatus();
         this.gameEventDispatcher = new GameEventDispatcher(this);
         this.getCraftServer().addWorld(this.getWorld()); // CraftBukkit
+
+        this.chunkTaskScheduler = new io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler(this, io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler.workerThreads); // Paper - rewrite chunk system
+        this.entityLookup = new io.papermc.paper.chunk.system.entity.EntityLookup(this, new EntityCallbacks()); // Paper - rewrite chunk system
     }
 
     public void setWeatherParameters(int clearDuration, int rainDuration, boolean raining, boolean thundering) {
@@ -502,7 +606,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
                         gameprofilerfiller.push("checkDespawn");
                         entity.checkDespawn();
                         gameprofilerfiller.pop();
-                        if (this.chunkSource.chunkMap.getDistanceManager().inEntityTickingRange(entity.chunkPosition().toLong())) {
+                        if (true || this.chunkSource.chunkMap.getDistanceManager().inEntityTickingRange(entity.chunkPosition().toLong())) { // Paper - now always true if in the ticking list
                             Entity entity1 = entity.getVehicle();
 
                             if (entity1 != null) {
@@ -527,13 +631,16 @@ public class ServerLevel extends Level implements WorldGenLevel {
         }
 
         gameprofilerfiller.push("entityManagement");
-        this.entityManager.tick();
+        //this.entityManager.tick(); // Paper - rewrite chunk system
         gameprofilerfiller.pop();
     }
 
     @Override
     public boolean shouldTickBlocksAt(long chunkPos) {
-        return this.chunkSource.chunkMap.getDistanceManager().inBlockTickingRange(chunkPos);
+        // Paper start - replace player chunk loader system
+        ChunkHolder holder = this.chunkSource.chunkMap.getVisibleChunkIfPresent(chunkPos);
+        return holder != null && holder.isTickingReady();
+        // Paper end - replace player chunk loader system
     }
 
     protected void tickTime() {
@@ -994,6 +1101,11 @@ public class ServerLevel extends Level implements WorldGenLevel {
     }
 
     public void save(@Nullable ProgressListener progressListener, boolean flush, boolean savingDisabled) {
+        // Paper start - rewrite chunk system - add close param
+        this.save(progressListener, flush, savingDisabled, false);
+    }
+    public void save(@Nullable ProgressListener progressListener, boolean flush, boolean savingDisabled, boolean close) {
+        // Paper end - rewrite chunk system - add close param
         ServerChunkCache chunkproviderserver = this.getChunkSource();
 
         if (!savingDisabled) {
@@ -1009,16 +1121,13 @@ public class ServerLevel extends Level implements WorldGenLevel {
             }
 
                 timings.worldSaveChunks.startTiming(); // Paper
-            chunkproviderserver.save(flush);
+            if (!close) chunkproviderserver.save(flush); // Paper - rewrite chunk system
+            if (close) chunkproviderserver.close(true); // Paper - rewrite chunk system
                 timings.worldSaveChunks.stopTiming(); // Paper
             }// Paper
-            if (flush) {
-                this.entityManager.saveAll();
-            } else {
-                this.entityManager.autoSave();
-            }
+            // Paper - rewrite chunk system - entity saving moved into ChunkHolder
 
-        }
+        } else if (close) { chunkproviderserver.close(false); } // Paper - rewrite chunk system
 
         // CraftBukkit start - moved from MinecraftServer.saveChunks
         ServerLevel worldserver1 = this;
@@ -1154,7 +1263,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
             this.removePlayerImmediately((ServerPlayer) entity, Entity.RemovalReason.DISCARDED);
         }
 
-        this.entityManager.addNewEntity(player);
+        this.entityLookup.addNewEntity(player); // Paper - rewite chunk system
     }
 
     // CraftBukkit start
@@ -1170,7 +1279,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
             }
             // CraftBukkit end
 
-            return this.entityManager.addNewEntity(entity);
+            return this.entityLookup.addNewEntity(entity); // Paper - rewrite chunk system
         }
     }
 
@@ -1182,10 +1291,10 @@ public class ServerLevel extends Level implements WorldGenLevel {
     public boolean tryAddFreshEntityWithPassengers(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason) {
         // CraftBukkit end
         Stream<UUID> stream = entity.getSelfAndPassengers().map(Entity::getUUID); // CraftBukkit - decompile error
-        PersistentEntitySectionManager persistententitysectionmanager = this.entityManager;
+        //PersistentEntitySectionManager persistententitysectionmanager = this.entityManager; // Paper - rewrite chunk system
 
-        Objects.requireNonNull(this.entityManager);
-        if (stream.anyMatch(persistententitysectionmanager::isLoaded)) {
+        //Objects.requireNonNull(this.entityManager); // Paper - rewrite chunk system
+        if (stream.anyMatch(this.entityLookup::hasEntity)) { // Paper - rewrite chunk system
             return false;
         } else {
             this.addFreshEntityWithPassengers(entity, reason); // CraftBukkit
@@ -1705,7 +1814,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
                 }
             }
 
-            bufferedwriter.write(String.format(Locale.ROOT, "entities: %s\n", this.entityManager.gatherStats()));
+            bufferedwriter.write(String.format(Locale.ROOT, "entities: %s\n", this.entityLookup.getDebugInfo())); // Paper - rewrite chunk system
             bufferedwriter.write(String.format(Locale.ROOT, "block_entity_tickers: %d\n", this.blockEntityTickers.size()));
             bufferedwriter.write(String.format(Locale.ROOT, "block_ticks: %d\n", this.getBlockTicks().count()));
             bufferedwriter.write(String.format(Locale.ROOT, "fluid_ticks: %d\n", this.getFluidTicks().count()));
@@ -1754,7 +1863,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
         BufferedWriter bufferedwriter2 = Files.newBufferedWriter(path1);
 
         try {
-            playerchunkmap.dumpChunks(bufferedwriter2);
+            //playerchunkmap.dumpChunks(bufferedwriter2); // Paper - rewrite chunk system
         } catch (Throwable throwable4) {
             if (bufferedwriter2 != null) {
                 try {
@@ -1775,7 +1884,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
         BufferedWriter bufferedwriter3 = Files.newBufferedWriter(path2);
 
         try {
-            this.entityManager.dumpSections(bufferedwriter3);
+            //this.entityManager.dumpSections(bufferedwriter3); // Paper - rewrite chunk system
         } catch (Throwable throwable6) {
             if (bufferedwriter3 != null) {
                 try {
@@ -1917,7 +2026,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
 
     @VisibleForTesting
     public String getWatchdogStats() {
-        return String.format(Locale.ROOT, "players: %s, entities: %s [%s], block_entities: %d [%s], block_ticks: %d, fluid_ticks: %d, chunk_source: %s", this.players.size(), this.entityManager.gatherStats(), ServerLevel.getTypeCount(this.entityManager.getEntityGetter().getAll(), (entity) -> {
+        return String.format(Locale.ROOT, "players: %s, entities: %s [%s], block_entities: %d [%s], block_ticks: %d, fluid_ticks: %d, chunk_source: %s", this.players.size(), this.entityLookup.getDebugInfo(), ServerLevel.getTypeCount(this.entityLookup.getAll(), (entity) -> { // Paper - rewrite chunk system
             return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString();
         }), this.blockEntityTickers.size(), ServerLevel.getTypeCount(this.blockEntityTickers, TickingBlockEntity::getType), this.getBlockTicks().count(), this.getFluidTicks().count(), this.gatherChunkSourceStats());
     }
@@ -1977,15 +2086,15 @@ public class ServerLevel extends Level implements WorldGenLevel {
     @Override
     public LevelEntityGetter<Entity> getEntities() {
         org.spigotmc.AsyncCatcher.catchOp("Chunk getEntities call"); // Spigot
-        return this.entityManager.getEntityGetter();
+        return this.entityLookup; // Paper - rewrite chunk system
     }
 
     public void addLegacyChunkEntities(Stream<Entity> entities) {
-        this.entityManager.addLegacyChunkEntities(entities);
+        this.entityLookup.addLegacyChunkEntities(entities.toList()); // Paper - rewrite chunk system
     }
 
     public void addWorldGenChunkEntities(Stream<Entity> entities) {
-        this.entityManager.addWorldGenChunkEntities(entities);
+        this.entityLookup.addWorldGenChunkEntities(entities.toList()); // Paper - rewrite chunk system
     }
 
     public void startTickingChunk(LevelChunk chunk) {
@@ -2001,34 +2110,49 @@ public class ServerLevel extends Level implements WorldGenLevel {
     @Override
     public void close() throws IOException {
         super.close();
-        this.entityManager.close();
+        //this.entityManager.close(); // Paper - rewrite chunk system
     }
 
     @Override
     public String gatherChunkSourceStats() {
         String s = this.chunkSource.gatherStats();
 
-        return "Chunks[S] W: " + s + " E: " + this.entityManager.gatherStats();
+        return "Chunks[S] W: " + s + " E: " + this.entityLookup.getDebugInfo(); // Paper - rewrite chunk system
     }
 
     public boolean areEntitiesLoaded(long chunkPos) {
-        return this.entityManager.areEntitiesLoaded(chunkPos);
+        // Paper start - rewrite chunk system
+        return this.getChunkIfLoadedImmediately(ChunkPos.getX(chunkPos), ChunkPos.getZ(chunkPos)) != null;
+        // Paper end - rewrite chunk system
     }
 
     private boolean isPositionTickingWithEntitiesLoaded(long chunkPos) {
-        return this.areEntitiesLoaded(chunkPos) && this.chunkSource.isPositionTicking(chunkPos);
+        // Paper start - optimize is ticking ready type functions
+        io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder = this.chunkTaskScheduler.chunkHolderManager.getChunkHolder(chunkPos);
+        // isTicking implies the chunk is loaded, and the chunk is loaded now implies the entities are loaded
+        return chunkHolder != null && chunkHolder.isTickingReady();
+        // Paper end
     }
 
     public boolean isPositionEntityTicking(BlockPos pos) {
-        return this.entityManager.canPositionTick(pos) && this.chunkSource.chunkMap.getDistanceManager().inEntityTickingRange(ChunkPos.asLong(pos));
+        // Paper start - rewrite chunk system
+        io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder = this.chunkTaskScheduler.chunkHolderManager.getChunkHolder(io.papermc.paper.util.CoordinateUtils.getChunkKey(pos));
+        return chunkHolder != null && chunkHolder.isEntityTickingReady();
+        // Paper end - rewrite chunk system
     }
 
     public boolean isNaturalSpawningAllowed(BlockPos pos) {
-        return this.entityManager.canPositionTick(pos);
+        // Paper start - rewrite chunk system
+        io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder = this.chunkTaskScheduler.chunkHolderManager.getChunkHolder(io.papermc.paper.util.CoordinateUtils.getChunkKey(pos));
+        return chunkHolder != null && chunkHolder.isEntityTickingReady();
+        // Paper end - rewrite chunk system
     }
 
     public boolean isNaturalSpawningAllowed(ChunkPos pos) {
-        return this.entityManager.canPositionTick(pos);
+        // Paper start - rewrite chunk system
+        io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder = this.chunkTaskScheduler.chunkHolderManager.getChunkHolder(io.papermc.paper.util.CoordinateUtils.getChunkKey(pos));
+        return chunkHolder != null && chunkHolder.isEntityTickingReady();
+        // Paper end - rewrite chunk system
     }
 
     @Override
