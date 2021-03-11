@@ -502,6 +502,11 @@ public abstract class Player extends LivingEntity {
         this.containerMenu = this.inventoryMenu;
     }
     // Paper end
+    // Paper start - special close for unloaded inventory
+    public void closeUnloadedInventory(org.bukkit.event.inventory.InventoryCloseEvent.Reason reason) {
+        this.containerMenu = this.inventoryMenu;
+    }
+    // Paper end - special close for unloaded inventory
 
     public void closeContainer() {
         this.containerMenu = this.inventoryMenu;
