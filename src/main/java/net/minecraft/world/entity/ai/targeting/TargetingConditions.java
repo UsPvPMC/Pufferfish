@@ -75,9 +75,18 @@ public class TargetingConditions {
                 }
 
                 if (this.range > 0.0D) {
-                    double d = this.testInvisible ? targetEntity.getVisibilityPercent(baseEntity) : 1.0D;
-                    double e = Math.max((this.useFollowRange ? this.getFollowRange(baseEntity) : this.range) * d, 2.0D); // Paper
+                    // Pufferfish start - check range before getting visibility
+                    // d = invisibility percent, e = follow range adjusted for invisibility, f = distance
                     double f = baseEntity.distanceToSqr(targetEntity.getX(), targetEntity.getY(), targetEntity.getZ());
+                    double followRangeRaw = this.useFollowRange ? this.getFollowRange(baseEntity) : this.range;
+
+                    if (f > followRangeRaw * followRangeRaw) { // the actual follow range will always be this value or smaller, so if the distance is larger then it never will return true after getting invis
+                        return false;
+                    }
+
+                    double d = this.testInvisible ? targetEntity.getVisibilityPercent(baseEntity) : 1.0D;
+                    double e = Math.max((followRangeRaw) * d, 2.0D); // Paper
+                    // Pufferfish end
                     if (f > e * e) {
                         return false;
                     }
