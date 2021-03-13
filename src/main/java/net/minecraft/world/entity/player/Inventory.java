@@ -682,6 +682,8 @@ public class Inventory implements Container, Nameable {
     }
 
     public boolean contains(ItemStack stack) {
+        // Pufferfish start - don't allocate iterators
+        /*
         Iterator iterator = this.compartments.iterator();
 
         while (iterator.hasNext()) {
@@ -696,6 +698,18 @@ public class Inventory implements Container, Nameable {
                 }
             }
         }
+         */
+        for (int i = 0; i < this.compartments.size(); i++) {
+            List<ItemStack> list = this.compartments.get(i);
+            for (int j = 0; j < list.size(); j++) {
+                ItemStack itemstack1 = list.get(j);
+
+                if (!itemstack1.isEmpty() && itemstack1.sameItem(stack)) {
+                    return true;
+                }
+            }
+        }
+        // Pufferfish end
 
         return false;
     }
