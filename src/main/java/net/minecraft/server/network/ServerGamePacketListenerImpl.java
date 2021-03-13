@@ -2485,7 +2485,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
 
         // Arm swing animation
-        PlayerAnimationEvent event = new PlayerAnimationEvent(this.getCraftPlayer(), (packet.getHand() == InteractionHand.MAIN_HAND) ? PlayerAnimationType.ARM_SWING : PlayerAnimationType.OFF_ARM_SWING);
+        io.papermc.paper.event.player.PlayerArmSwingEvent event = new io.papermc.paper.event.player.PlayerArmSwingEvent(this.getCraftPlayer(), packet.getHand() == InteractionHand.MAIN_HAND ? org.bukkit.inventory.EquipmentSlot.HAND : org.bukkit.inventory.EquipmentSlot.OFF_HAND); // Paper
         this.cserver.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) return;
