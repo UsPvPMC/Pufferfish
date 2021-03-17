@@ -1039,6 +1039,11 @@ public final class CraftServer implements Server {
                 plugin.getPluginMeta().getDisplayName(),
                 "This plugin is not properly shutting down its async tasks when it is being shut down. This task may throw errors during the final shutdown logs and might not complete before process dies."
             ));
+            getLogger().log(Level.SEVERE, String.format("%s Stacktrace", worker.getThread().getName()));
+            StackTraceElement[] stackTrace = worker.getThread().getStackTrace();
+            for (StackTraceElement element : stackTrace) {
+                getLogger().log(Level.SEVERE, "  " + element.toString());
+            }
         }
     }
     // Paper end
