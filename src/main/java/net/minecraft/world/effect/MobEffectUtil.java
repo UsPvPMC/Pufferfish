@@ -54,10 +54,23 @@ public final class MobEffectUtil {
     }
 
     public static List<ServerPlayer> addEffectToPlayersAround(ServerLevel worldserver, @Nullable Entity entity, Vec3 vec3d, double d0, MobEffectInstance mobeffect, int i, org.bukkit.event.entity.EntityPotionEffectEvent.Cause cause) {
+        // Paper start
+        return addEffectToPlayersAround(worldserver, entity, vec3d, d0, mobeffect, i, cause, null);
+    }
+
+    public static List<ServerPlayer> addEffectToPlayersAround(ServerLevel worldserver, @Nullable Entity entity, Vec3 vec3d, double d0, MobEffectInstance mobeffect, int i, org.bukkit.event.entity.EntityPotionEffectEvent.Cause cause, @Nullable java.util.function.Predicate<ServerPlayer> playerPredicate) {
+        // Paper end
         // CraftBukkit end
         MobEffect mobeffectlist = mobeffect.getEffect();
         List<ServerPlayer> list = worldserver.getPlayers((entityplayer) -> {
-            return entityplayer.gameMode.isSurvival() && (entity == null || !entity.isAlliedTo((Entity) entityplayer)) && vec3d.closerThan(entityplayer.position(), d0) && (!entityplayer.hasEffect(mobeffectlist) || entityplayer.getEffect(mobeffectlist).getAmplifier() < mobeffect.getAmplifier() || entityplayer.getEffect(mobeffectlist).endsWithin(i - 1));
+            // Paper start
+            boolean condition = entityplayer.gameMode.isSurvival() && (entity == null || !entity.isAlliedTo((Entity) entityplayer)) && vec3d.closerThan(entityplayer.position(), d0) && (!entityplayer.hasEffect(mobeffectlist) || entityplayer.getEffect(mobeffectlist).getAmplifier() < mobeffect.getAmplifier() || entityplayer.getEffect(mobeffectlist).endsWithin(i - 1));
+            if (condition) {
+                return playerPredicate == null || playerPredicate.test(entityplayer); // Only test the player AFTER it is true
+            } else {
+                return false;
+            }
+            // Paper ned
         });
 
         list.forEach((entityplayer) -> {
