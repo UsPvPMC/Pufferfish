@@ -16,11 +16,15 @@ public final class PaperConsole extends SimpleTerminalConsole {
 
     @Override
     protected LineReader buildReader(LineReaderBuilder builder) {
-        return super.buildReader(builder
+        builder
                 .appName("Paper")
                 .variable(LineReader.HISTORY_FILE, java.nio.file.Paths.get(".console_history"))
                 .completer(new ConsoleCommandCompleter(this.server))
-        );
+                .option(LineReader.Option.COMPLETE_IN_WORD, true);
+        if (io.papermc.paper.configuration.GlobalConfiguration.get().console.enableBrigadierHighlighting) {
+            builder.highlighter(new io.papermc.paper.console.BrigadierCommandHighlighter(this.server));
+        }
+        return super.buildReader(builder);
     }
 
     @Override

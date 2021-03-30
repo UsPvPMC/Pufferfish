@@ -173,7 +173,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
 
         thread.setDaemon(true);
         thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(DedicatedServer.LOGGER));
-        thread.start();
+        // thread.start(); // Paper - moved down
         DedicatedServer.LOGGER.info("Starting minecraft server version {}", SharedConstants.getCurrentVersion().getName());
         if (Runtime.getRuntime().maxMemory() / 1024L / 1024L < 512L) {
             DedicatedServer.LOGGER.warn("To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"");
@@ -205,6 +205,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
         this.getPlayerList().loadAndSaveFiles(); // Must be after convertNames
         // Paper end - moved up
         org.spigotmc.WatchdogThread.doStart(org.spigotmc.SpigotConfig.timeoutTime, org.spigotmc.SpigotConfig.restartOnCrash);
+        thread.start(); // Paper - start console thread after MinecraftServer.console & PaperConfig are initialized
         io.papermc.paper.command.PaperCommands.registerCommands(this);
         com.destroystokyo.paper.Metrics.PaperMetrics.startMetrics();
         com.destroystokyo.paper.VersionHistoryManager.INSTANCE.getClass(); // load version history now
