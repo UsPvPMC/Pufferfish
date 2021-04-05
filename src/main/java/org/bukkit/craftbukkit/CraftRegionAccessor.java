@@ -935,6 +935,7 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
             entity.moveTo(location.getX(), location.getY(), location.getZ());
         } else if (AreaEffectCloud.class.isAssignableFrom(clazz)) {
             entity = new net.minecraft.world.entity.AreaEffectCloud(world, x, y, z);
+            entity.moveTo(x, y, z, yaw, pitch); // Paper - Set area effect cloud Rotation
         } else if (EvokerFangs.class.isAssignableFrom(clazz)) {
             entity = new net.minecraft.world.entity.projectile.EvokerFangs(world, x, y, z, (float) Math.toRadians(yaw), 0, null);
         } else if (Marker.class.isAssignableFrom(clazz)) {
