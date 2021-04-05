@@ -80,4 +80,10 @@ public class CraftBeehive extends CraftBlockEntityState<BeehiveBlockEntity> impl
 
         getSnapshot().addOccupant(((CraftBee) entity).getHandle(), false);
     }
+    // Paper start - Add EntityBlockStorage clearEntities
+    @Override
+    public void clearEntities() {
+        getSnapshot().clearBees();
+    }
+    // Paper end
 }

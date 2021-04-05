@@ -139,6 +139,11 @@ public class BeehiveBlockEntity extends BlockEntity {
         return this.stored.size();
     }
 
+    // Paper start - Add EntityBlockStorage clearEntities
+    public void clearBees() {
+        this.stored.clear();
+    }
+    // Paper end
     public static int getHoneyLevel(BlockState state) {
         return (Integer) state.getValue(BeehiveBlock.HONEY_LEVEL);
     }
