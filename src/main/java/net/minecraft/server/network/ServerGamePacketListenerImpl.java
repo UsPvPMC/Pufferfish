@@ -1285,7 +1285,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
 
         itemstack.addTagElement("pages", nbttaglist);
-        CraftEventFactory.handleEditBookEvent(player, slot, handItem, itemstack); // CraftBukkit
+        this.player.getInventory().setItem(slot, CraftEventFactory.handleEditBookEvent(player, slot, handItem, itemstack)); // CraftBukkit // Paper - Don't ignore result (see other callsite for handleEditBookEvent)
     }
 
     @Override
