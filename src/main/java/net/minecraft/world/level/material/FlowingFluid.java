@@ -43,6 +43,8 @@ public abstract class FlowingFluid extends Fluid {
     public static final BooleanProperty FALLING = BlockStateProperties.FALLING;
     public static final IntegerProperty LEVEL = BlockStateProperties.LEVEL_FLOWING;
     private static final int CACHE_SIZE = 200;
+    // Pufferfish start - use our own cache
+    /*
     private static final ThreadLocal<Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>> OCCLUSION_CACHE = ThreadLocal.withInitial(() -> {
         Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey> object2bytelinkedopenhashmap = new Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>(200) {
             protected void rehash(int i) {}
@@ -51,6 +53,14 @@ public abstract class FlowingFluid extends Fluid {
         object2bytelinkedopenhashmap.defaultReturnValue((byte) 127);
         return object2bytelinkedopenhashmap;
     });
+     */
+
+    private static final ThreadLocal<gg.airplane.structs.FluidDirectionCache<Block.BlockStatePairKey>> localFluidDirectionCache = ThreadLocal.withInitial(() -> {
+        // Pufferfish todo - mess with this number for performance
+        //  with 2048 it seems very infrequent on a small world that it has to remove old entries
+        return new gg.airplane.structs.FluidDirectionCache<>(2048);
+    });
+    // Pufferfish end
     private final Map<FluidState, VoxelShape> shapes = Maps.newIdentityHashMap();
 
     public FlowingFluid() {}
@@ -239,6 +249,8 @@ public abstract class FlowingFluid extends Fluid {
     }
 
     private boolean canPassThroughWall(Direction face, BlockGetter world, BlockPos pos, BlockState state, BlockPos fromPos, BlockState fromState) {
+        // Pufferfish start - modify to use our cache
+        /*
         Object2ByteLinkedOpenHashMap object2bytelinkedopenhashmap;
 
         if (!state.getBlock().hasDynamicShape() && !fromState.getBlock().hasDynamicShape()) {
@@ -246,9 +258,16 @@ public abstract class FlowingFluid extends Fluid {
         } else {
             object2bytelinkedopenhashmap = null;
         }
+         */
+        gg.airplane.structs.FluidDirectionCache<Block.BlockStatePairKey> cache = null;
+
+        if (!state.getBlock().hasDynamicShape() && !fromState.getBlock().hasDynamicShape()) {
+            cache = localFluidDirectionCache.get();
+        }
 
         Block.BlockStatePairKey block_a;
 
+        /*
         if (object2bytelinkedopenhashmap != null) {
             block_a = new Block.BlockStatePairKey(state, fromState, face);
             byte b0 = object2bytelinkedopenhashmap.getAndMoveToFirst(block_a);
@@ -259,11 +278,22 @@ public abstract class FlowingFluid extends Fluid {
         } else {
             block_a = null;
         }
+         */
+        if (cache != null) {
+            block_a = new Block.BlockStatePairKey(state, fromState, face);
+            Boolean flag = cache.getValue(block_a);
+            if (flag != null) {
+                return flag;
+            }
+        } else {
+            block_a = null;
+        }
 
         VoxelShape voxelshape = state.getCollisionShape(world, pos);
         VoxelShape voxelshape1 = fromState.getCollisionShape(world, fromPos);
         boolean flag = !Shapes.mergedFaceOccludes(voxelshape, voxelshape1, face);
 
+        /*
         if (object2bytelinkedopenhashmap != null) {
             if (object2bytelinkedopenhashmap.size() == 200) {
                 object2bytelinkedopenhashmap.removeLastByte();
@@ -271,6 +301,11 @@ public abstract class FlowingFluid extends Fluid {
 
             object2bytelinkedopenhashmap.putAndMoveToFirst(block_a, (byte) (flag ? 1 : 0));
         }
+         */
+        if (cache != null) {
+            cache.putValue(block_a, flag);
+        }
+        // Pufferfish end
 
         return flag;
     }
