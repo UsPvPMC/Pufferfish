@@ -251,6 +251,11 @@ public abstract class Player extends LivingEntity {
 
         if (this.isSleeping()) {
             ++this.sleepCounter;
+            // Paper start
+            if (this.sleepCounter == 100) {
+                if (!new io.papermc.paper.event.player.PlayerDeepSleepEvent((org.bukkit.entity.Player) getBukkitEntity()).callEvent()) { this.sleepCounter = Integer.MIN_VALUE; }
+            }
+            // Paper end
             if (this.sleepCounter > 100) {
                 this.sleepCounter = 100;
             }
