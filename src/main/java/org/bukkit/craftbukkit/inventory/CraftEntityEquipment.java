@@ -244,6 +244,17 @@ public class CraftEntityEquipment implements EntityEquipment {
     public void setBootsDropChance(float chance) {
         this.setDropChance(net.minecraft.world.entity.EquipmentSlot.FEET, chance);
     }
+    // Paper start
+    @Override
+    public float getDropChance(EquipmentSlot slot) {
+        return getDropChance(CraftEquipmentSlot.getNMS(slot));
+    }
+
+    @Override
+    public void setDropChance(EquipmentSlot slot, float chance) {
+        setDropChance(CraftEquipmentSlot.getNMS(slot), chance);
+    }
+    // Paper end
 
     private void setDropChance(net.minecraft.world.entity.EquipmentSlot slot, float chance) {
         Preconditions.checkArgument(this.entity.getHandle() instanceof Mob, "Cannot set drop chance for non-Mob entity");
