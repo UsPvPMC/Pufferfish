@@ -760,6 +760,12 @@ public abstract class PlayerList {
     }
 
     public ServerPlayer respawn(ServerPlayer entityplayer, ServerLevel worldserver, boolean flag, Location location, boolean avoidSuffocation, RespawnReason reason) {
+        // Paper start
+        return respawn(entityplayer, worldserver, flag, location, avoidSuffocation, reason, new org.bukkit.event.player.PlayerRespawnEvent.RespawnFlag[0]);
+    }
+
+    public ServerPlayer respawn(ServerPlayer entityplayer, ServerLevel worldserver, boolean flag, Location location, boolean avoidSuffocation, RespawnReason reason, org.bukkit.event.player.PlayerRespawnEvent.RespawnFlag...respawnFlags) {
+        // Paper end
         entityplayer.stopRiding(); // CraftBukkit
         this.players.remove(entityplayer);
         this.playersByName.remove(entityplayer.getScoreboardName().toLowerCase(java.util.Locale.ROOT)); // Spigot
@@ -851,7 +857,7 @@ public abstract class PlayerList {
             }
 
             Player respawnPlayer = entityplayer1.getBukkitEntity();
-            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn && !isAnchorSpawn, isAnchorSpawn, reason); // Paper - Fix anchor respawn acting as a bed respawn from the end portal
+            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn && !isAnchorSpawn, isAnchorSpawn, reason, com.google.common.collect.ImmutableSet.<org.bukkit.event.player.PlayerRespawnEvent.RespawnFlag>builder().add(respawnFlags)); // Paper - Fix anchor respawn acting as a bed respawn from the end portal
             this.cserver.getPluginManager().callEvent(respawnEvent);
             // Spigot Start
             if (entityplayer.connection.isDisconnected()) {
