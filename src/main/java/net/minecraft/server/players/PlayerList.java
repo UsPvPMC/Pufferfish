@@ -801,6 +801,7 @@ public abstract class PlayerList {
 
         // Paper start
         boolean isBedSpawn = false;
+        boolean isAnchorSpawn = false;
         boolean isRespawn = false;
         boolean isLocAltered = false; // Paper - Fix SPIGOT-5989
         // Paper end
@@ -821,6 +822,7 @@ public abstract class PlayerList {
                 if (optional.isPresent()) {
                     BlockState iblockdata = worldserver1.getBlockState(blockposition);
                     boolean flag3 = iblockdata.is(Blocks.RESPAWN_ANCHOR);
+                    isAnchorSpawn = flag3; // Paper - Fix anchor respawn acting as a bed respawn from the end portal
                     Vec3 vec3d = (Vec3) optional.get();
                     float f1;
 
@@ -849,7 +851,7 @@ public abstract class PlayerList {
             }
 
             Player respawnPlayer = entityplayer1.getBukkitEntity();
-            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn && !flag2, flag2, reason);
+            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn && !isAnchorSpawn, isAnchorSpawn, reason); // Paper - Fix anchor respawn acting as a bed respawn from the end portal
             this.cserver.getPluginManager().callEvent(respawnEvent);
             // Spigot Start
             if (entityplayer.connection.isDisconnected()) {
