@@ -279,4 +279,10 @@ public class PufferfishConfig {
     }
 
 
+    public static boolean disableMethodProfiler;
+    private static void miscSettings() {
+        disableMethodProfiler = getBoolean("misc.disable-method-profiler", true);
+        setComment("misc", "Settings for things that don't belong elsewhere");
+    }
+
 }

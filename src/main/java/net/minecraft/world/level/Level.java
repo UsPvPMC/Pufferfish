@@ -1541,6 +1541,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     }
 
     public ProfilerFiller getProfiler() {
+        if (gg.pufferfish.pufferfish.PufferfishConfig.disableMethodProfiler) return net.minecraft.util.profiling.InactiveProfiler.INSTANCE; // Pufferfish
         return (ProfilerFiller) this.profiler.get();
     }
 
