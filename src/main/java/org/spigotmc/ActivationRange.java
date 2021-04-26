@@ -315,7 +315,7 @@ public class ActivationRange
         if ( entity instanceof LivingEntity )
         {
             LivingEntity living = (LivingEntity) entity;
-            if ( living.onClimbable() || living.jumping || living.hurtTime > 0 || living.activeEffects.size() > 0 ) // Paper
+            if ( living.onClimableCached() || living.jumping || living.hurtTime > 0 || living.activeEffects.size() > 0 ) // Paper // Pufferfish - use cached
             {
                 return 1; // Paper
             }

@@ -141,7 +141,6 @@ import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 // CraftBukkit end
 
-import co.aikar.timings.MinecraftTimings; // Paper
 
 public abstract class LivingEntity extends Entity implements Attackable {
 
@@ -1937,6 +1936,20 @@ public abstract class LivingEntity extends Entity implements Attackable {
     public Optional<BlockPos> getLastClimbablePos() {
         return this.lastClimbablePos;
     }
+
+
+    // Pufferfish start
+    private boolean cachedOnClimable = false;
+    private BlockPos lastClimbingPosition = null;
+
+    public boolean onClimableCached() {
+        if (!this.blockPosition().equals(this.lastClimbingPosition)) {
+            this.cachedOnClimable = this.onClimbable();
+            this.lastClimbingPosition = this.blockPosition();
+        }
+        return this.cachedOnClimable;
+    }
+    // Pufferfish end
 
     public boolean onClimbable() {
         if (this.isSpectator()) {
