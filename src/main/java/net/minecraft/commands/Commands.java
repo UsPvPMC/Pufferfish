@@ -394,7 +394,12 @@ public class Commands {
     }
 
     public void sendCommands(ServerPlayer player) {
-        if ( org.spigotmc.SpigotConfig.tabComplete < 0 ) return; // Spigot
+        // Paper start - Send empty commands if tab completion is disabled
+        if ( org.spigotmc.SpigotConfig.tabComplete < 0 ) { //return; // Spigot
+            player.connection.send(new ClientboundCommandsPacket(new RootCommandNode<>()));
+            return;
+        }
+        // Paper end
         // CraftBukkit start
         // Register Vanilla commands into builtRoot as before
         // Paper start - Async command map building
