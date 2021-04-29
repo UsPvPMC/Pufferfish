@@ -622,6 +622,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
             } else {
                 this.channel.pipeline().addBefore("encoder", "compress", new CompressionEncoder(compressionThreshold));
             }
+            this.channel.pipeline().fireUserEventTriggered(io.papermc.paper.network.ConnectionEvent.COMPRESSION_THRESHOLD_SET); // Paper
         } else {
             if (this.channel.pipeline().get("decompress") instanceof CompressionDecoder) {
                 this.channel.pipeline().remove("decompress");
@@ -630,6 +631,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
             if (this.channel.pipeline().get("compress") instanceof CompressionEncoder) {
                 this.channel.pipeline().remove("compress");
             }
+            this.channel.pipeline().fireUserEventTriggered(io.papermc.paper.network.ConnectionEvent.COMPRESSION_DISABLED); // Paper
         }
 
     }
