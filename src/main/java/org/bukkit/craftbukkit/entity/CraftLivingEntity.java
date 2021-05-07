@@ -930,5 +930,21 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     public void setHurtDirection(float hurtDirection) {
         throw new UnsupportedOperationException("Cannot set the hurt direction on a non player");
     }
+
+    public static MobType fromBukkitEntityCategory(EntityCategory entityCategory) {
+        switch (entityCategory) {
+            case NONE:
+                return MobType.UNDEFINED;
+            case UNDEAD:
+                return MobType.UNDEAD;
+            case ARTHROPOD:
+                return MobType.ARTHROPOD;
+            case ILLAGER:
+                return MobType.ILLAGER;
+            case WATER:
+                return MobType.WATER;
+        }
+        throw new IllegalArgumentException(entityCategory + " is an unrecognized entity category");
+    }
     // Paper end
 }
