@@ -100,6 +100,7 @@ public class GameRules {
     public static final GameRules.Key<GameRules.BooleanValue> RULE_GLOBAL_SOUND_EVENTS = GameRules.register("globalSoundEvents", GameRules.Category.MISC, GameRules.BooleanValue.create(true));
     public static final GameRules.Key<GameRules.BooleanValue> RULE_DO_VINES_SPREAD = GameRules.register("doVinesSpread", GameRules.Category.UPDATES, GameRules.BooleanValue.create(true));
     private final Map<GameRules.Key<?>, GameRules.Value<?>> rules;
+    private final GameRules.Value<?>[] gameruleArray; // Paper
 
     private static <T extends GameRules.Value<T>> GameRules.Key<T> register(String name, GameRules.Category category, GameRules.Type<T> type) {
         GameRules.Key<T> gamerules_gamerulekey = new GameRules.Key<>(name, category);
@@ -118,17 +119,30 @@ public class GameRules {
     }
 
     public GameRules() {
-        this.rules = (Map) GameRules.GAME_RULE_TYPES.entrySet().stream().collect(ImmutableMap.toImmutableMap(Entry::getKey, (entry) -> {
+        // Paper start - use this to ensure gameruleArray is initialized
+        this((Map) GameRules.GAME_RULE_TYPES.entrySet().stream().collect(ImmutableMap.toImmutableMap(Entry::getKey, (entry) -> {
             return ((GameRules.Type) entry.getValue()).createRule();
-        }));
+        })));
+        // Paper end
     }
 
     private GameRules(Map<GameRules.Key<?>, GameRules.Value<?>> rules) {
         this.rules = rules;
+
+        // Paper start
+        int arraySize = rules.keySet().stream().mapToInt(key -> key.gameRuleIndex).max().orElse(-1) + 1;
+        GameRules.Value<?>[] values = new GameRules.Value[arraySize];
+
+        for (Entry<GameRules.Key<?>, GameRules.Value<?>> entry : rules.entrySet()) {
+            values[entry.getKey().gameRuleIndex] = entry.getValue();
+        }
+
+        this.gameruleArray = values;
+        // Paper end
     }
 
     public <T extends GameRules.Value<T>> T getRule(GameRules.Key<T> key) {
-        return (T) this.rules.get(key); // CraftBukkit - decompile error
+        return key == null ? null : (T) this.gameruleArray[key.gameRuleIndex]; // Paper
     }
 
     public CompoundTag createTag() {
@@ -187,6 +201,10 @@ public class GameRules {
     }
 
     public static final class Key<T extends GameRules.Value<T>> {
+        // Paper start
+        private static int lastGameRuleIndex = 0;
+        public final int gameRuleIndex = lastGameRuleIndex++;
+        // Paper end
 
         final String id;
         private final GameRules.Category category;
