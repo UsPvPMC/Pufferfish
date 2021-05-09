@@ -54,6 +54,7 @@ public class HoneyBlock extends HalfTransparentBlock {
 
     @Override
     public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
+        if (!new io.papermc.paper.event.entity.EntityInsideBlockEvent(entity.getBukkitEntity(), org.bukkit.craftbukkit.block.CraftBlock.at(world, pos)).callEvent()) { return; } // Paper
         if (this.isSlidingDown(pos, entity)) {
             this.maybeDoSlideAchievement(entity, pos);
             this.doSlideMovement(entity);

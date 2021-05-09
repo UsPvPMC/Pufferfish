@@ -24,6 +24,7 @@ public class LavaCauldronBlock extends AbstractCauldronBlock {
 
     @Override
     public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
+        if (!new io.papermc.paper.event.entity.EntityInsideBlockEvent(entity.getBukkitEntity(), org.bukkit.craftbukkit.block.CraftBlock.at(world, pos)).callEvent()) { return; } // Paper
         if (this.isEntityInsideContent(state, pos, entity)) {
             entity.lavaHurt();
         }

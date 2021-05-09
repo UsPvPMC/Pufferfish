@@ -44,6 +44,7 @@ public class DetectorRailBlock extends BaseRailBlock {
 
     @Override
     public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
+        if (!new io.papermc.paper.event.entity.EntityInsideBlockEvent(entity.getBukkitEntity(), org.bukkit.craftbukkit.block.CraftBlock.at(world, pos)).callEvent()) { return; } // Paper
         if (!world.isClientSide) {
             if (!(Boolean) state.getValue(DetectorRailBlock.POWERED)) {
                 this.checkPressed(world, pos, state);

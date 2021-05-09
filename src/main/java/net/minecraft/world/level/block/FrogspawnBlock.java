@@ -71,6 +71,7 @@ public class FrogspawnBlock extends Block {
 
     @Override
     public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
+        if (!new io.papermc.paper.event.entity.EntityInsideBlockEvent(entity.getBukkitEntity(), org.bukkit.craftbukkit.block.CraftBlock.at(world, pos)).callEvent()) { return; } // Paper
         if (entity.getType().equals(EntityType.FALLING_BLOCK)) {
             this.destroyBlock(world, pos);
         }

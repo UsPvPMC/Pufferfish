@@ -25,6 +25,7 @@ public class WaterlilyBlock extends BushBlock {
     @Override
     public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
         super.entityInside(state, world, pos, entity);
+        if (!new io.papermc.paper.event.entity.EntityInsideBlockEvent(entity.getBukkitEntity(), org.bukkit.craftbukkit.block.CraftBlock.at(world, pos)).callEvent()) { return; } // Paper
         if (world instanceof ServerLevel && entity instanceof Boat && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(entity, pos, Blocks.AIR.defaultBlockState()).isCancelled()) { // CraftBukkit
             world.destroyBlock(new BlockPos(pos), true, entity);
         }
