@@ -2618,6 +2618,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     // Spigot Start
     public SocketAddress getRawAddress()
     {
+        // Paper start - this can be nullable in the case of a Unix domain socket, so if it is, fake something
+        if (connection.channel.remoteAddress() == null) {
+            return new java.net.InetSocketAddress(java.net.InetAddress.getLoopbackAddress(), 0);
+        }
+        // Paper end
         return this.connection.channel.remoteAddress();
     }
     // Spigot End
