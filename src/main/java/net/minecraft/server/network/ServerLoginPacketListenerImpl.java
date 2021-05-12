@@ -331,12 +331,13 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
         public void fireEvents() throws Exception {
                         String playerName = ServerLoginPacketListenerImpl.this.gameProfile.getName();
                         java.net.InetAddress address = ((java.net.InetSocketAddress) ServerLoginPacketListenerImpl.this.connection.getRemoteAddress()).getAddress();
+                        java.net.InetAddress rawAddress = ((java.net.InetSocketAddress) connection.channel.remoteAddress()).getAddress(); // Paper
                         java.util.UUID uniqueId = ServerLoginPacketListenerImpl.this.gameProfile.getId();
                         final org.bukkit.craftbukkit.CraftServer server = ServerLoginPacketListenerImpl.this.server.server;
 
                         // Paper start
                         com.destroystokyo.paper.profile.PlayerProfile profile = com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitMirror(ServerLoginPacketListenerImpl.this.gameProfile);
-                        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId, profile);
+                        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, rawAddress, uniqueId, profile); // Paper - add rawAddress
                         server.getPluginManager().callEvent(asyncEvent);
                         profile = asyncEvent.getPlayerProfile();
                         profile.complete(true); // Paper - setPlayerProfileAPI
