@@ -2912,6 +2912,13 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                 if (true && !this.isPassenger() && this.portalTime++ >= i) { // CraftBukkit
                     this.level.getProfiler().push("portal");
                     this.portalTime = i;
+                    // Paper start
+                    io.papermc.paper.event.entity.EntityPortalReadyEvent event = new io.papermc.paper.event.entity.EntityPortalReadyEvent(this.getBukkitEntity(), worldserver1 == null ? null : worldserver1.getWorld(), org.bukkit.PortalType.NETHER);
+                    if (!event.callEvent()) {
+                        this.portalTime = 0;
+                    } else {
+                        worldserver1 = event.getTargetWorld() == null ? null : ((CraftWorld) event.getTargetWorld()).getHandle();
+                    // Paper end
                     this.setPortalCooldown();
                     // CraftBukkit start
                     if (this instanceof ServerPlayer) {
@@ -2919,6 +2926,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                     } else {
                         this.changeDimension(worldserver1);
                     }
+                    } // Paper
                     // CraftBukkit end
                     this.level.getProfiler().pop();
                 }
