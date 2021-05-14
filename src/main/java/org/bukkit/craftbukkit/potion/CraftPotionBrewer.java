@@ -15,12 +15,18 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 public class CraftPotionBrewer implements PotionBrewer {
-    private static final Map<PotionType, Collection<PotionEffect>> cache = Maps.newHashMap();
+    private static final Map<Integer, Collection<PotionEffect>> cache = Maps.newHashMap(); // Paper
 
     @Override
     public Collection<PotionEffect> getEffects(PotionType damage, boolean upgraded, boolean extended) {
-        if (CraftPotionBrewer.cache.containsKey(damage))
-            return CraftPotionBrewer.cache.get(damage);
+        // Paper start
+        int key = damage.ordinal() << 2;
+        key |= (upgraded ? 1 : 0) << 1;
+        key |= extended ? 1 : 0;
+
+        if (CraftPotionBrewer.cache.containsKey(key))
+            return CraftPotionBrewer.cache.get(key);
+        // Paper end
 
         List<MobEffectInstance> mcEffects = Potion.byName(CraftPotionUtil.fromBukkit(new PotionData(damage, extended, upgraded))).getEffects();
 
@@ -29,9 +35,9 @@ public class CraftPotionBrewer implements PotionBrewer {
             builder.add(CraftPotionUtil.toBukkit(effect));
         }
 
-        CraftPotionBrewer.cache.put(damage, builder.build());
+        CraftPotionBrewer.cache.put(key, builder.build()); // Paper
 
-        return CraftPotionBrewer.cache.get(damage);
+        return CraftPotionBrewer.cache.get(key); // Paper
     }
 
     @Override
