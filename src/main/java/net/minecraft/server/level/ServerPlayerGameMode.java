@@ -73,21 +73,27 @@ public class ServerPlayerGameMode {
     }
 
     public boolean changeGameModeForPlayer(GameType gameMode) {
+        // Paper end
+        PlayerGameModeChangeEvent event = this.changeGameModeForPlayer(gameMode, org.bukkit.event.player.PlayerGameModeChangeEvent.Cause.UNKNOWN, null);
+        return event == null ? false : event.isCancelled();
+    }
+    public PlayerGameModeChangeEvent changeGameModeForPlayer(GameType gameMode, org.bukkit.event.player.PlayerGameModeChangeEvent.Cause cause, net.kyori.adventure.text.Component cancelMessage) {
+        // Paper end
         if (gameMode == this.gameModeForPlayer) {
-            return false;
+            return null; // Paper
         } else {
             // CraftBukkit start
-            PlayerGameModeChangeEvent event = new PlayerGameModeChangeEvent(this.player.getBukkitEntity(), GameMode.getByValue(gameMode.getId()));
+            PlayerGameModeChangeEvent event = new PlayerGameModeChangeEvent(this.player.getBukkitEntity(), GameMode.getByValue(gameMode.getId()), cause, cancelMessage); // Paper
             this.level.getCraftServer().getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                return false;
+                return event; // Paper
             }
             // CraftBukkit end
             this.setGameModeForPlayer(gameMode, this.previousGameModeForPlayer);
             this.player.onUpdateAbilities();
             this.player.server.getPlayerList().broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_GAME_MODE, this.player), this.player); // CraftBukkit
             this.level.updateSleepingPlayerList();
-            return true;
+            return event; // Paper
         }
     }
 
