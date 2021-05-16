@@ -669,7 +669,7 @@ public abstract class PlayerList {
         while (iterator.hasNext()) {
             entityplayer = (ServerPlayer) iterator.next();
             this.save(entityplayer); // CraftBukkit - Force the player's inventory to be saved
-            entityplayer.connection.disconnect(Component.translatable("multiplayer.disconnect.duplicate_login"));
+            entityplayer.connection.disconnect(Component.translatable("multiplayer.disconnect.duplicate_login", new Object[0]), org.bukkit.event.player.PlayerKickEvent.Cause.DUPLICATE_LOGIN); // Paper - kick event cause
         }
 
         // Instead of kicking then returning, we need to store the kick reason
@@ -1305,8 +1305,8 @@ public abstract class PlayerList {
         // Paper end
         // CraftBukkit start - disconnect safely
         for (ServerPlayer player : this.players) {
-            if (isRestarting) player.connection.disconnect(org.spigotmc.SpigotConfig.restartMessage); else // Paper
-            player.connection.disconnect(this.server.server.shutdownMessage()); // CraftBukkit - add custom shutdown message // Paper - Adventure
+            if (isRestarting) player.connection.disconnect(org.spigotmc.SpigotConfig.restartMessage, org.bukkit.event.player.PlayerKickEvent.Cause.UNKNOWN); else // Paper - kick event cause (cause is never used here)
+            player.connection.disconnect(this.server.server.shutdownMessage(), org.bukkit.event.player.PlayerKickEvent.Cause.UNKNOWN); // CraftBukkit - add custom shutdown message // Paper - Adventure & KickEventCause (cause is never used here)
         }
         // CraftBukkit end
 

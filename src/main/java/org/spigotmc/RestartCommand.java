@@ -74,7 +74,7 @@ public class RestartCommand extends Command
             // Kick all players
             for ( ServerPlayer p : com.google.common.collect.ImmutableList.copyOf( MinecraftServer.getServer().getPlayerList().players ) )
             {
-                p.connection.disconnect(SpigotConfig.restartMessage);
+                p.connection.disconnect(SpigotConfig.restartMessage, org.bukkit.event.player.PlayerKickEvent.Cause.RESTART_COMMAND); // Paper - kick event reason (cause is never used))
             }
             // Give the socket a chance to send the packets
             try
