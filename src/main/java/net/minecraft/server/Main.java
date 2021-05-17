@@ -293,6 +293,7 @@ public class Main {
                 */
                 boolean flag1 = !optionset.has("nogui") && !optionset.nonOptionArguments().contains("nogui");
 
+                if(!Boolean.parseBoolean(System.getenv().getOrDefault("PAPER_DISABLE_SERVER_GUI", String.valueOf(false)))) // Paper
                 if (flag1 && !GraphicsEnvironment.isHeadless()) {
                     dedicatedserver1.showGui();
                 }
