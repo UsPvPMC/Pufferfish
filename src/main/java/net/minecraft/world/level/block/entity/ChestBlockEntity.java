@@ -31,7 +31,10 @@ import org.bukkit.entity.HumanEntity;
 public class ChestBlockEntity extends RandomizableContainerBlockEntity implements LidBlockEntity {
 
     private static final int EVENT_SET_OPEN_COUNT = 1;
+    // Pufferfish start
     private NonNullList<ItemStack> items;
+    private gg.airplane.structs.ItemListWithBitset optimizedItems;
+    // Pufferfish end
     public final ContainerOpenersCounter openersCounter;
     private final ChestLidController chestLidController;
 
@@ -65,9 +68,13 @@ public class ChestBlockEntity extends RandomizableContainerBlockEntity implement
     }
     // CraftBukkit end
 
+    private final boolean isNative = getClass().equals(ChestBlockEntity.class); // Pufferfish
     protected ChestBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        this.items = NonNullList.withSize(27, ItemStack.EMPTY);
+        // Pufferfish start
+        this.optimizedItems = new gg.airplane.structs.ItemListWithBitset(27);
+        this.items = this.optimizedItems.nonNullList;
+        // Pufferfish end
         this.openersCounter = new ContainerOpenersCounter() {
             @Override
             protected void onOpen(Level world, BlockPos pos, BlockState state) {
@@ -98,6 +105,23 @@ public class ChestBlockEntity extends RandomizableContainerBlockEntity implement
         this.chestLidController = new ChestLidController();
     }
 
+    // Pufferfish start
+    @Override
+    public boolean hasEmptySlot(Direction enumdirection) {
+        return isNative ? !this.optimizedItems.hasFullStacks() : super.hasEmptySlot(enumdirection);
+    }
+
+    @Override
+    public boolean isCompletelyFull(Direction enumdirection) {
+        return isNative ? this.optimizedItems.hasFullStacks() && super.isCompletelyFull(enumdirection) : super.isCompletelyFull(enumdirection);
+    }
+
+    @Override
+    public boolean isCompletelyEmpty(Direction enumdirection) {
+        return isNative && this.optimizedItems.isCompletelyEmpty() || super.isCompletelyEmpty(enumdirection);
+    }
+    // Pufferfish end
+
     public ChestBlockEntity(BlockPos pos, BlockState state) {
         this(BlockEntityType.CHEST, pos, state);
     }
@@ -115,7 +139,10 @@ public class ChestBlockEntity extends RandomizableContainerBlockEntity implement
     @Override
     public void load(CompoundTag nbt) {
         super.load(nbt);
-        this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+        // Pufferfish start
+        this.optimizedItems = new gg.airplane.structs.ItemListWithBitset(this.getContainerSize());
+        this.items = this.optimizedItems.nonNullList;
+        // Pufferfish end
         if (!this.tryLoadLootTable(nbt)) {
             ContainerHelper.loadAllItems(nbt, this.items);
         }
@@ -187,7 +214,10 @@ public class ChestBlockEntity extends RandomizableContainerBlockEntity implement
 
     @Override
     protected void setItems(NonNullList<ItemStack> list) {
-        this.items = list;
+        // Pufferfish start
+        this.optimizedItems = gg.airplane.structs.ItemListWithBitset.fromList(list);
+        this.items = this.optimizedItems.nonNullList;
+        // Pufferfish end
     }
 
     @Override

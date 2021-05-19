@@ -97,12 +97,7 @@ public abstract class RandomizableContainerBlockEntity extends BaseContainerBloc
     public boolean isEmpty() {
         this.unpackLootTable((Player)null);
         // Paper start
-        for (final ItemStack itemStack : this.getItems()) {
-            if (!itemStack.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
+        return this.isCompletelyEmpty(null); // Pufferfish - use super
         // Paper end
     }
 

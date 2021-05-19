@@ -1,5 +1,6 @@
 package net.minecraft.world;
 
+import net.minecraft.core.Direction; // Pufferfish
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -63,6 +64,23 @@ public class CompoundContainer implements Container {
         this.container1 = first;
         this.container2 = second;
     }
+
+    // Pufferfish start
+    @Override
+   public boolean hasEmptySlot(Direction enumdirection) {
+        return this.container1.hasEmptySlot(null) || this.container2.hasEmptySlot(null);
+    }
+
+    @Override
+   public boolean isCompletelyFull(Direction enumdirection) {
+        return this.container1.isCompletelyFull(null) && this.container2.isCompletelyFull(null);
+    }
+
+    @Override
+    public boolean isCompletelyEmpty(Direction enumdirection) {
+        return this.container1.isCompletelyEmpty(null) && this.container2.isCompletelyEmpty(null);
+    }
+    // Pufferfish end
 
     @Override
     public int getContainerSize() {

@@ -3,6 +3,8 @@ package net.minecraft.world;
 import java.util.Set;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
+
+import net.minecraft.core.Direction; // Pufferfish
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -13,6 +15,63 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 // CraftBukkit end
 
 public interface Container extends Clearable {
+    // Pufferfish start - allow the inventory to override and optimize these frequent calls
+    default boolean hasEmptySlot(@org.jetbrains.annotations.Nullable Direction enumdirection) { // there is a slot with 0 items in it
+        if (this instanceof WorldlyContainer worldlyContainer) {
+            for (int i : worldlyContainer.getSlotsForFace(enumdirection)) {
+                if (this.getItem(i).isEmpty()) {
+                    return true;
+                }
+            }
+        } else {
+            int size = this.getContainerSize();
+            for (int i = 0; i < size; i++) {
+                if (this.getItem(i).isEmpty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    default boolean isCompletelyFull(@org.jetbrains.annotations.Nullable Direction enumdirection) { // every stack is maxed
+        if (this instanceof WorldlyContainer worldlyContainer) {
+            for (int i : worldlyContainer.getSlotsForFace(enumdirection)) {
+                ItemStack itemStack = this.getItem(i);
+                if (itemStack.getCount() < itemStack.getMaxStackSize()) {
+                    return false;
+                }
+            }
+        } else {
+            int size = this.getContainerSize();
+            for (int i = 0; i < size; i++) {
+                ItemStack itemStack = this.getItem(i);
+                if (itemStack.getCount() < itemStack.getMaxStackSize()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    default boolean isCompletelyEmpty(@org.jetbrains.annotations.Nullable Direction enumdirection) {
+        if (this instanceof WorldlyContainer worldlyContainer) {
+            for (int i : worldlyContainer.getSlotsForFace(enumdirection)) {
+                if (!this.getItem(i).isEmpty()) {
+                    return false;
+                }
+            }
+        } else {
+            int size = this.getContainerSize();
+            for (int i = 0; i < size; i++) {
+                if (!this.getItem(i).isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    // Pufferfish end
 
     int LARGE_MAX_STACK_SIZE = 64;
     int DEFAULT_DISTANCE_LIMIT = 8;

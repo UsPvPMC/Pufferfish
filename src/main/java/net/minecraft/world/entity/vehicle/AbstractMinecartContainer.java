@@ -27,7 +27,10 @@ import org.bukkit.inventory.InventoryHolder;
 
 public abstract class AbstractMinecartContainer extends AbstractMinecart implements ContainerEntity {
 
+    // Pufferfish start
     private NonNullList<ItemStack> itemStacks;
+    private gg.airplane.structs.ItemListWithBitset itemStacksOptimized;
+    // Pufferfish end
     @Nullable
     public ResourceLocation lootTable;
     public long lootTableSeed;
@@ -89,12 +92,18 @@ public abstract class AbstractMinecartContainer extends AbstractMinecart impleme
 
     protected AbstractMinecartContainer(EntityType<?> type, Level world) {
         super(type, world);
-        this.itemStacks = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY); // CraftBukkit - SPIGOT-3513
+        // Pufferfish start
+        this.itemStacksOptimized = new gg.airplane.structs.ItemListWithBitset(this.getContainerSize()); // CraftBukkit - SPIGOT-3513
+        this.itemStacks = this.itemStacksOptimized.nonNullList;
+        // Pufferfish end
     }
 
     protected AbstractMinecartContainer(EntityType<?> type, double x, double y, double z, Level world) {
         super(type, world, x, y, z);
-        this.itemStacks = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY); // CraftBukkit - SPIGOT-3513
+        // Pufferfish start
+        this.itemStacksOptimized = new gg.airplane.structs.ItemListWithBitset(this.getContainerSize()); // CraftBukkit - SPIGOT-3513
+        this.itemStacks = this.itemStacksOptimized.nonNullList;
+        // Pufferfish end
     }
 
     @Override
@@ -156,6 +165,10 @@ public abstract class AbstractMinecartContainer extends AbstractMinecart impleme
     protected void readAdditionalSaveData(CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
         this.lootableData.loadNbt(nbt); // Paper
+        // Pufferfish start
+        this.itemStacksOptimized = new gg.airplane.structs.ItemListWithBitset(this.getContainerSize());
+        this.itemStacks = this.itemStacksOptimized.nonNullList;
+        // Pufferfish end
         this.readChestVehicleSaveData(nbt);
     }
 

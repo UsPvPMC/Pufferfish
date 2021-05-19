@@ -47,7 +47,10 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 
     public static final int MOVE_ITEM_SPEED = 8;
     public static final int HOPPER_CONTAINER_SIZE = 5;
+    // Pufferfish start
     private NonNullList<ItemStack> items;
+    private gg.airplane.structs.ItemListWithBitset optimizedItems; // Pufferfish
+    // Pufferfish end
     private int cooldownTime;
     private long tickedGameTime;
 
@@ -83,14 +86,37 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 
     public HopperBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityType.HOPPER, pos, state);
-        this.items = NonNullList.withSize(5, ItemStack.EMPTY);
+        // Pufferfish start
+        this.optimizedItems = new gg.airplane.structs.ItemListWithBitset(5);
+        this.items = this.optimizedItems.nonNullList;
+        // Pufferfish end
         this.cooldownTime = -1;
     }
+
+    // Pufferfish start
+    @Override
+    public boolean hasEmptySlot(Direction enumdirection) {
+        return !this.optimizedItems.hasFullStacks();
+    }
+
+    @Override
+    public boolean isCompletelyFull(Direction enumdirection) {
+        return this.optimizedItems.hasFullStacks() && super.isCompletelyFull(enumdirection);
+    }
+
+    @Override
+    public boolean isCompletelyEmpty(Direction enumdirection) {
+        return this.optimizedItems.isCompletelyEmpty() || super.isCompletelyEmpty(enumdirection);
+    }
+    // Pufferfish end
 
     @Override
     public void load(CompoundTag nbt) {
         super.load(nbt);
-        this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+        // Pufferfish start
+        this.optimizedItems = new gg.airplane.structs.ItemListWithBitset(this.getContainerSize());
+        this.items = this.optimizedItems.nonNullList;
+        // Pufferfish end
         if (!this.tryLoadLootTable(nbt)) {
             ContainerHelper.loadAllItems(nbt, this.items);
         }
@@ -162,7 +188,7 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
                     flag = HopperBlockEntity.ejectItems(world, pos, state, (Container) blockEntity, blockEntity); // CraftBukkit
                 }
 
-                if (!blockEntity.inventoryFull()) {
+                if (!blockEntity.optimizedItems.hasFullStacks() || !blockEntity.inventoryFull()) { // Pufferfish - use bitset first
                     flag |= booleansupplier.getAsBoolean();
                 }
 
@@ -451,11 +477,18 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
     }
 
     private static boolean isFullContainer(Container inventory, Direction direction) {
-        return allMatch(inventory, direction, STACK_SIZE_TEST); // Paper - no streams
+        // Pufferfish start - use bitsets
+        //return allMatch(inventory, direction, STACK_SIZE_TEST); // Paper - no streams
+        return inventory.isCompletelyFull(direction);
+        // Pufferfish end
     }
 
     private static boolean isEmptyContainer(Container inv, Direction facing) {
-        return allMatch(inv, facing, IS_EMPTY_TEST);
+        // Paper start
+        // Pufferfish start - use bitsets
+        //return allMatch(inv, facing, IS_EMPTY_TEST);
+        return inv.isCompletelyEmpty(facing);
+        // Pufferfish end
     }
 
     public static boolean suckInItems(Level world, Hopper hopper) {
@@ -636,7 +669,7 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 
         if (HopperBlockEntity.canPlaceItemInContainer(to, stack, slot, side)) {
             boolean flag = false;
-            boolean flag1 = to.isEmpty();
+            boolean flag1 = to.isCompletelyEmpty(side); // Pufferfish
 
             if (itemstack1.isEmpty()) {
                 // Spigot start - SPIGOT-6693, InventorySubcontainer#setItem
@@ -813,7 +846,10 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 
     @Override
     protected void setItems(NonNullList<ItemStack> list) {
-        this.items = list;
+        // Pufferfish start
+        this.optimizedItems = gg.airplane.structs.ItemListWithBitset.fromList(list);
+        this.items = this.optimizedItems.nonNullList;
+        // Pufferfish end
     }
 
     public static void entityInside(Level world, BlockPos pos, BlockState state, Entity entity, HopperBlockEntity blockEntity) {
