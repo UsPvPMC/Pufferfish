@@ -845,13 +845,13 @@ public abstract class PlayerList {
                         f1 = (float) Mth.wrapDegrees(Mth.atan2(vec3d1.z, vec3d1.x) * 57.2957763671875D - 90.0D);
                     }
 
-                    entityplayer1.setRespawnPosition(worldserver1.dimension(), blockposition, f, flag1, false);
+                    entityplayer1.setRespawnPosition(worldserver1.dimension(), blockposition, f, flag1, false, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause.PLAYER_RESPAWN); // Paper - PlayerSetSpawnEvent
                     flag2 = !flag && flag3;
                     isBedSpawn = true;
                     location = new Location(worldserver1.getWorld(), vec3d.x, vec3d.y, vec3d.z, f1, 0.0F);
                 } else if (blockposition != null) {
                     entityplayer1.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.NO_RESPAWN_BLOCK_AVAILABLE, 0.0F));
-                    entityplayer1.setRespawnPosition(null, null, 0f, false, false); // CraftBukkit - SPIGOT-5988: Clear respawn location when obstructed
+                    entityplayer1.setRespawnPosition(null, null, 0f, false, false, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause.PLAYER_RESPAWN); // CraftBukkit - SPIGOT-5988: Clear respawn location when obstructed // Paper - PlayerSetSpawnEvent
                 }
             }
 

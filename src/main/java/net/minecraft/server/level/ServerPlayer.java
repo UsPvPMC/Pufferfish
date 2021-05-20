@@ -1307,7 +1307,7 @@ public class ServerPlayer extends Player {
             } else if (this.bedBlocked(blockposition, enumdirection)) {
                 return Either.left(Player.BedSleepingProblem.OBSTRUCTED);
             } else {
-                this.setRespawnPosition(this.level.dimension(), blockposition, this.getYRot(), false, true);
+                this.setRespawnPosition(this.level.dimension(), blockposition, this.getYRot(), false, true, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause.BED); // Paper - PlayerSetSpawnEvent
                 if (this.level.isDay()) {
                     return Either.left(Player.BedSleepingProblem.NOT_POSSIBLE_NOW);
                 } else {
@@ -2149,12 +2149,33 @@ public class ServerPlayer extends Player {
         return this.respawnForced;
     }
 
+    @Deprecated // Paper
     public void setRespawnPosition(ResourceKey<Level> dimension, @Nullable BlockPos pos, float angle, boolean forced, boolean sendMessage) {
+        // Paper start
+        this.setRespawnPosition(dimension, pos, angle, forced, sendMessage, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause.UNKNOWN);
+    }
+    public boolean setRespawnPosition(ResourceKey<Level> dimension, @Nullable BlockPos pos, float angle, boolean forced, boolean sendMessage, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause cause) {
+        Location spawnLoc = null;
+        boolean willNotify = false;
         if (pos != null) {
             boolean flag2 = pos.equals(this.respawnPosition) && dimension.equals(this.respawnDimension);
+            spawnLoc = io.papermc.paper.util.MCUtil.toLocation(this.getServer().getLevel(dimension), pos);
+            spawnLoc.setYaw(angle);
+            willNotify = sendMessage && !flag2;
+        }
+        com.destroystokyo.paper.event.player.PlayerSetSpawnEvent event = new com.destroystokyo.paper.event.player.PlayerSetSpawnEvent(this.getBukkitEntity(), cause, spawnLoc, forced, willNotify, willNotify ? net.kyori.adventure.text.Component.translatable("block.minecraft.set_spawn") : null);
+        if (!event.callEvent()) {
+            return false;
+        }
+        if (event.getLocation() != null) {
+            dimension = event.getLocation().getWorld() != null ? ((CraftWorld) event.getLocation().getWorld()).getHandle().dimension() : dimension;
+            pos = io.papermc.paper.util.MCUtil.toBlockPosition(event.getLocation());
+            angle = (float) event.getLocation().getYaw();
+            forced = event.isForced();
+            // Paper end
 
-            if (sendMessage && !flag2) {
-                this.sendSystemMessage(Component.translatable("block.minecraft.set_spawn"));
+            if (event.willNotifyPlayer() && event.getNotification() != null) { // Paper
+                this.sendSystemMessage(PaperAdventure.asVanilla(event.getNotification())); // Paper
             }
 
             this.respawnPosition = pos;
@@ -2168,6 +2189,7 @@ public class ServerPlayer extends Player {
             this.respawnForced = false;
         }
 
+        return true; // Paper
     }
 
     public void trackChunk(ChunkPos chunkPos, Packet<?> chunkDataPacket) {
