@@ -1206,12 +1206,7 @@ public final class CraftServer implements Server {
         worlddata.customDimensions = iregistry;
         worlddata.checkName(name);
         worlddata.setModdedInfo(this.console.getServerModName(), this.console.getModdedStatus().shouldReportAsModified());
-
-        if (console.options.has("forceUpgrade")) {
-            net.minecraft.server.Main.forceUpgrade(worldSession, DataFixers.getDataFixer(), console.options.has("eraseCache"), () -> {
-                return true;
-            }, iregistry);
-        }
+        // Paper - move down
 
         long j = BiomeManager.obfuscateSeed(creator.seed());
         List<CustomSpawner> list = ImmutableList.of(new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(), new WanderingTraderSpawner(worlddata));
@@ -1222,6 +1217,13 @@ public final class CraftServer implements Server {
             biomeProvider = generator.getDefaultBiomeProvider(worldInfo);
         }
 
+        // Paper start - fix and optimise world upgrading
+        if (console.options.has("forceUpgrade")) {
+            net.minecraft.server.Main.convertWorldButItWorks(
+                actualDimension,  worldSession, DataFixers.getDataFixer(), worlddimension.generator().getTypeNameForDataFixer(), console.options.has("eraseCache")
+            );
+        }
+        // Paper end - fix and optimise world upgrading
         ResourceKey<net.minecraft.world.level.Level> worldKey;
         String levelName = this.getServer().getProperties().levelName;
         if (name.equals(levelName + "_nether")) {

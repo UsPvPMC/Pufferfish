@@ -32,6 +32,28 @@ public class RegionFileStorage implements AutoCloseable {
     }
 
     // Paper start
+    public static @Nullable ChunkPos getRegionFileCoordinates(Path file) {
+        String fileName = file.getFileName().toString();
+        if (!fileName.startsWith("r.") || !fileName.endsWith(".mca")) {
+            return null;
+        }
+
+        String[] split = fileName.split("\\.");
+
+        if (split.length != 4) {
+            return null;
+        }
+
+        try {
+            int x = Integer.parseInt(split[1]);
+            int z = Integer.parseInt(split[2]);
+
+            return new ChunkPos(x << 5, z << 5);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
     public synchronized RegionFile getRegionFileIfLoaded(ChunkPos chunkcoordintpair) {
         return this.regionCache.getAndMoveToFirst(ChunkPos.asLong(chunkcoordintpair.getRegionX(), chunkcoordintpair.getRegionZ()));
     }
