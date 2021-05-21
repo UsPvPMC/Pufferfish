@@ -40,6 +40,8 @@ import org.bukkit.event.player.PlayerBucketFillEvent;
 
 public class BucketItem extends Item implements DispensibleContainerItem {
 
+    private static @Nullable ItemStack itemLeftInHandAfterPlayerBucketEmptyEvent = null; // Paper
+
     public final Fluid content;
 
     public BucketItem(Fluid fluid, Item.Properties settings) {
@@ -121,6 +123,13 @@ public class BucketItem extends Item implements DispensibleContainerItem {
     }
 
     public static ItemStack getEmptySuccessItem(ItemStack stack, Player player) {
+        // Paper start
+        if (itemLeftInHandAfterPlayerBucketEmptyEvent != null) {
+            ItemStack itemInHand = itemLeftInHandAfterPlayerBucketEmptyEvent;
+            itemLeftInHandAfterPlayerBucketEmptyEvent = null;
+            return itemInHand;
+        }
+        // Paper end
         return !player.getAbilities().instabuild ? new ItemStack(Items.BUCKET) : stack;
     }
 
@@ -152,6 +161,7 @@ public class BucketItem extends Item implements DispensibleContainerItem {
                     ((ServerPlayer) entityhuman).getBukkitEntity().updateInventory(); // SPIGOT-4541
                     return false;
                 }
+                itemLeftInHandAfterPlayerBucketEmptyEvent = event.getItemStack() != null ? event.getItemStack().equals(CraftItemStack.asNewCraftStack(net.minecraft.world.item.Items.BUCKET)) ? null : CraftItemStack.asNMSCopy(event.getItemStack()) : ItemStack.EMPTY; // Paper - fix empty event result itemstack
             }
             // CraftBukkit end
             if (!flag1) {
