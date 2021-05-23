@@ -36,4 +36,11 @@ public class CraftEnderChest extends CraftBlockEntityState<EnderChestBlockEntity
         }
         getTileEntity().openersCounter.opened = false;
     }
+
+    // Paper start - More Lidded Block API
+    @Override
+    public boolean isOpen() {
+        return getTileEntity().openersCounter.opened;
+    }
+    // Paper end - More Lidded Block API
 }
