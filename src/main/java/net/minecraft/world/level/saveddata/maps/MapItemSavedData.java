@@ -295,8 +295,12 @@ public class MapItemSavedData extends SavedData {
 
             MapFrame worldmapframe1 = new MapFrame(blockposition, entityitemframe.getDirection().get2DDataValue() * 90, entityitemframe.getId());
 
+            // Paper start
+            if (this.decorations.size() < player.level.paperConfig().maps.itemFrameCursorLimit) {
             this.addDecoration(MapDecoration.Type.FRAME, player.level, "frame-" + entityitemframe.getId(), (double) blockposition.getX(), (double) blockposition.getZ(), (double) (entityitemframe.getDirection().get2DDataValue() * 90), (Component) null);
             this.frameMarkers.put(worldmapframe1.getId(), worldmapframe1);
+            }
+            // Paper end
         }
 
         CompoundTag nbttagcompound = stack.getTag();
