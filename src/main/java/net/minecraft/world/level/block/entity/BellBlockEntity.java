@@ -156,7 +156,7 @@ public class BellBlockEntity extends BlockEntity {
             return BellBlockEntity.isRaiderWithinRange(pos, entityliving);
         }).map((entity) -> (org.bukkit.entity.LivingEntity) entity.getBukkitEntity()).collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new)); // CraftBukkit
 
-        org.bukkit.craftbukkit.event.CraftEventFactory.handleBellResonateEvent(world, pos, entities).forEach(BellBlockEntity::glow);
+        org.bukkit.craftbukkit.event.CraftEventFactory.handleBellResonateEvent(world, pos, entities).forEach(entity -> glow(entity, pos)); // Paper - pass BlockPos
         // CraftBukkit end
     }
 
@@ -191,7 +191,11 @@ public class BellBlockEntity extends BlockEntity {
         return entity.isAlive() && !entity.isRemoved() && pos.closerToCenterThan(entity.position(), 48.0D) && entity.getType().is(EntityTypeTags.RAIDERS);
     }
 
-    private static void glow(LivingEntity entity) {
+    // Paper start
+    private static void glow(LivingEntity entity) { glow(entity, null); }
+    private static void glow(LivingEntity entity, @javax.annotation.Nullable BlockPos pos) {
+        if (pos != null && !new io.papermc.paper.event.block.BellRevealRaiderEvent(entity.level.getWorld().getBlockAt(io.papermc.paper.util.MCUtil.toLocation(entity.level, pos)), entity.getBukkitEntity()).callEvent()) return;
+        // Paper end
         entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 60));
     }
 
