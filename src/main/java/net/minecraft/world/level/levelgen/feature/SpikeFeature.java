@@ -100,6 +100,7 @@ public class SpikeFeature extends Feature<SpikeConfiguration> {
             endCrystal.setBeamTarget(config.getCrystalBeamTarget());
             endCrystal.setInvulnerable(config.isCrystalInvulnerable());
             endCrystal.moveTo((double)spike.getCenterX() + 0.5D, (double)(spike.getHeight() + 1), (double)spike.getCenterZ() + 0.5D, random.nextFloat() * 360.0F, 0.0F);
+        endCrystal.generatedByDragonFight = true; // Paper
             world.addFreshEntity(endCrystal);
             this.setBlock(world, new BlockPos(spike.getCenterX(), spike.getHeight(), spike.getCenterZ()), Blocks.BEDROCK.defaultBlockState());
         }
