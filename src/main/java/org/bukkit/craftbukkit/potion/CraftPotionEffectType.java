@@ -105,4 +105,46 @@ public class CraftPotionEffectType extends PotionEffectType {
     public Color getColor() {
         return Color.fromRGB(this.handle.getColor());
     }
+    // Paper start
+    @Override
+    public org.bukkit.NamespacedKey getKey() {
+        return org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getKey(this.handle));
+    }
+
+    @Override
+    public java.util.Map<org.bukkit.attribute.Attribute, org.bukkit.attribute.AttributeModifier> getEffectAttributes() {
+        // re-create map each time because a nms MobEffect can have its attributes modified
+        final java.util.Map<org.bukkit.attribute.Attribute, org.bukkit.attribute.AttributeModifier> attributeMap = new java.util.HashMap<>();
+        this.handle.getAttributeModifiers().forEach((attribute, attributeModifier) -> {
+            attributeMap.put(org.bukkit.craftbukkit.attribute.CraftAttributeMap.fromMinecraft(attribute.toString()), org.bukkit.craftbukkit.attribute.CraftAttributeInstance.convert(attributeModifier));
+        });
+        return java.util.Map.copyOf(attributeMap);
+    }
+
+    @Override
+    public double getAttributeModifierAmount(org.bukkit.attribute.Attribute attribute, int effectAmplifier) {
+        com.google.common.base.Preconditions.checkArgument(effectAmplifier >= 0, "effectAmplifier must be greater than or equal to 0");
+        net.minecraft.world.entity.ai.attributes.Attribute nmsAttribute = org.bukkit.craftbukkit.attribute.CraftAttributeMap.toMinecraft(attribute);
+        com.google.common.base.Preconditions.checkArgument(this.handle.getAttributeModifiers().containsKey(nmsAttribute), attribute + " is not present on " + this.getKey());
+        return this.handle.getAttributeModifierValue(effectAmplifier, this.handle.getAttributeModifiers().get(nmsAttribute));
+    }
+
+    @Override
+    public PotionEffectType.Category getEffectCategory() {
+        return fromNMS(handle.getCategory());
+    }
+
+    @Override
+    public String translationKey() {
+        return this.handle.getDescriptionId();
+    }
+
+    public static PotionEffectType.Category fromNMS(net.minecraft.world.effect.MobEffectCategory mobEffectInfo) {
+        return switch (mobEffectInfo) {
+            case BENEFICIAL -> PotionEffectType.Category.BENEFICIAL;
+            case HARMFUL -> PotionEffectType.Category.HARMFUL;
+            case NEUTRAL -> PotionEffectType.Category.NEUTRAL;
+        };
+    }
+    // Paper end
 }
