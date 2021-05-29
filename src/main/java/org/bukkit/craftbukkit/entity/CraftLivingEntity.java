@@ -29,6 +29,9 @@ import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.entity.projectile.ThrownEnderpearl;
 import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
 import net.minecraft.world.entity.projectile.ThrownTrident;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang.Validate;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -575,6 +578,18 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
 
         return this.getHandle().hasLineOfSight(((CraftEntity) other).getHandle());
     }
+
+    // Paper start
+    @Override
+    public boolean hasLineOfSight(Location loc) {
+        if (this.getHandle().level != ((CraftWorld) loc.getWorld()).getHandle()) return false;
+        Vec3 vec3d = new Vec3(this.getHandle().getX(), this.getHandle().getEyeY(), this.getHandle().getZ());
+        Vec3 vec3d1 = new Vec3(loc.getX(), loc.getY(), loc.getZ());
+        if (vec3d1.distanceToSqr(vec3d) > 128D * 128D) return false; //Return early if the distance is greater than 128 blocks
+
+        return this.getHandle().level.clip(new ClipContext(vec3d, vec3d1, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this.getHandle())).getType() == HitResult.Type.MISS;
+    }
+    // Paper end
 
     @Override
     public boolean getRemoveWhenFarAway() {
