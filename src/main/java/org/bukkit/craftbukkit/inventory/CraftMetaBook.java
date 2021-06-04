@@ -88,11 +88,11 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         super(tag);
 
         if (tag.contains(BOOK_TITLE.NBT)) {
-            this.title = limit( tag.getString(BOOK_TITLE.NBT), 8192 ); // Spigot
+            this.title = limit( tag.getString(BOOK_TITLE.NBT), io.papermc.paper.configuration.GlobalConfiguration.get().itemValidation.book.title); // Spigot // Paper - make configurable
         }
 
         if (tag.contains(BOOK_AUTHOR.NBT)) {
-            this.author = limit( tag.getString(BOOK_AUTHOR.NBT), 8192 ); // Spigot
+            this.author = limit( tag.getString(BOOK_AUTHOR.NBT), io.papermc.paper.configuration.GlobalConfiguration.get().itemValidation.book.author ); // Spigot // Paper - make configurable
         }
 
         if (tag.contains(RESOLVED.NBT)) {
@@ -120,7 +120,7 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
                 } else {
                     page = this.validatePage(page);
                 }
-                this.pages.add( limit( page, 16384 ) ); // Spigot
+                this.pages.add( limit( page, io.papermc.paper.configuration.GlobalConfiguration.get().itemValidation.book.page ) ); // Spigot // Paper - make configurable
             }
         }
     }

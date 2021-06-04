@@ -360,7 +360,7 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
             CompoundTag display = tag.getCompound(DISPLAY.NBT);
 
             if (display.contains(NAME.NBT)) {
-                this.displayName = limit( display.getString(NAME.NBT), 8192 ); // Spigot
+                this.displayName = limit( display.getString(NAME.NBT), io.papermc.paper.configuration.GlobalConfiguration.get().itemValidation.displayName ); // Spigot // Paper - make configurable
             }
 
             if (display.contains(LOCNAME.NBT)) {
@@ -371,7 +371,7 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
                 ListTag list = display.getList(LORE.NBT, CraftMagicNumbers.NBT.TAG_STRING);
                 this.lore = new ArrayList<String>(list.size());
                 for (int index = 0; index < list.size(); index++) {
-                    String line = limit( list.getString(index), 8192 ); // Spigot
+                    String line = limit( list.getString(index), io.papermc.paper.configuration.GlobalConfiguration.get().itemValidation.loreLine ); // Spigot // Paper - make configurable
                     this.lore.add(line);
                 }
             }
