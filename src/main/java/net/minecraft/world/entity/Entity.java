@@ -510,6 +510,36 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
         return chunkMap.playerEntityTrackerTrackMaps[type.ordinal()].getObjectsInRange(MCUtil.getCoordinateKey(this));
     }
     // Paper end - optimise entity tracking
+    // Paper start - make end portalling safe
+    public BlockPos portalBlock;
+    public ServerLevel portalWorld;
+    public void tickEndPortal() {
+        BlockPos pos = this.portalBlock;
+        ServerLevel world = this.portalWorld;
+        this.portalBlock = null;
+        this.portalWorld = null;
+
+        if (pos == null || world == null || world != this.level) {
+            return;
+        }
+
+        if (this.isPassenger() || this.isVehicle() || !this.canChangeDimensions() || this.isRemoved() || !this.valid || !this.isAlive()) {
+            return;
+        }
+
+        ResourceKey<Level> resourcekey = world.getTypeKey() == LevelStem.END ? Level.OVERWORLD : Level.END; // CraftBukkit - SPIGOT-6152: send back to main overworld in custom ends
+        ServerLevel worldserver = world.getServer().getLevel(resourcekey);
+
+        org.bukkit.event.entity.EntityPortalEnterEvent event = new org.bukkit.event.entity.EntityPortalEnterEvent(this.getBukkitEntity(), new org.bukkit.Location(world.getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+        event.callEvent();
+
+        if (this instanceof ServerPlayer) {
+            ((ServerPlayer)this).changeDimension(worldserver, PlayerTeleportEvent.TeleportCause.END_PORTAL);
+            return;
+        }
+        this.teleportTo(worldserver, null);
+    }
+    // Paper end - make end portalling safe
 
     public Entity(EntityType<?> type, Level world) {
         this.id = Entity.ENTITY_COUNTER.incrementAndGet();
@@ -2730,6 +2760,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
             }
 
             this.processPortalCooldown();
+            this.tickEndPortal(); // Paper - make end portalling safe
         }
     }
 
