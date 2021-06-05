@@ -18,6 +18,12 @@ public class Main {
     public static boolean useJline = true;
     public static boolean useConsole = true;
 
+    // Paper start - Hijack log manager to ensure logging on shutdown
+    static {
+        System.setProperty("java.util.logging.manager", "io.papermc.paper.log.CustomLogManager");
+    }
+    // Paper end
+
     public static void main(String[] args) {
         // Paper start
         final String warnWhenLegacyFormattingDetected = String.join(".", "net", "kyori", "adventure", "text", "warnWhenLegacyFormattingDetected");
