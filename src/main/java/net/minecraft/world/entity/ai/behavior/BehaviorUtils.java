@@ -173,11 +173,11 @@ public class BehaviorUtils {
 
         return optional.map((uuid) -> {
             return ((ServerLevel) entity.level).getEntity(uuid);
-        }).map((entity) -> {
+        }).map((entity1) -> { // Paper - remap fix
             LivingEntity entityliving1;
 
-            if (entity instanceof LivingEntity) {
-                LivingEntity entityliving2 = (LivingEntity) entity;
+            if (entity1 instanceof LivingEntity) { // Paper - remap fix
+                LivingEntity entityliving2 = (LivingEntity) entity1; // Paper - remap fix
 
                 entityliving1 = entityliving2;
             } else {

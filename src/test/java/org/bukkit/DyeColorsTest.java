@@ -4,7 +4,6 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.world.item.DyeColor;
 import org.bukkit.support.AbstractTestingBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,7 +28,7 @@ public class DyeColorsTest extends AbstractTestingBase {
     @Test
     public void checkColor() {
         Color color = this.dye.getColor();
-        float[] nmsColorArray = DyeColor.byId(this.dye.getWoolData()).getTextureDiffuseColors();
+        float[] nmsColorArray = net.minecraft.world.item.DyeColor.byId(this.dye.getWoolData()).getTextureDiffuseColors(); // Paper - remap fix
         Color nmsColor = Color.fromRGB((int) (nmsColorArray[0] * 255), (int) (nmsColorArray[1] * 255), (int) (nmsColorArray[2] * 255));
         assertThat(color, is(nmsColor));
     }
@@ -37,7 +36,7 @@ public class DyeColorsTest extends AbstractTestingBase {
     @Test
     public void checkFireworkColor() {
         Color color = this.dye.getFireworkColor();
-        int nmsColor = DyeColor.byId(this.dye.getWoolData()).getFireworkColor();
+        int nmsColor = net.minecraft.world.item.DyeColor.byId(this.dye.getWoolData()).getFireworkColor(); // Paper - remap fix
         assertThat(color, is(Color.fromRGB(nmsColor)));
     }
 }
