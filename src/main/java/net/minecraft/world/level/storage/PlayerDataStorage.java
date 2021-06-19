@@ -93,7 +93,7 @@ public class PlayerDataStorage {
             // CraftBukkit end
             int i = NbtUtils.getDataVersion(nbttagcompound, -1);
 
-            player.load(DataFixTypes.PLAYER.updateToCurrentVersion(this.fixerUpper, nbttagcompound, i));
+            player.load(ca.spottedleaf.dataconverter.minecraft.MCDataConverter.convertTag(ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry.PLAYER, nbttagcompound, i, net.minecraft.SharedConstants.getCurrentVersion().getDataVersion().getVersion())); // Paper - replace player converter
         }
 
         return nbttagcompound;

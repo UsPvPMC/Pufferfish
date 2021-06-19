@@ -115,7 +115,7 @@ public class EntityStorage implements EntityPersistentStorage<Entity> {
 
     private CompoundTag upgradeChunkTag(CompoundTag chunkNbt) {
         int i = NbtUtils.getDataVersion(chunkNbt, -1);
-        return DataFixTypes.ENTITY_CHUNK.updateToCurrentVersion(this.fixerUpper, chunkNbt, i);
+        return ca.spottedleaf.dataconverter.minecraft.MCDataConverter.convertTag(ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry.ENTITY_CHUNK, chunkNbt, i, net.minecraft.SharedConstants.getCurrentVersion().getDataVersion().getVersion()); // Paper - route to new converter system
     }
 
     @Override
