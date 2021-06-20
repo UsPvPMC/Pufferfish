@@ -84,7 +84,7 @@ public class Turtle extends Animal {
     }
 
     public void setHomePos(BlockPos pos) {
-        this.entityData.set(Turtle.HOME_POS, pos);
+        this.entityData.set(Turtle.HOME_POS, pos.immutable()); // Paper - called with mutablepos...
     }
 
     public BlockPos getHomePos() {

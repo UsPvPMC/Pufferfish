@@ -46,6 +46,15 @@ public class ZeroBitStorage implements BitStorage {
         return 0;
     }
 
+    // Paper start
+    @Override
+    public void forEach(DataBitConsumer consumer) {
+        for(int i = 0; i < this.size; ++i) {
+            consumer.accept(i, 0);
+        }
+    }
+    // Paper end
+
     @Override
     public void getAll(IntConsumer action) {
         for(int i = 0; i < this.size; ++i) {

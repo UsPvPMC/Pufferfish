@@ -27,6 +27,7 @@ public class LevelChunkSection {
     public final PalettedContainer<BlockState> states;
     // CraftBukkit start - read/write
     private PalettedContainer<Holder<Biome>> biomes;
+    public final com.destroystokyo.paper.util.maplist.IBlockDataList tickingList = new com.destroystokyo.paper.util.maplist.IBlockDataList(); // Paper
 
     public LevelChunkSection(int i, PalettedContainer<BlockState> datapaletteblock, PalettedContainer<Holder<Biome>> palettedcontainerro) {
         // CraftBukkit end
@@ -85,6 +86,9 @@ public class LevelChunkSection {
             --this.nonEmptyBlockCount;
             if (iblockdata1.isRandomlyTicking()) {
                 --this.tickingBlockCount;
+                // Paper start
+                this.tickingList.remove(x, y, z);
+                // Paper end
             }
         }
 
@@ -96,6 +100,9 @@ public class LevelChunkSection {
             ++this.nonEmptyBlockCount;
             if (state.isRandomlyTicking()) {
                 ++this.tickingBlockCount;
+                // Paper start
+                this.tickingList.add(x, y, z, state);
+                // Paper end
             }
         }
 
@@ -127,40 +134,31 @@ public class LevelChunkSection {
     }
 
     public void recalcBlockCounts() {
-        class a implements PalettedContainer.CountConsumer<BlockState> {
+        // Paper start - unfuck this
+        this.tickingList.clear();
+        this.nonEmptyBlockCount = 0;
+        this.tickingBlockCount = 0;
+        this.tickingFluidCount = 0;
+        this.states.forEachLocation((BlockState iblockdata, int i) -> {
+            FluidState fluid = iblockdata.getFluidState();
 
-            public int nonEmptyBlockCount;
-            public int tickingBlockCount;
-            public int tickingFluidCount;
-
-            a() {}
-
-            public void accept(BlockState iblockdata, int i) {
-                FluidState fluid = iblockdata.getFluidState();
-
-                if (!iblockdata.isAir()) {
-                    this.nonEmptyBlockCount += i;
-                    if (iblockdata.isRandomlyTicking()) {
-                        this.tickingBlockCount += i;
-                    }
+            if (!iblockdata.isAir()) {
+                this.nonEmptyBlockCount = (short) (this.nonEmptyBlockCount + 1);
+                if (iblockdata.isRandomlyTicking()) {
+                    this.tickingBlockCount = (short)(this.tickingBlockCount + 1);
+                    this.tickingList.add(i, iblockdata);
                 }
-
-                if (!fluid.isEmpty()) {
-                    this.nonEmptyBlockCount += i;
-                    if (fluid.isRandomlyTicking()) {
-                        this.tickingFluidCount += i;
-                    }
-                }
-
             }
-        }
 
-        a a0 = new a();
+            if (!fluid.isEmpty()) {
+                this.nonEmptyBlockCount = (short) (this.nonEmptyBlockCount + 1);
+                if (fluid.isRandomlyTicking()) {
+                    this.tickingFluidCount = (short) (this.tickingFluidCount + 1);
+                }
+            }
 
-        this.states.count(a0);
-        this.nonEmptyBlockCount = (short) a0.nonEmptyBlockCount;
-        this.tickingBlockCount = (short) a0.tickingBlockCount;
-        this.tickingFluidCount = (short) a0.tickingFluidCount;
+        });
+        // Paper end
     }
 
     public PalettedContainer<BlockState> getStates() {

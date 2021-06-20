@@ -387,6 +387,14 @@ public class PalettedContainer<T> implements PaletteResize<T>, PalettedContainer
         }
     }
 
+    // Paper start
+    public void forEachLocation(PalettedContainer.CountConsumer<T> consumer) {
+        this.data.storage.forEach((int location, int data) -> {
+            consumer.accept(this.data.palette.valueFor(data), location);
+        });
+    }
+    // Paper end
+
     @FunctionalInterface
     public interface CountConsumer<T> {
         void accept(T object, int count);

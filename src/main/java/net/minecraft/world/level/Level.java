@@ -1371,10 +1371,18 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
     public abstract RecipeManager getRecipeManager();
 
     public BlockPos getBlockRandomPos(int x, int y, int z, int l) {
+        // Paper start - allow use of mutable pos
+        BlockPos.MutableBlockPos ret = new BlockPos.MutableBlockPos();
+        this.getRandomBlockPosition(x, y, z, l, ret);
+        return ret.immutable();
+    }
+    public final BlockPos.MutableBlockPos getRandomBlockPosition(int x, int y, int z, int l, BlockPos.MutableBlockPos out) {
+        // Paper end
         this.randValue = this.randValue * 3 + 1013904223;
         int i1 = this.randValue >> 2;
 
-        return new BlockPos(x + (i1 & 15), y + (i1 >> 16 & l), z + (i1 >> 8 & 15));
+        out.set(x + (i1 & 15), y + (i1 >> 16 & l), z + (i1 >> 8 & 15)); // Paper - change to setValues call
+        return out; // Paper
     }
 
     public boolean noSave() {

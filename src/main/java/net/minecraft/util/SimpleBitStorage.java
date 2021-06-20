@@ -124,6 +124,28 @@ public class SimpleBitStorage implements BitStorage {
         return this.bits;
     }
 
+    // Paper start
+    @Override
+    public final void forEach(DataBitConsumer consumer) {
+        int i = 0;
+        long[] along = this.data;
+        int j = along.length;
+
+        for (int k = 0; k < j; ++k) {
+            long l = along[k];
+
+            for (int i1 = 0; i1 < this.valuesPerLong; ++i1) {
+                consumer.accept(i, (int) (l & this.mask));
+                l >>= this.bits;
+                ++i;
+                if (i >= this.size) {
+                    return;
+                }
+            }
+        }
+    }
+    // Paper end
+
     @Override
     public void getAll(IntConsumer action) {
         int i = 0;
