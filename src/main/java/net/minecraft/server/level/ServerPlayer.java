@@ -100,6 +100,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.Unit;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -1430,7 +1431,7 @@ public class ServerPlayer extends Player {
 
     @Override
     public boolean isInvulnerableTo(DamageSource damageSource) {
-        return super.isInvulnerableTo(damageSource) || this.isChangingDimension();
+        return super.isInvulnerableTo(damageSource) || this.isChangingDimension()  || !level.paperConfig().collisions.allowPlayerCrammingDamage && damageSource == damageSources().cramming(); // Paper - disable player cramming
     }
 
     @Override
