@@ -633,7 +633,7 @@ public class LevelChunk extends ChunkAccess {
                     + " (" + getBlockState(blockposition) + ") where there was no entity tile!\n" +
                     "Chunk coordinates: " + (this.chunkPos.x * 16) + "," + (this.chunkPos.z * 16) +
                     "\nWorld: " + level.getLevel().dimension().location());
-            e.printStackTrace();
+            io.papermc.paper.util.TraceUtil.printStackTrace(e);
             ServerInternalException.reportInternalException(e);
             // Paper end
             // CraftBukkit end

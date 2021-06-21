@@ -185,7 +185,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                 MutableComponent ichatmutablecomponent = Component.translatable("multiplayer.disconnect.invalid_player_data");
                 // Paper start
                 if (MinecraftServer.getServer().isDebugging()) {
-                    exception.printStackTrace();
+                    io.papermc.paper.util.TraceUtil.printStackTrace(exception);
                 }
                 // Paper end
 

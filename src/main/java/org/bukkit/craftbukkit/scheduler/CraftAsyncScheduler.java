@@ -40,9 +40,9 @@ public class CraftAsyncScheduler extends CraftScheduler {
 
     private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
             4, Integer.MAX_VALUE,30L, TimeUnit.SECONDS, new SynchronousQueue<>(),
-            new ThreadFactoryBuilder().setNameFormat("Craft Scheduler Thread - %1$d").build());
+            new ThreadFactoryBuilder().setNameFormat("Craft Scheduler Thread - %1$d").setUncaughtExceptionHandler(new net.minecraft.DefaultUncaughtExceptionHandlerWithName(net.minecraft.server.MinecraftServer.LOGGER)).build()); // Paper
     private final Executor management = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
-            .setNameFormat("Craft Async Scheduler Management Thread").build());
+            .setNameFormat("Craft Async Scheduler Management Thread").setUncaughtExceptionHandler(new net.minecraft.DefaultUncaughtExceptionHandlerWithName(net.minecraft.server.MinecraftServer.LOGGER)).build()); // Paper
     private final List<CraftTask> temp = new ArrayList<>();
 
     CraftAsyncScheduler() {

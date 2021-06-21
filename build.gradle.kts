@@ -19,6 +19,7 @@ dependencies {
           Scanning takes about 1-2 seconds so adding this speeds up the server start.
      */
     implementation("org.apache.logging.log4j:log4j-core:2.14.1") // Paper - implementation
+    annotationProcessor("org.apache.logging.log4j:log4j-core:2.14.1") // Paper - Needed to generate meta for our Log4j plugins
     // Paper end
     implementation("org.apache.logging.log4j:log4j-iostreams:2.19.0") // Paper - remove exclusion
     implementation("org.ow2.asm:asm:9.4")
@@ -26,6 +27,7 @@ dependencies {
     testImplementation("org.mockito:mockito-core:4.9.0") // Paper - switch to mockito
     implementation("org.spongepowered:configurate-yaml:4.1.2") // Paper - config files
     implementation("commons-lang:commons-lang:2.6")
+    implementation("net.fabricmc:mapping-io:0.3.0") // Paper - needed to read mappings for stacktrace deobfuscation
     runtimeOnly("org.xerial:sqlite-jdbc:3.41.0.0")
     runtimeOnly("com.mysql:mysql-connector-j:8.0.32")
     runtimeOnly("com.lmax:disruptor:3.4.4") // Paper
@@ -104,6 +106,18 @@ tasks.check {
     dependsOn(scanJar)
 }
 // Paper end
+
+// Paper start - include reobf mappings in jar for stacktrace deobfuscation
+val includeMappings = tasks.register<io.papermc.paperweight.tasks.IncludeMappings>("includeMappings") {
+    inputJar.set(tasks.fixJarForReobf.flatMap { it.outputJar })
+    mappings.set(tasks.reobfJar.flatMap { it.mappingsFile })
+    mappingsDest.set("META-INF/mappings/reobf.tiny")
+}
+
+tasks.reobfJar {
+    inputJar.set(includeMappings.flatMap { it.outputJar })
+}
+// Paper end - include reobf mappings in jar for stacktrace deobfuscation
 
 tasks.test {
     exclude("org/bukkit/craftbukkit/inventory/ItemStack*Test.class")

@@ -195,6 +195,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
         org.spigotmc.SpigotConfig.registerCommands();
         // Spigot end
         // Paper start
+        io.papermc.paper.util.ObfHelper.INSTANCE.getClass(); // Paper - load mappings for stacktrace deobf and etc.
         paperConfigurations.initializeGlobalConfiguration();
         paperConfigurations.initializeWorldDefaultsConfiguration();
         org.spigotmc.WatchdogThread.doStart(org.spigotmc.SpigotConfig.timeoutTime, org.spigotmc.SpigotConfig.restartOnCrash);
