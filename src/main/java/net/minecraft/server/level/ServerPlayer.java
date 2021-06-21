@@ -2221,7 +2221,7 @@ public class ServerPlayer extends Player {
 
             if (retainOwnership) {
                 if (!itemstack1.isEmpty()) {
-                    this.awardStat(Stats.ITEM_DROPPED.get(itemstack1.getItem()), stack.getCount());
+                    this.awardStat(Stats.ITEM_DROPPED.get(itemstack1.getItem()), itemstack1.getCount()); // Paper
                 }
 
                 this.awardStat(Stats.DROP);
