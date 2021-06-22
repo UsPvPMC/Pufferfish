@@ -66,14 +66,20 @@ public final class Biome {
     private final BiomeGenerationSettings generationSettings;
     private final MobSpawnSettings mobSettings;
     private final BiomeSpecialEffects specialEffects;
-    private final ThreadLocal<Long2FloatLinkedOpenHashMap> temperatureCache = ThreadLocal.withInitial(() -> {
+    // Pufferfish start - use our cache
+    private final ThreadLocal<gg.airplane.structs.Long2FloatAgingCache> temperatureCache = ThreadLocal.withInitial(() -> {
         return Util.make(() -> {
+            /*
             Long2FloatLinkedOpenHashMap long2FloatLinkedOpenHashMap = new Long2FloatLinkedOpenHashMap(1024, 0.25F) {
                 protected void rehash(int i) {
                 }
             };
             long2FloatLinkedOpenHashMap.defaultReturnValue(Float.NaN);
             return long2FloatLinkedOpenHashMap;
+
+             */
+            return new gg.airplane.structs.Long2FloatAgingCache(TEMPERATURE_CACHE_SIZE);
+            // Pufferfish end
         });
     });
 
@@ -118,17 +124,15 @@ public final class Biome {
     @Deprecated
     public float getTemperature(BlockPos blockPos) {
         long l = blockPos.asLong();
-        Long2FloatLinkedOpenHashMap long2FloatLinkedOpenHashMap = this.temperatureCache.get();
-        float f = long2FloatLinkedOpenHashMap.get(l);
+        // Pufferfish start
+        gg.airplane.structs.Long2FloatAgingCache cache = this.temperatureCache.get();
+        float f = cache.getValue(l);
         if (!Float.isNaN(f)) {
             return f;
         } else {
             float g = this.getHeightAdjustedTemperature(blockPos);
-            if (long2FloatLinkedOpenHashMap.size() == 1024) {
-                long2FloatLinkedOpenHashMap.removeFirstFloat();
-            }
-
-            long2FloatLinkedOpenHashMap.put(l, g);
+            cache.putValue(l, g);
+            // Pufferfish end
             return g;
         }
     }
