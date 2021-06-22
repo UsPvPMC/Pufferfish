@@ -274,7 +274,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 
     public abstract ResourceKey<LevelStem> getTypeKey();
 
-    protected final io.papermc.paper.util.math.ThreadUnsafeRandom randomTickRandom = new io.papermc.paper.util.math.ThreadUnsafeRandom(java.util.concurrent.ThreadLocalRandom.current().nextLong()); // Pufferfish - move thread unsafe random initialization
+    protected final io.papermc.paper.util.math.ThreadUnsafeRandom randomTickRandom = new io.papermc.paper.util.math.ThreadUnsafeRandom(java.util.concurrent.ThreadLocalRandom.current().nextLong()); public net.minecraft.util.RandomSource getThreadUnsafeRandom() { return this.randomTickRandom; } // Pufferfish - move thread unsafe random initialization // Pufferfish - getter
 
     // Pufferfish start - ensure these get inlined
     private final int minBuildHeight, minSection, height, maxBuildHeight, maxSection;

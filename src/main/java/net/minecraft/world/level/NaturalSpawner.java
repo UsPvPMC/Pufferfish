@@ -417,12 +417,12 @@ public final class NaturalSpawner {
         }
     }
 
-    private static BlockPos getRandomPosWithin(Level world, LevelChunk chunk) {
+    private static BlockPos getRandomPosWithin(ServerLevel world, LevelChunk chunk) { // Pufferfish - accept serverlevel
         ChunkPos chunkcoordintpair = chunk.getPos();
-        int i = chunkcoordintpair.getMinBlockX() + world.random.nextInt(16);
-        int j = chunkcoordintpair.getMinBlockZ() + world.random.nextInt(16);
+        int i = chunkcoordintpair.getMinBlockX() + world.getThreadUnsafeRandom().nextInt(16); // Pufferfish - use thread unsafe random
+        int j = chunkcoordintpair.getMinBlockZ() + world.getThreadUnsafeRandom().nextInt(16); // Pufferfish
         int k = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, i, j) + 1;
-        int l = Mth.randomBetweenInclusive(world.random, world.getMinBuildHeight(), k);
+        int l = Mth.randomBetweenInclusive(world.getThreadUnsafeRandom(), world.getMinBuildHeight(), k); // Pufferfish
 
         return new BlockPos(i, l, j);
     }
