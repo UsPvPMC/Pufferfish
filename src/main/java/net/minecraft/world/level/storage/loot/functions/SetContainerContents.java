@@ -46,7 +46,7 @@ public class SetContainerContents extends LootItemConditionalFunction {
             NonNullList<ItemStack> nonNullList = NonNullList.create();
             this.entries.forEach((entry) -> {
                 entry.expand(context, (choice) -> {
-                    choice.createItemStack(LootTable.createStackSplitter(context, nonNullList::add), context);
+                    choice.createItemStack(LootTable.createStackSplitter(context, nonNullList::add, context.getLevel()), context); // Paper - preserve overstacked items
                 });
             });
             CompoundTag compoundTag = new CompoundTag();

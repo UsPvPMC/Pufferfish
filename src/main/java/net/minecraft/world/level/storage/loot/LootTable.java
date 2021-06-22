@@ -56,13 +56,21 @@ public class LootTable {
         this.compositeFunction = LootItemFunctions.compose(functions);
     }
 
+    // Paper start - preserve overstacked items
+    @Deprecated
     public static Consumer<ItemStack> createStackSplitter(LootContext context, Consumer<ItemStack> consumer) {
+        return createStackSplitter(context, consumer, null);
+    }
+    public static Consumer<ItemStack> createStackSplitter(LootContext context, Consumer<ItemStack> consumer, @org.jetbrains.annotations.Nullable net.minecraft.server.level.ServerLevel level) {
+        boolean skipSplitter = level != null && !level.paperConfig().fixes.splitOverstackedLoot;
+        // Paper end
         return (itemstack) -> {
             if (itemstack.isItemEnabled(context.getLevel().enabledFeatures())) {
-                if (itemstack.getCount() < itemstack.getMaxStackSize()) {
+                if (skipSplitter || itemstack.getCount() < itemstack.getMaxStackSize()) { // Paper - preserve overstacked items
                     consumer.accept(itemstack);
                 } else {
                     int i = itemstack.getCount();
+
 
                     while (i > 0) {
                         ItemStack itemstack1 = itemstack.copy();
@@ -97,7 +105,7 @@ public class LootTable {
     }
 
     public void getRandomItems(LootContext context, Consumer<ItemStack> lootConsumer) {
-        this.getRandomItemsRaw(context, LootTable.createStackSplitter(context, lootConsumer));
+        this.getRandomItemsRaw(context, LootTable.createStackSplitter(context, lootConsumer, context.getLevel())); // Paper - preserve overstacked items
     }
 
     public ObjectArrayList<ItemStack> getRandomItems(LootContext context) {
