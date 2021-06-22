@@ -72,7 +72,7 @@ public class Llama extends AbstractChestedHorse implements VariantHolder<Llama.V
     @Nullable
     private Llama caravanHead;
     @Nullable
-    private Llama caravanTail;
+    public Llama caravanTail; // Paper
 
     public Llama(EntityType<? extends Llama> type, Level world) {
         super(type, world);

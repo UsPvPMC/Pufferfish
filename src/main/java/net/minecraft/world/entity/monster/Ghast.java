@@ -66,6 +66,12 @@ public class Ghast extends FlyingMob implements Enemy {
         return this.explosionPower;
     }
 
+    // Paper start
+    public void setExplosionPower(int explosionPower) {
+        this.explosionPower = explosionPower;
+    }
+    // Paper end
+
     @Override
     protected boolean shouldDespawnInPeaceful() {
         return true;

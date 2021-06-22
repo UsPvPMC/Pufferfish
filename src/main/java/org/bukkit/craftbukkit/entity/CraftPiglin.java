@@ -90,4 +90,15 @@ public class CraftPiglin extends CraftPiglinAbstract implements Piglin, com.dest
     public String toString() {
         return "CraftPiglin";
     }
+    // Paper start
+    @Override
+    public void setChargingCrossbow(boolean chargingCrossbow) {
+        this.getHandle().setChargingCrossbow(chargingCrossbow);
+    }
+
+    @Override
+    public boolean isChargingCrossbow() {
+        return this.getHandle().isChargingCrossbow();
+    }
+    // Paper end
 }

@@ -24,4 +24,25 @@ public class CraftChicken extends CraftAnimals implements Chicken {
     public EntityType getType() {
         return EntityType.CHICKEN;
     }
+    // Paper start
+    @Override
+    public boolean isChickenJockey() {
+        return this.getHandle().isChickenJockey();
+    }
+
+    @Override
+    public void setIsChickenJockey(boolean isChickenJockey) {
+        this.getHandle().setChickenJockey(isChickenJockey);
+    }
+
+    @Override
+    public int getEggLayTime() {
+        return this.getHandle().eggTime;
+    }
+
+    @Override
+    public void setEggLayTime(int eggLayTime) {
+        this.getHandle().eggTime = eggLayTime;
+    }
+    // Paper end
 }

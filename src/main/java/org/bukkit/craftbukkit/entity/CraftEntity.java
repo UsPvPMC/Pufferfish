@@ -227,10 +227,16 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
                     else { return new CraftSquid(server, (Squid) entity); }
                 }
                 else if (entity instanceof AbstractFish) {
-                    if (entity instanceof Cod) { return new CraftCod(server, (Cod) entity); }
+                    // Paper start - Schooling Fish API
+                    if (entity instanceof net.minecraft.world.entity.animal.AbstractSchoolingFish abstractSchoolingFish) {
+                       if (entity instanceof Cod) { return new CraftCod(server, (Cod) entity); }
+                       else if (entity instanceof Salmon) { return new CraftSalmon(server, (Salmon) entity); }
+                       else if (entity instanceof TropicalFish) { return new CraftTropicalFish(server, (TropicalFish) entity); }
+                       else { return new io.papermc.paper.entity.PaperSchoolableFish(server, abstractSchoolingFish); }
+                    }
+                    // Paper end
                     else if (entity instanceof Pufferfish) { return new CraftPufferFish(server, (Pufferfish) entity); }
-                    else if (entity instanceof Salmon) { return new CraftSalmon(server, (Salmon) entity); }
-                    else if (entity instanceof TropicalFish) { return new CraftTropicalFish(server, (TropicalFish) entity); }
+                    // Paper - move fish
                     else if (entity instanceof Tadpole) { return new CraftTadpole(server, (Tadpole) entity); }
                     else { return new CraftFish(server, (AbstractFish) entity); }
                 }

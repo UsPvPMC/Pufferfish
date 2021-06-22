@@ -811,14 +811,19 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
             } else if (Phantom.class.isAssignableFrom(clazz)) {
                 entity = net.minecraft.world.entity.EntityType.PHANTOM.create(world);
             } else if (Fish.class.isAssignableFrom(clazz)) {
-                if (Cod.class.isAssignableFrom(clazz)) {
-                    entity = net.minecraft.world.entity.EntityType.COD.create(world);
+                // Paper start - Schooling Fish API
+                if (io.papermc.paper.entity.SchoolableFish.class.isAssignableFrom(clazz)) {
+                    if (Cod.class.isAssignableFrom(clazz)) {
+                        entity = net.minecraft.world.entity.EntityType.COD.create(world);
+                    } else if (Salmon.class.isAssignableFrom(clazz)) {
+                        entity = net.minecraft.world.entity.EntityType.SALMON.create(world);
+                    } else if (TropicalFish.class.isAssignableFrom(clazz)) {
+                        entity = net.minecraft.world.entity.EntityType.TROPICAL_FISH.create(world);
+                    }
+                // Paper stop
                 } else if (PufferFish.class.isAssignableFrom(clazz)) {
                     entity = net.minecraft.world.entity.EntityType.PUFFERFISH.create(world);
-                } else if (Salmon.class.isAssignableFrom(clazz)) {
-                    entity = net.minecraft.world.entity.EntityType.SALMON.create(world);
-                } else if (TropicalFish.class.isAssignableFrom(clazz)) {
-                    entity = net.minecraft.world.entity.EntityType.TROPICAL_FISH.create(world);
+                // Paper - remove old fish impl
                 } else if (Tadpole.class.isAssignableFrom(clazz)) {
                     entity = net.minecraft.world.entity.EntityType.TADPOLE.create(world);
                 }

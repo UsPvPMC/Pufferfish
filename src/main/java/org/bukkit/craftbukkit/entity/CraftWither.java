@@ -61,4 +61,31 @@ public class CraftWither extends CraftMonster implements Wither, com.destroystok
         Entity target = this.getHandle().getLevel().getEntity(entityId);
         return (target != null) ? (LivingEntity) target.getBukkitEntity() : null;
     }
+
+    // Paper start
+    @Override
+    public boolean isCharged() {
+        return getHandle().isPowered();
+    }
+
+    @Override
+    public int getInvulnerableTicks() {
+        return getHandle().getInvulnerableTicks();
+    }
+
+    @Override
+    public void setInvulnerableTicks(int ticks) {
+        getHandle().setInvulnerableTicks(ticks);
+    }
+
+    @Override
+    public boolean canTravelThroughPortals() {
+        return getHandle().canChangeDimensions();
+    }
+
+    @Override
+    public void setCanTravelThroughPortals(boolean value) {
+        getHandle().setCanTravelThroughPortals(value);
+    }
+    // Paper end
 }

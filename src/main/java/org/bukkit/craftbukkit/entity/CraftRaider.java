@@ -65,4 +65,16 @@ public abstract class CraftRaider extends CraftMonster implements Raider {
     public Sound getCelebrationSound() {
         return CraftSound.getBukkit(this.getHandle().getCelebrateSound());
     }
+
+    // Paper start
+    @Override
+    public boolean isCelebrating() {
+        return this.getHandle().isCelebrating();
+    }
+
+    @Override
+    public void setCelebrating(boolean celebrating) {
+        this.getHandle().setCelebrating(celebrating);
+    }
+    // Paper end
 }

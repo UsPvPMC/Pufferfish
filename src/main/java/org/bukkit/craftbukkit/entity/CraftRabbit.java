@@ -48,4 +48,15 @@ public class CraftRabbit extends CraftAnimals implements Rabbit {
 
         entity.setVariant(net.minecraft.world.entity.animal.Rabbit.Variant.values()[type.ordinal()]);
     }
+    // Paper start
+    @Override
+    public void setMoreCarrotTicks(int ticks) {
+        this.getHandle().moreCarrotTicks = ticks;
+    }
+
+    @Override
+    public int getMoreCarrotTicks() {
+        return this.getHandle().moreCarrotTicks;
+    }
+    // Paper end
 }

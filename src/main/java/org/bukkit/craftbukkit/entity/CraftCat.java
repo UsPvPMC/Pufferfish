@@ -50,4 +50,25 @@ public class CraftCat extends CraftTameableAnimal implements Cat {
     public void setCollarColor(DyeColor color) {
         this.getHandle().setCollarColor(net.minecraft.world.item.DyeColor.byId(color.getWoolData()));
     }
+    // Paper Start - More cat api
+    @Override
+    public void setLyingDown(boolean lyingDown) {
+        this.getHandle().setLying(lyingDown);
+    }
+
+    @Override
+    public boolean isLyingDown() {
+        return this.getHandle().isLying();
+    }
+
+    @Override
+    public void setHeadUp(boolean headUp) {
+        this.getHandle().setRelaxStateOne(headUp);
+    }
+
+    @Override
+    public boolean isHeadUp() {
+        return this.getHandle().isRelaxStateOne();
+    }
+    // Paper End - More cat api
 }

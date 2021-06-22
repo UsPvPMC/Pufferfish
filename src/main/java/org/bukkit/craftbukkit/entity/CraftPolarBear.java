@@ -23,4 +23,16 @@ public class CraftPolarBear extends CraftAnimals implements PolarBear {
     public EntityType getType() {
         return EntityType.POLAR_BEAR;
     }
+
+    // Paper start
+    @Override
+    public boolean isStanding() {
+        return this.getHandle().isStanding();
+    }
+
+    @Override
+    public void setStanding(boolean standing) {
+        this.getHandle().setStanding(standing);
+    }
+    // Paper end
 }
