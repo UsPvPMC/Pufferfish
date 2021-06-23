@@ -59,5 +59,15 @@ public class CraftTrident extends CraftArrow implements Trident {
         com.google.common.base.Preconditions.checkArgument(loyaltyLevel >= 0 && loyaltyLevel <= 127, "The loyalty level has to be between 0 and 127");
         this.getHandle().setLoyalty((byte) loyaltyLevel);
     }
+
+    @Override
+    public boolean hasDealtDamage() {
+        return this.getHandle().dealtDamage;
+    }
+
+    @Override
+    public void setHasDealtDamage(boolean hasDealtDamage) {
+        this.getHandle().dealtDamage = hasDealtDamage;
+    }
     // Paper end
 }

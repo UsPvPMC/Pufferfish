@@ -41,6 +41,40 @@ public class CraftShulkerBullet extends AbstractProjectile implements ShulkerBul
     }
 
     @Override
+    public org.bukkit.util.Vector getTargetDelta() {
+        net.minecraft.world.entity.projectile.ShulkerBullet bullet = this.getHandle();
+        return new org.bukkit.util.Vector(bullet.targetDeltaX, bullet.targetDeltaY, bullet.targetDeltaZ);
+    }
+
+    @Override
+    public void setTargetDelta(org.bukkit.util.Vector vector) {
+        net.minecraft.world.entity.projectile.ShulkerBullet bullet = this.getHandle();
+        bullet.targetDeltaX = vector.getX();
+        bullet.targetDeltaY = vector.getY();
+        bullet.targetDeltaZ = vector.getZ();
+    }
+
+    @Override
+    public org.bukkit.block.BlockFace getCurrentMovementDirection() {
+        return org.bukkit.craftbukkit.block.CraftBlock.notchToBlockFace(this.getHandle().currentMoveDirection);
+    }
+
+    @Override
+    public void setCurrentMovementDirection(org.bukkit.block.BlockFace movementDirection) {
+        this.getHandle().currentMoveDirection = org.bukkit.craftbukkit.block.CraftBlock.blockFaceToNotch(movementDirection);
+    }
+
+    @Override
+    public int getFlightSteps() {
+        return this.getHandle().flightSteps;
+    }
+
+    @Override
+    public void setFlightSteps(int steps) {
+        this.getHandle().flightSteps = steps;
+    }
+
+    @Override
     public String toString() {
         return "CraftShulkerBullet";
     }

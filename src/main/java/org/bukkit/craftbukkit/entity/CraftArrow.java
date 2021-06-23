@@ -109,6 +109,27 @@ public class CraftArrow extends AbstractProjectile implements AbstractArrow {
     }
 
     @Override
+    public void setLifetimeTicks(int ticks) {
+        this.getHandle().life = ticks;
+    }
+
+    @Override
+    public int getLifetimeTicks() {
+        return this.getHandle().life;
+    }
+
+    @org.jetbrains.annotations.NotNull
+    @Override
+    public org.bukkit.Sound getHitSound() {
+        return org.bukkit.craftbukkit.CraftSound.getBukkit(this.getHandle().soundEvent);
+    }
+
+    @Override
+    public void setHitSound(@org.jetbrains.annotations.NotNull org.bukkit.Sound sound) {
+        this.getHandle().setSoundEvent(org.bukkit.craftbukkit.CraftSound.getSoundEffect(sound));
+    }
+
+    @Override
     public void setNoPhysics(boolean noPhysics) {
         this.getHandle().setNoPhysics(noPhysics);
     }

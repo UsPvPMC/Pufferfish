@@ -278,12 +278,20 @@ public final class CraftItemStack extends ItemStack {
     public ItemMeta getItemMeta() {
         return CraftItemStack.getItemMeta(this.handle);
     }
+    // Paper start
+    public static void applyMetaToItem(net.minecraft.world.item.ItemStack itemStack, ItemMeta meta) {
+        ((org.bukkit.craftbukkit.inventory.CraftMetaItem) meta).applyToItem(itemStack.getOrCreateTag());
+    }
 
     public static ItemMeta getItemMeta(net.minecraft.world.item.ItemStack item) {
+        return getItemMeta(item, CraftItemStack.getType(item));
+    }
+    public static ItemMeta getItemMeta(net.minecraft.world.item.ItemStack item, Material material) {
+        // Paper end
         if (!CraftItemStack.hasItemMeta(item)) {
-            return CraftItemFactory.instance().getItemMeta(CraftItemStack.getType(item));
+            return CraftItemFactory.instance().getItemMeta(material); // Paper
         }
-        switch (CraftItemStack.getType(item)) {
+        switch (material) {  // Paper
             case WRITTEN_BOOK:
                 return new CraftMetaBookSigned(item.getTag());
             case WRITABLE_BOOK:
