@@ -41,8 +41,10 @@ public class LootContext {
         this.level = world;
         this.lootTables = tableGetter;
         this.conditions = conditionGetter;
-        this.params = ImmutableMap.copyOf(parameters);
-        this.dynamicDrops = ImmutableMap.copyOf(drops);
+        // Pufferfish start - use unmodifiable maps instead of immutable ones to skip the copy
+        this.params = java.util.Collections.unmodifiableMap(parameters);
+        this.dynamicDrops = java.util.Collections.unmodifiableMap(drops);
+        // Pufferfish end
     }
 
     public boolean hasParam(LootContextParam<?> parameter) {
