@@ -1028,13 +1028,13 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         try {
             tickConsumer.accept(entity);
             MinecraftServer.getServer().executeMidTickTasks(); // Paper - execute chunk tasks mid tick
-        } catch (Throwable throwable) {
+        } catch (Throwable throwable) { // Pufferfish - diff on change ServerLevel.tick
             if (throwable instanceof ThreadDeath) throw throwable; // Paper
             // Paper start - Prevent tile entity and entity crashes
             final String msg = String.format("Entity threw exception at %s:%s,%s,%s", entity.level.getWorld().getName(), entity.getX(), entity.getY(), entity.getZ());
             MinecraftServer.LOGGER.error(msg, throwable);
             getCraftServer().getPluginManager().callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable)));
-            entity.discard();
+            entity.discard(); // Pufferfish - diff on change ServerLevel.tick
             // Paper end
         }
     }

@@ -729,7 +729,20 @@ public class ServerLevel extends Level implements WorldGenLevel {
                             }
 
                             gameprofilerfiller.push("tick");
-                            this.guardEntityTick(this::tickNonPassenger, entity);
+                        // Pufferfish start - copied from this.guardEntityTick
+                        try {
+                            this.tickNonPassenger(entity); // Pufferfish - changed
+                            MinecraftServer.getServer().executeMidTickTasks(); // Tuinity - execute chunk tasks mid tick
+                        } catch (Throwable throwable) {
+                            if (throwable instanceof ThreadDeath) throw throwable; // Paper
+                            // Paper start - Prevent tile entity and entity crashes
+                            final String msg = String.format("Entity threw exception at %s:%s,%s,%s", entity.level.getWorld().getName(), entity.getX(), entity.getY(), entity.getZ());
+                            MinecraftServer.LOGGER.error(msg, throwable);
+                            getCraftServer().getPluginManager().callEvent(new com.destroystokyo.paper.event.server.ServerExceptionEvent(new com.destroystokyo.paper.exception.ServerInternalException(msg, throwable)));
+                            entity.discard();
+                            // Paper end
+                        }
+                        // Pufferfish end
                             gameprofilerfiller.pop();
                         }
                     }
