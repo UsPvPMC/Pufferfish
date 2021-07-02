@@ -119,6 +119,7 @@ public abstract class MoveToBlockGoal extends Goal {
                 for(int m = 0; m <= l; m = m > 0 ? -m : 1 - m) {
                     for(int n = m < l && m > -l ? l : 0; n <= l; n = n > 0 ? -n : 1 - n) {
                         mutableBlockPos.setWithOffset(blockPos, m, k - 1, n);
+                        if (!this.mob.level.hasChunkAt(mutableBlockPos)) continue; // Pufferfish - if this block isn't loaded, continue
                         if (this.mob.isWithinRestriction(mutableBlockPos) && this.isValidTarget(this.mob.level, mutableBlockPos)) {
                             this.blockPos = mutableBlockPos;
                             setTargetPosition(mutableBlockPos.immutable()); // Paper
