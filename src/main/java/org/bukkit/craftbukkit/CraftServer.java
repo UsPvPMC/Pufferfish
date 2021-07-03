@@ -1249,6 +1249,7 @@ public final class CraftServer implements Server {
         internal.setSpawnSettings(true, true);
         // Paper - move up
 
+        internal.keepSpawnInMemory = creator.keepSpawnLoaded().toBooleanOrElse(internal.getWorld().getKeepSpawnInMemory()); // Paper
         this.getServer().prepareLevels(internal.getChunkSource().chunkMap.progressListener, internal);
         //internal.entityManager.tick(); // SPIGOT-6526: Load pending entities so they are available to the API // Paper - rewrite chunk system
 
