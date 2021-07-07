@@ -268,7 +268,6 @@ public class ServerPlayer extends Player {
     public boolean sentListPacket = false;
     public boolean supressTrackerForLogin = false; // Paper
     public Integer clientViewDistance;
-    public String kickLeaveMessage = null; // SPIGOT-3034: Forward leave message to PlayerQuitEvent
     // CraftBukkit end
     public boolean isRealPlayer; // Paper
     public double lastEntitySpawnRadiusSquared; // Paper - optimise isOutsideRange, this field is in blocks
