@@ -43,6 +43,7 @@ public class SignBlockEntity extends BlockEntity implements CommandSource { // C
     private boolean renderMessagedFiltered;
     private DyeColor color;
     private boolean hasGlowingText;
+    private static final org.apache.logging.log4j.Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger();
 
     public SignBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityType.SIGN, pos, state);
@@ -260,7 +261,17 @@ public class SignBlockEntity extends BlockEntity implements CommandSource { // C
             ClickEvent chatclickable = chatmodifier.getClickEvent();
 
             if (chatclickable != null && chatclickable.getAction() == ClickEvent.Action.RUN_COMMAND) {
-                player.getServer().getCommands().performPrefixedCommand(this.createCommandSourceStack(player), chatclickable.getValue());
+                // Paper start
+                String command = chatclickable.getValue().startsWith("/") ? chatclickable.getValue() : "/" + chatclickable.getValue();
+                if (org.spigotmc.SpigotConfig.logCommands)  {
+                    LOGGER.info("{} issued server command: {}", player.getScoreboardName(), command);
+                }
+                io.papermc.paper.event.player.PlayerSignCommandPreprocessEvent event = new io.papermc.paper.event.player.PlayerSignCommandPreprocessEvent(player.getBukkitEntity(), command, new org.bukkit.craftbukkit.util.LazyPlayerSet(player.getServer()), (org.bukkit.block.Sign) io.papermc.paper.util.MCUtil.toBukkitBlock(this.level, this.worldPosition).getState());
+                if (!event.callEvent()) {
+                    return false;
+                }
+                player.getServer().getCommands().performPrefixedCommand(this.createCommandSourceStack(((org.bukkit.craftbukkit.entity.CraftPlayer) event.getPlayer()).getHandle()), event.getMessage());
+                // Paper end
             }
         }
 
@@ -296,8 +307,21 @@ public class SignBlockEntity extends BlockEntity implements CommandSource { // C
         String s = player == null ? "Sign" : player.getName().getString();
         Object object = player == null ? Component.literal("Sign") : player.getDisplayName();
 
+        // Paper start - send messages back to the player
+        CommandSource commandSource = this.level.paperConfig().misc.showSignClickCommandFailureMsgsToPlayer ? new io.papermc.paper.commands.DelegatingCommandSource(this) {
+            @Override
+            public void sendSystemMessage(Component message) {
+                player.sendSystemMessage(message);
+            }
+
+            @Override
+            public boolean acceptsFailure() {
+                return true;
+            }
+        } : this;
+        // Paper end
         // CraftBukkit - this
-        return new CommandSourceStack(this, Vec3.atCenterOf(this.worldPosition), Vec2.ZERO, (ServerLevel) this.level, 2, s, (Component) object, this.level.getServer(), player);
+        return new CommandSourceStack(commandSource, Vec3.atCenterOf(this.worldPosition), Vec2.ZERO, (ServerLevel) this.level, 2, s, (Component) object, this.level.getServer(), player); // Paper
     }
 
     public DyeColor getColor() {
