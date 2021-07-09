@@ -54,6 +54,7 @@ public class Commodore
     ) );
 
     // Paper start - Plugin rewrites
+    private static final String CB_PACKAGE = org.bukkit.Bukkit.getServer().getClass().getPackageName().replace('.', '/');
     private static final Map<String, String> SEARCH_AND_REMOVE = initReplacementsMap();
     private static Map<String, String> initReplacementsMap()
     {
@@ -458,6 +459,11 @@ public class Commodore
                         }
                         if ((owner.equals("org/bukkit/OfflinePlayer") || owner.equals("org/bukkit/entity/Player")) && name.equals("getPlayerProfile") && desc.equals("()Lorg/bukkit/profile/PlayerProfile;")) {
                             super.visitMethodInsn(opcode, owner, name, "()Lcom/destroystokyo/paper/profile/PlayerProfile;", itf);
+                            return;
+                        }
+                        if (owner.equals("org/bukkit/advancement/Advancement") && name.equals("getDisplay") && desc.endsWith(")Lorg/bukkit/advancement/AdvancementDisplay;")) {
+                            super.visitTypeInsn(Opcodes.CHECKCAST, CB_PACKAGE + "/advancement/CraftAdvancement");
+                            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, CB_PACKAGE + "/advancement/CraftAdvancement", "getDisplay0", desc, false);
                             return;
                         }
                         // Paper end

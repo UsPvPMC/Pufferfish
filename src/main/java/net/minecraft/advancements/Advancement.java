@@ -53,8 +53,16 @@ public class Advancement {
             parent.addChild(this);
         }
 
-        if (display == null) {
-            this.chatComponent = Component.literal(id.toString());
+        // Paper start - moved to static method
+        this.chatComponent = constructDisplayComponent(this.id, this.display);
+    }
+
+    public static Component constructDisplayComponent(final @Nullable ResourceLocation id, final @Nullable DisplayInfo display) {
+        if (id == null && display == null) {
+            throw new IllegalArgumentException("can't both be null");
+        } else if (display == null) {
+            return Component.literal(id.toString());
+        // Paper end
         } else {
             Component ichatbasecomponent = display.getTitle();
             ChatFormatting enumchatformat = display.getFrame().getChatColor();
@@ -63,7 +71,7 @@ public class Advancement {
                 return chatmodifier.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, ichatmutablecomponent));
             });
 
-            this.chatComponent = ComponentUtils.wrapInSquareBrackets(ichatmutablecomponent1).withStyle(enumchatformat);
+            return ComponentUtils.wrapInSquareBrackets(ichatmutablecomponent1).withStyle(enumchatformat); // Paper
         }
 
     }

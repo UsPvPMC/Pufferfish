@@ -28,6 +28,7 @@ public class DisplayInfo {
     private final boolean hidden;
     private float x;
     private float y;
+    public final io.papermc.paper.advancement.AdvancementDisplay paper = new io.papermc.paper.advancement.PaperAdvancementDisplay(this); // Paper
 
     public DisplayInfo(ItemStack icon, Component title, Component description, @Nullable ResourceLocation background, FrameType frame, boolean showToast, boolean announceToChat, boolean hidden) {
         this.title = title;
