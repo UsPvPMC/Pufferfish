@@ -27,6 +27,12 @@ public interface ContainerLevelAccess {
         public <T> Optional<T> evaluate(BiFunction<Level, BlockPos, T> getter) {
             return Optional.empty();
         }
+        // Paper start
+        @Override
+        public org.bukkit.Location getLocation() {
+            return null;
+        }
+        // Paper end
     };
 
     static ContainerLevelAccess create(final Level world, final BlockPos pos) {
