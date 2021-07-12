@@ -82,7 +82,7 @@ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketL
                 if (packet.getProtocolVersion() != SharedConstants.getCurrentVersion().getProtocolVersion()) {
                     Component ichatmutablecomponent; // Paper - Fix hex colors not working in some kick messages
 
-                    if (packet.getProtocolVersion() < 754) {
+                    if (packet.getProtocolVersion() < SharedConstants.getCurrentVersion().getProtocolVersion()) { // Paper - Fix incorrect message for outdated clients
                         ichatmutablecomponent = org.bukkit.craftbukkit.util.CraftChatMessage.fromString( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName() ) , true )[0]; // Spigot // Paper - Fix hex colors not working in some kick messages
                     } else {
                         ichatmutablecomponent = org.bukkit.craftbukkit.util.CraftChatMessage.fromString( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName() ) , true )[0]; // Spigot // Paper - Fix hex colors not working in some kick messages
