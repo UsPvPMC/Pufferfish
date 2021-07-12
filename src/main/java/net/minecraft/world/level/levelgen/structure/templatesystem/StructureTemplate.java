@@ -836,7 +836,7 @@ public class StructureTemplate {
     public static final class Palette {
 
         private final List<StructureTemplate.StructureBlockInfo> blocks;
-        private final Map<Block, List<StructureTemplate.StructureBlockInfo>> cache = Maps.newHashMap();
+        private final Map<Block, List<StructureTemplate.StructureBlockInfo>> cache = Maps.newConcurrentMap(); // Paper
 
         Palette(List<StructureTemplate.StructureBlockInfo> infos) {
             this.blocks = infos;
