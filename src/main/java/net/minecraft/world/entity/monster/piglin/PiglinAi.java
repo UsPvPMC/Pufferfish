@@ -270,7 +270,9 @@ public class PiglinAi {
 
     private static void holdInOffhand(Piglin piglin, ItemStack stack) {
         if (PiglinAi.isHoldingItemInOffHand(piglin)) {
+            piglin.forceDrops = true; // Paper
             piglin.spawnAtLocation(piglin.getItemInHand(InteractionHand.OFF_HAND));
+            piglin.forceDrops = false; // Paper
         }
 
         piglin.holdInOffHand(stack);
@@ -330,7 +332,9 @@ public class PiglinAi {
 
     protected static void cancelAdmiring(Piglin piglin) {
         if (PiglinAi.isAdmiringItem(piglin) && !piglin.getOffhandItem().isEmpty()) {
+            piglin.forceDrops = true; // Paper
             piglin.spawnAtLocation(piglin.getOffhandItem());
+            piglin.forceDrops = false; // Paper
             piglin.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
         }
 

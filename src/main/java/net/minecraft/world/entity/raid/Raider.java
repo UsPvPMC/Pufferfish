@@ -250,7 +250,9 @@ public abstract class Raider extends PatrollingMonster {
             double d0 = (double) this.getEquipmentDropChance(enumitemslot);
 
             if (!itemstack1.isEmpty() && (double) Math.max(this.random.nextFloat() - 0.1F, 0.0F) < d0) {
+                this.forceDrops = true; // Paper
                 this.spawnAtLocation(itemstack1);
+                this.forceDrops = false; // Paper
             }
 
             this.onItemPickup(item);

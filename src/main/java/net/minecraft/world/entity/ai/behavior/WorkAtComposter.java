@@ -87,7 +87,9 @@ public class WorkAtComposter extends WorkAtPoi {
                 simpleContainer.removeItemType(Items.WHEAT, m);
                 ItemStack itemStack = simpleContainer.addItem(new ItemStack(Items.BREAD, l));
                 if (!itemStack.isEmpty()) {
+                    entity.forceDrops = true; // Paper
                     entity.spawnAtLocation(itemStack, 0.5F);
+                    entity.forceDrops = false; // Paper
                 }
 
             }
