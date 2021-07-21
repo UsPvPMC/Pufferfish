@@ -503,14 +503,14 @@ public class Fox extends Animal implements VariantHolder<Fox.Type> {
             entityitem.setPickUpDelay(40);
             entityitem.setThrower(this.getUUID());
             this.playSound(SoundEvents.FOX_SPIT, 1.0F, 1.0F);
-            this.level.addFreshEntity(entityitem);
+            this.spawnAtLocation(entityitem); // Paper - call EntityDropItemEvent
         }
     }
 
     private void dropItemStack(ItemStack stack) {
         ItemEntity entityitem = new ItemEntity(this.level, this.getX(), this.getY(), this.getZ(), stack);
 
-        this.level.addFreshEntity(entityitem);
+        this.spawnAtLocation(entityitem); // Paper - call EntityDropItemEvent
     }
 
     @Override

@@ -2557,6 +2557,14 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
             stack.setCount(0); // Paper - destroy this item - if this ever leaks due to game bugs, ensure it doesn't dupe
 
             entityitem.setDefaultPickUpDelay();
+            // Paper start
+            return this.spawnAtLocation(entityitem);
+        }
+    }
+    @Nullable
+    public ItemEntity spawnAtLocation(ItemEntity entityitem) {
+        {
+            // Paper end
             // CraftBukkit start
             EntityDropItemEvent event = new EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) entityitem.getBukkitEntity());
             Bukkit.getPluginManager().callEvent(event);
