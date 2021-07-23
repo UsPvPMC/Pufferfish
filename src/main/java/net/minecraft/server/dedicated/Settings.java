@@ -23,6 +23,7 @@ public abstract class Settings<T extends Settings<T>> {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     public final Properties properties;
+    private static final boolean skipComments = Boolean.getBoolean("Paper.skipServerPropertiesComments"); // Paper - allow skipping server.properties comments
     // CraftBukkit start
     private OptionSet options = null;
 
@@ -80,9 +81,47 @@ public abstract class Settings<T extends Settings<T>> {
             }
             // CraftBukkit end
             OutputStream outputstream = Files.newOutputStream(path);
+            // Paper start - disable writing comments to properties file
+            java.io.BufferedOutputStream bufferedOutputStream =  !skipComments ? new java.io.BufferedOutputStream(outputstream) : new java.io.BufferedOutputStream(outputstream) {
+                private boolean isRightAfterNewline = true; // If last written char was newline
+                private boolean isComment = false; // Are we writing comment currently?
+
+                @Override
+                public void write(@org.jetbrains.annotations.NotNull byte[] b) throws IOException {
+                    this.write(b, 0, b.length);
+                }
+
+                @Override
+                public void write(@org.jetbrains.annotations.NotNull byte[] bbuf, int off, int len) throws IOException {
+                    int latest_offset = off; // The latest offset, updated when comment ends
+                    for (int index = off; index < off + len; ++index ) {
+                        byte c = bbuf[index];
+                        boolean isNewline = (c == '\n' || c == '\r');
+                        if (isNewline && isComment) {
+                            // Comment has ended
+                            isComment = false;
+                            latest_offset = index+1;
+                        }
+                        if (c == '#' && isRightAfterNewline) {
+                            isComment = true;
+                            if (index != latest_offset) {
+                                // We got some non-comment data earlier
+                                super.write(bbuf, latest_offset, index-latest_offset);
+                            }
+                        }
+                        isRightAfterNewline = isNewline; // Store for next iteration
+
+                    }
+                    if (latest_offset < off+len && !isComment) {
+                        // We have some unwritten data, that isn't part of a comment
+                        super.write(bbuf, latest_offset, (off + len) - latest_offset);
+                    }
+                }
+            };
+            // Paper end
 
             try {
-                this.properties.store(outputstream, "Minecraft server properties");
+                this.properties.store(bufferedOutputStream, "Minecraft server properties"); // Paper - use bufferedOutputStream
             } catch (Throwable throwable) {
                 if (outputstream != null) {
                     try {
