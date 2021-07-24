@@ -430,7 +430,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             --this.dropSpamTickCount;
         }
 
-        if (this.player.getLastActionTime() > 0L && this.server.getPlayerIdleTimeout() > 0 && Util.getMillis() - this.player.getLastActionTime() > (long) (this.server.getPlayerIdleTimeout() * 1000 * 60)) {
+        if (this.player.getLastActionTime() > 0L && this.server.getPlayerIdleTimeout() > 0 && Util.getMillis() - this.player.getLastActionTime() > (long) (this.server.getPlayerIdleTimeout() * 1000 * 60) && !this.player.wonGame) { // Paper - Prevent AFK kick while watching end credits.
             this.player.resetLastActionTime(); // CraftBukkit - SPIGOT-854
             this.disconnect(Component.translatable("multiplayer.disconnect.idling"), org.bukkit.event.player.PlayerKickEvent.Cause.IDLING); // Paper - kick event cause
         }
