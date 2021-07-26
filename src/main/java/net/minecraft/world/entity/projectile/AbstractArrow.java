@@ -372,6 +372,7 @@ public abstract class AbstractArrow extends Projectile {
             }
         }
 
+        if (this.isCritArrow()) damagesource = damagesource.critical(); // Paper - add critical damage API
         boolean flag = entity.getType() == EntityType.ENDERMAN;
         int k = entity.getRemainingFireTicks();
 

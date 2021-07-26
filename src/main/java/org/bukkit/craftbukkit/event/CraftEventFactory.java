@@ -986,7 +986,7 @@ public class CraftEventFactory {
                 } else {
                     damageCause = DamageCause.ENTITY_EXPLOSION;
                 }
-                event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), entity.getBukkitEntity(), damageCause, modifiers, modifierFunctions);
+                event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), entity.getBukkitEntity(), damageCause, modifiers, modifierFunctions, source.isCritical()); // Paper - add critical damage API
             }
             event.setCancelled(cancelled);
 
@@ -1018,7 +1018,7 @@ public class CraftEventFactory {
                 cause = DamageCause.SONIC_BOOM;
             }
 
-            return CraftEventFactory.callEntityDamageEvent(damager, entity, cause, modifiers, modifierFunctions, cancelled);
+            return CraftEventFactory.callEntityDamageEvent(damager, entity, cause, modifiers, modifierFunctions, cancelled, source.isCritical()); // Paper - add critical damage API
         } else if (source.is(DamageTypes.OUT_OF_WORLD)) {
             EntityDamageEvent event = new EntityDamageByBlockEvent(null, entity.getBukkitEntity(), DamageCause.VOID, modifiers, modifierFunctions);
             event.setCancelled(cancelled);
@@ -1088,7 +1088,7 @@ public class CraftEventFactory {
             } else {
                 throw new IllegalStateException(String.format("Unhandled damage of %s by %s from %s", entity, damager.getHandle(), source.getMsgId()));
             }
-            EntityDamageEvent event = new EntityDamageByEntityEvent(damager, entity.getBukkitEntity(), cause, modifiers, modifierFunctions);
+            EntityDamageEvent event = new EntityDamageByEntityEvent(damager, entity.getBukkitEntity(), cause, modifiers, modifierFunctions, source.isCritical()); // Paper - add critical damage API
             event.setCancelled(cancelled);
             CraftEventFactory.callEvent(event);
             if (!event.isCancelled()) {
@@ -1133,20 +1133,28 @@ public class CraftEventFactory {
         }
 
         if (cause != null) {
-            return CraftEventFactory.callEntityDamageEvent(null, entity, cause, modifiers, modifierFunctions, cancelled);
+            return CraftEventFactory.callEntityDamageEvent(null, entity, cause, modifiers, modifierFunctions, cancelled, source.isCritical()); // Paper - add critical damage API
         }
 
         throw new IllegalStateException(String.format("Unhandled damage of %s from %s", entity, source.getMsgId()));
     }
 
+    @Deprecated // Paper - Add critical damage API
     private static EntityDamageEvent callEntityDamageEvent(Entity damager, Entity damagee, DamageCause cause, Map<DamageModifier, Double> modifiers, Map<DamageModifier, Function<? super Double, Double>> modifierFunctions) {
         return CraftEventFactory.callEntityDamageEvent(damager, damagee, cause, modifiers, modifierFunctions, false);
     }
 
+    // Paper start - Add critical damage API
+    @Deprecated
     private static EntityDamageEvent callEntityDamageEvent(Entity damager, Entity damagee, DamageCause cause, Map<DamageModifier, Double> modifiers, Map<DamageModifier, Function<? super Double, Double>> modifierFunctions, boolean cancelled) {
+        return CraftEventFactory.callEntityDamageEvent(damager, damagee, cause, modifiers, modifierFunctions, false, false);
+    }
+
+    private static EntityDamageEvent callEntityDamageEvent(Entity damager, Entity damagee, DamageCause cause, Map<DamageModifier, Double> modifiers, Map<DamageModifier, Function<? super Double, Double>> modifierFunctions, boolean cancelled, boolean critical) {
+        // Paper end
         EntityDamageEvent event;
         if (damager != null) {
-            event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), damagee.getBukkitEntity(), cause, modifiers, modifierFunctions);
+            event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), damagee.getBukkitEntity(), cause, modifiers, modifierFunctions, critical); // Paper - add critical damage API
         } else {
             event = new EntityDamageEvent(damagee.getBukkitEntity(), cause, modifiers, modifierFunctions);
         }

@@ -1261,7 +1261,7 @@ public abstract class Player extends LivingEntity {
                         flag1 = true;
                     }
 
-                    boolean flag2 = flag && this.fallDistance > 0.0F && !this.onGround && !this.onClimbable() && !this.isInWater() && !this.hasEffect(MobEffects.BLINDNESS) && !this.isPassenger() && target instanceof LivingEntity;
+                    boolean flag2 = flag && this.fallDistance > 0.0F && !this.onGround && !this.onClimbable() && !this.isInWater() && !this.hasEffect(MobEffects.BLINDNESS) && !this.isPassenger() && target instanceof LivingEntity; // Paper - Add critical damage API - conflict on change
 
                     flag2 = flag2 && !level.paperConfig().entities.behavior.disablePlayerCrits; // Paper
                     flag2 = flag2 && !this.isSprinting();
@@ -1301,7 +1301,7 @@ public abstract class Player extends LivingEntity {
                     }
 
                     Vec3 vec3d = target.getDeltaMovement();
-                    boolean flag5 = target.hurt(this.damageSources().playerAttack(this), f);
+                    boolean flag5 = target.hurt(this.damageSources().playerAttack(this).critical(flag2), f); // Paper - add critical damage API
 
                     if (flag5) {
                         if (i > 0) {
@@ -1329,7 +1329,7 @@ public abstract class Player extends LivingEntity {
 
                                 if (entityliving != this && entityliving != target && !this.isAlliedTo((Entity) entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && this.distanceToSqr((Entity) entityliving) < 9.0D) {
                                     // CraftBukkit start - Only apply knockback if the damage hits
-                                    if (entityliving.hurt(this.damageSources().playerAttack(this).sweep(), f4)) {
+                                    if (entityliving.hurt(this.damageSources().playerAttack(this).sweep().critical(flag2), f4)) { // Paper - add critical damage API
                                     entityliving.knockback(0.4000000059604645D, (double) Mth.sin(this.getYRot() * 0.017453292F), (double) (-Mth.cos(this.getYRot() * 0.017453292F)), this); // Pa
                                     }
                                     // CraftBukkit end
