@@ -103,6 +103,11 @@ public class ServerConnectionListener {
                 ServerConnectionListener.LOGGER.info("Using default channel type");
             }
 
+            // Paper start - indicate Velocity natives in use
+            ServerConnectionListener.LOGGER.info("Paper: Using " + com.velocitypowered.natives.util.Natives.compress.getLoadedVariant() + " compression from Velocity.");
+            ServerConnectionListener.LOGGER.info("Paper: Using " + com.velocitypowered.natives.util.Natives.cipher.getLoadedVariant() + " cipher from Velocity.");
+            // Paper end
+
             this.channels.add(((ServerBootstrap) ((ServerBootstrap) (new ServerBootstrap()).channel(oclass)).childHandler(new ChannelInitializer<Channel>() {
                 protected void initChannel(Channel channel) {
                     try {

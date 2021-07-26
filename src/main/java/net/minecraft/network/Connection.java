@@ -707,11 +707,28 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         return networkmanager;
     }
 
-    public void setEncryptionKey(Cipher decryptionCipher, Cipher encryptionCipher) {
-        this.encrypted = true;
-        this.channel.pipeline().addBefore("splitter", "decrypt", new CipherDecoder(decryptionCipher));
-        this.channel.pipeline().addBefore("prepender", "encrypt", new CipherEncoder(encryptionCipher));
+    // Paper start
+//    public void setEncryptionKey(Cipher decryptionCipher, Cipher encryptionCipher) {
+//        this.encrypted = true;
+//        this.channel.pipeline().addBefore("splitter", "decrypt", new CipherDecoder(decryptionCipher));
+//        this.channel.pipeline().addBefore("prepender", "encrypt", new CipherEncoder(encryptionCipher));
+//    }
+
+    public void setupEncryption(javax.crypto.SecretKey key) throws net.minecraft.util.CryptException {
+        if (!this.encrypted) {
+            try {
+                com.velocitypowered.natives.encryption.VelocityCipher decryption = com.velocitypowered.natives.util.Natives.cipher.get().forDecryption(key);
+                com.velocitypowered.natives.encryption.VelocityCipher encryption = com.velocitypowered.natives.util.Natives.cipher.get().forEncryption(key);
+
+                this.encrypted = true;
+                this.channel.pipeline().addBefore("splitter", "decrypt", new CipherDecoder(decryption));
+                this.channel.pipeline().addBefore("prepender", "encrypt", new CipherEncoder(encryption));
+            } catch (java.security.GeneralSecurityException e) {
+                throw new net.minecraft.util.CryptException(e);
+            }
+        }
     }
+    // Paper end
 
     public boolean isEncrypted() {
         return this.encrypted;
@@ -740,16 +757,17 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
 
     public void setupCompression(int compressionThreshold, boolean rejectsBadPackets) {
         if (compressionThreshold >= 0) {
+            com.velocitypowered.natives.compression.VelocityCompressor compressor = com.velocitypowered.natives.util.Natives.compress.get().create(-1); // Paper
             if (this.channel.pipeline().get("decompress") instanceof CompressionDecoder) {
                 ((CompressionDecoder) this.channel.pipeline().get("decompress")).setThreshold(compressionThreshold, rejectsBadPackets);
             } else {
-                this.channel.pipeline().addBefore("decoder", "decompress", new CompressionDecoder(compressionThreshold, rejectsBadPackets));
+                this.channel.pipeline().addBefore("decoder", "decompress", new CompressionDecoder(compressor, compressionThreshold, rejectsBadPackets)); // Paper
             }
 
             if (this.channel.pipeline().get("compress") instanceof CompressionEncoder) {
                 ((CompressionEncoder) this.channel.pipeline().get("compress")).setThreshold(compressionThreshold);
             } else {
-                this.channel.pipeline().addBefore("encoder", "compress", new CompressionEncoder(compressionThreshold));
+                this.channel.pipeline().addBefore("encoder", "compress", new CompressionEncoder(compressor, compressionThreshold)); // Paper
             }
             this.channel.pipeline().fireUserEventTriggered(io.papermc.paper.network.ConnectionEvent.COMPRESSION_THRESHOLD_SET); // Paper
         } else {
