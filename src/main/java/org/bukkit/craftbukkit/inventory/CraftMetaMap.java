@@ -138,6 +138,7 @@ class CraftMetaMap extends CraftMetaItem implements MapMeta {
 
     @Override
     public int getMapId() {
+        Preconditions.checkState(this.hasMapView(), "Item does not have map associated - check hasMapView() first!"); // Paper - more friendly message
         return this.mapId;
     }
 

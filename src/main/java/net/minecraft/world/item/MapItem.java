@@ -73,7 +73,7 @@ public class MapItem extends ComplexItem {
     public static Integer getMapId(ItemStack stack) {
         CompoundTag nbttagcompound = stack.getTag();
 
-        return nbttagcompound != null && nbttagcompound.contains("map", 99) ? nbttagcompound.getInt("map") : -1; // CraftBukkit - make new maps for no tag
+        return nbttagcompound != null && nbttagcompound.contains("map", 99) ? nbttagcompound.getInt("map") : null; // CraftBukkit - make new maps for no tag // Paper - don't return invalid ID
     }
 
     public static int createNewSavedData(Level world, int x, int z, int scale, boolean showIcons, boolean unlimitedTracking, ResourceKey<Level> dimension) {
