@@ -112,6 +112,7 @@ public class Util {
     }).findFirst().orElseThrow(() -> {
         return new IllegalStateException("No jar file system provider found");
     });
+    public static final double COLLISION_EPSILON = 1.0E-7; // Paper
     private static Consumer<String> thePauser = (message) -> {
     };
 
