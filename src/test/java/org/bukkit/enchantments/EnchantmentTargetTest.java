@@ -5,10 +5,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.EnchantmentCategory;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+import org.bukkit.support.AbstractTestingBase;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class EnchantmentTargetTest {
+public class EnchantmentTargetTest extends AbstractTestingBase { // Paper
 
     @Test
     public void test() {
