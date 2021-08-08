@@ -181,7 +181,7 @@ public class GameProfileCache {
             } else {
                 this.requests.put(username, CompletableFuture.supplyAsync(() -> {
                     return this.get(username);
-                }, Util.backgroundExecutor()).whenCompleteAsync((optional, throwable) -> {
+                }, Util.PROFILE_EXECUTOR).whenCompleteAsync((optional, throwable) -> { // Paper - not a good idea to use BLOCKING OPERATIONS on the worldgen executor
                     this.requests.remove(username);
                 }, this.executor).whenCompleteAsync((optional, throwable) -> {
                     consumer.accept(optional);
