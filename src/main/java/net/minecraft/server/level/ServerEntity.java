@@ -78,7 +78,7 @@ public class ServerEntity {
         this.trackedPlayers = trackedPlayers;
         // CraftBukkit end
         this.ap = Vec3.ZERO;
-        this.lastPassengers = Collections.emptyList();
+        this.lastPassengers = com.google.common.collect.ImmutableList.of(); // Paper - optimize passenger checks
         this.level = worldserver;
         this.broadcast = consumer;
         this.entity = entity;
