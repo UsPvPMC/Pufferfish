@@ -3764,20 +3764,34 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     }
 
     private Stream<Entity> getIndirectPassengersStream() {
+        if (this.passengers.isEmpty()) { return Stream.of(); } // Paper
         return this.passengers.stream().flatMap(Entity::getSelfAndPassengers);
     }
 
     @Override
     public Stream<Entity> getSelfAndPassengers() {
+        if (this.passengers.isEmpty()) { return Stream.of(this); } // Paper
         return Stream.concat(Stream.of(this), this.getIndirectPassengersStream());
     }
 
     @Override
     public Stream<Entity> getPassengersAndSelf() {
+        if (this.passengers.isEmpty()) { return Stream.of(this); } // Paper
         return Stream.concat(this.passengers.stream().flatMap(Entity::getPassengersAndSelf), Stream.of(this));
     }
 
     public Iterable<Entity> getIndirectPassengers() {
+        // Paper start - rewrite this method
+        if (this.passengers.isEmpty()) { return ImmutableList.of(); }
+        ImmutableList.Builder<Entity> indirectPassengers = ImmutableList.builder();
+        for (Entity passenger : this.passengers) {
+            indirectPassengers.add(passenger);
+            indirectPassengers.addAll(passenger.getIndirectPassengers());
+        }
+        return indirectPassengers.build();
+    }
+    private Iterable<Entity> getIndirectPassengers_old() {
+        // Paper end
         return () -> {
             return this.getIndirectPassengersStream().iterator();
         };
@@ -3794,6 +3808,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     // Paper end - rewrite chunk system
 
     public boolean hasExactlyOnePlayerPassenger() {
+        if (this.passengers.isEmpty()) { return false; } // Paper
         return this.getIndirectPassengersStream().filter((entity) -> {
             return entity instanceof Player;
         }).count() == 1L;
