@@ -2161,6 +2161,11 @@ public final class CraftServer implements Server {
 
     @Override
     public int getSpawnLimit(SpawnCategory spawnCategory) {
+        // Paper start
+        return this.getSpawnLimitUnsafe(spawnCategory);
+    }
+    public int getSpawnLimitUnsafe(final SpawnCategory spawnCategory) {
+        // Paper end
         return this.spawnCategoryLimit.getOrDefault(spawnCategory, -1);
     }
 
