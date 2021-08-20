@@ -21,4 +21,16 @@ public class CraftSculkSensor extends CraftBlockEntityState<SculkSensorBlockEnti
         Preconditions.checkArgument(0 <= lastVibrationFrequency && lastVibrationFrequency <= 15, "Vibration frequency must be between 0-15");
         getSnapshot().lastVibrationFrequency = lastVibrationFrequency;
     }
+    // Paper start
+    @Override
+    public int getListenerRange() {
+        return this.getSnapshot().getListener().listenerRange;
+    }
+
+    @Override
+    public void setListenerRange(int range) {
+        Preconditions.checkArgument(range > 0, "Vibration listener range must be greater than 0");
+        this.getSnapshot().getListener().listenerRange = range;
+    }
+    // Paper end
 }
