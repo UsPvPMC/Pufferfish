@@ -38,8 +38,15 @@ public class CraftEnderSignal extends CraftEntity implements EnderSignal {
 
     @Override
     public void setTargetLocation(Location location) {
+        // Paper start
+        this.setTargetLocation(location, true);
+    }
+
+    @Override
+    public void setTargetLocation(Location location, boolean update) {
+        // Paper end
         Preconditions.checkArgument(getWorld().equals(location.getWorld()), "Cannot target EnderSignal across worlds");
-        this.getHandle().signalTo(BlockPos.containing(location.getX(), location.getY(), location.getZ()));
+        this.getHandle().signalTo(BlockPos.containing(location.getX(), location.getY(), location.getZ()), update); // Paper
     }
 
     @Override
