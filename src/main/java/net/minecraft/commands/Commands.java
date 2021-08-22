@@ -470,6 +470,7 @@ public class Commands {
     private void fillUsableCommands(CommandNode<CommandSourceStack> tree, CommandNode<SharedSuggestionProvider> result, CommandSourceStack source, Map<CommandNode<CommandSourceStack>, CommandNode<SharedSuggestionProvider>> resultNodes) {
         Iterator iterator = tree.getChildren().iterator();
 
+        boolean registeredAskServerSuggestionsForTree = false; // Paper - tell clients to ask server for suggestions for EntityArguments
         while (iterator.hasNext()) {
             CommandNode<CommandSourceStack> commandnode2 = (CommandNode) iterator.next();
             // Paper start
@@ -496,6 +497,12 @@ public class Commands {
 
                     if (requiredargumentbuilder.getSuggestionsProvider() != null) {
                         requiredargumentbuilder.suggests(SuggestionProviders.safelySwap(requiredargumentbuilder.getSuggestionsProvider()));
+                        // Paper start - tell clients to ask server for suggestions for EntityArguments
+                        registeredAskServerSuggestionsForTree = requiredargumentbuilder.getSuggestionsProvider() == net.minecraft.commands.synchronization.SuggestionProviders.ASK_SERVER;
+                    } else if (io.papermc.paper.configuration.GlobalConfiguration.get().commands.fixTargetSelectorTagCompletion && !registeredAskServerSuggestionsForTree && requiredargumentbuilder.getType() instanceof net.minecraft.commands.arguments.EntityArgument) {
+                        requiredargumentbuilder.suggests(requiredargumentbuilder.getType()::listSuggestions);
+                        registeredAskServerSuggestionsForTree = true; // You can only
+                        // Paper end - tell clients to ask server for suggestions for EntityArguments
                     }
                 }
 

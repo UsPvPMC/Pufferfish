@@ -421,4 +421,20 @@ public class CommandSourceStack implements SharedSuggestionProvider, com.destroy
         return this.source.getBukkitSender(this);
     }
     // CraftBukkit end
+    // Paper start - override getSelectedEntities
+    @Override
+    public Collection<String> getSelectedEntities() {
+        if (io.papermc.paper.configuration.GlobalConfiguration.get().commands.fixTargetSelectorTagCompletion && this.source instanceof ServerPlayer player) {
+            double pickDistance = player.gameMode.getGameModeForPlayer().isCreative() ? 5.0F : 4.5F;
+            Vec3 min = player.getEyePosition(1.0F);
+            Vec3 viewVector = player.getViewVector(1.0F);
+            Vec3 max = min.add(viewVector.x * pickDistance, viewVector.y * pickDistance, viewVector.z * pickDistance);
+            net.minecraft.world.phys.AABB aabb = player.getBoundingBox().expandTowards(viewVector.scale(pickDistance)).inflate(1.0D, 1.0D, 1.0D);
+            pickDistance = player.gameMode.getGameModeForPlayer().isCreative() ? 6.0F : pickDistance;
+            net.minecraft.world.phys.EntityHitResult hitResult = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(player, min, max, aabb, (e) -> !e.isSpectator() && e.isPickable(), pickDistance);
+            return hitResult != null ? java.util.Collections.singletonList(hitResult.getEntity().getStringUUID()) : SharedSuggestionProvider.super.getSelectedEntities();
+        }
+        return SharedSuggestionProvider.super.getSelectedEntities();
+    }
+    // Paper end
 }

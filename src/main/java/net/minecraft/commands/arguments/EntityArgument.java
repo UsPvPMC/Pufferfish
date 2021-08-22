@@ -128,7 +128,7 @@ public class EntityArgument implements ArgumentType<EntitySelector> {
             StringReader stringreader = new StringReader(suggestionsbuilder.getInput());
 
             stringreader.setCursor(suggestionsbuilder.getStart());
-            EntitySelectorParser argumentparserselector = new EntitySelectorParser(stringreader, icompletionprovider.hasPermission(2));
+            EntitySelectorParser argumentparserselector = new EntitySelectorParser(stringreader, icompletionprovider.hasPermission(2), true); // Paper
 
             try {
                 argumentparserselector.parse();
