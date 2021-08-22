@@ -328,7 +328,7 @@ public class BeehiveBlockEntity extends BlockEntity {
 
         for (Iterator iterator = bees.iterator(); iterator.hasNext(); ++tileentitybeehive_hivebee.ticksInHive) {
             tileentitybeehive_hivebee = (BeehiveBlockEntity.BeeData) iterator.next();
-            if (tileentitybeehive_hivebee.ticksInHive > tileentitybeehive_hivebee.minOccupationTicks) {
+            if (tileentitybeehive_hivebee.exitTickCounter > tileentitybeehive_hivebee.minOccupationTicks) { // Paper - use exitTickCounter
                 BeehiveBlockEntity.BeeReleaseStatus tileentitybeehive_releasestatus = tileentitybeehive_hivebee.entityData.getBoolean("HasNectar") ? BeehiveBlockEntity.BeeReleaseStatus.HONEY_DELIVERED : BeehiveBlockEntity.BeeReleaseStatus.BEE_RELEASED;
 
                 if (BeehiveBlockEntity.releaseOccupant(world, pos, state, tileentitybeehive_hivebee, (List) null, tileentitybeehive_releasestatus, flowerPos)) {
@@ -336,10 +336,11 @@ public class BeehiveBlockEntity extends BlockEntity {
                     iterator.remove();
                     // CraftBukkit start
                 } else {
-                    tileentitybeehive_hivebee.ticksInHive = tileentitybeehive_hivebee.minOccupationTicks / 2; // Not strictly Vanilla behaviour in cases where bees cannot spawn but still reasonable
+                    tileentitybeehive_hivebee.exitTickCounter = tileentitybeehive_hivebee.minOccupationTicks / 2; // Not strictly Vanilla behaviour in cases where bees cannot spawn but still reasonable // Paper - use exitTickCounter to keep actual bee life
                     // CraftBukkit end
                 }
             }
+            tileentitybeehive_hivebee.exitTickCounter++; // Paper
         }
 
         if (flag) {
@@ -428,12 +429,14 @@ public class BeehiveBlockEntity extends BlockEntity {
 
         final CompoundTag entityData;
         int ticksInHive;
+        int exitTickCounter; // Paper - separate counter for checking if bee should exit to reduce exit attempts
         final int minOccupationTicks;
 
         BeeData(CompoundTag entityData, int ticksInHive, int minOccupationTicks) {
             BeehiveBlockEntity.removeIgnoredBeeTags(entityData);
             this.entityData = entityData;
             this.ticksInHive = ticksInHive;
+            this.exitTickCounter = ticksInHive; // Paper
             this.minOccupationTicks = minOccupationTicks;
         }
     }
