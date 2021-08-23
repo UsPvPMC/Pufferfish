@@ -327,16 +327,33 @@ public class ChunkSerializer {
             BelowZeroRetrogen belowzeroretrogen = protochunk.getBelowZeroRetrogen();
             boolean flag5 = chunkstatus.isOrAfter(ChunkStatus.LIGHT) || belowzeroretrogen != null && belowzeroretrogen.targetStatus().isOrAfter(ChunkStatus.LIGHT);
 
-            if (!flag && flag5) {
-                Iterator iterator = BlockPos.betweenClosed(chunkPos.getMinBlockX(), world.getMinBuildHeight(), chunkPos.getMinBlockZ(), chunkPos.getMaxBlockX(), world.getMaxBuildHeight() - 1, chunkPos.getMaxBlockZ()).iterator();
+            if (!flag) { // Paper - fix incorrect parsing of blocks that emit light - it should always parse it, unless the chunk is marked as lit
+                // Paper start - let's make sure the implementation isn't as slow as possible
+                int offX = chunkPos.x << 4;
+                int offZ = chunkPos.z << 4;
 
-                while (iterator.hasNext()) {
-                    BlockPos blockposition = (BlockPos) iterator.next();
+                int minChunkSection = io.papermc.paper.util.WorldUtil.getMinSection(world);
+                int maxChunkSection = io.papermc.paper.util.WorldUtil.getMaxSection(world);
 
-                    if (((ChunkAccess) object1).getBlockState(blockposition).getLightEmission() != 0) {
-                        protochunk.addLight(blockposition);
+                LevelChunkSection[] sections = achunksection;
+                for (int sectionY = minChunkSection; sectionY <= maxChunkSection; ++sectionY) {
+                    LevelChunkSection section = sections[sectionY - minChunkSection];
+                    if (section == null || section.hasOnlyAir()) {
+                        // no sources in empty sections
+                        continue;
+                    }
+                    int offY = sectionY << 4;
+
+                    for (int index = 0; index < (16 * 16 * 16); ++index) {
+                        if (section.states.get(index).getLightEmission() <= 0) {
+                            continue;
+                        }
+
+                        // index = x | (z << 4) | (y << 8)
+                        protochunk.addLight(new BlockPos(offX | (index & 15), offY | (index >>> 8), offZ | ((index >>> 4) & 15)));
                     }
                 }
+                // Paper end
             }
         }
 
