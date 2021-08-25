@@ -14,9 +14,17 @@ import java.util.Collections;
 import java.util.function.Predicate;
 
 public abstract class ArgumentBuilder<S, T extends ArgumentBuilder<S, T>> {
+    // Paper start
+    private static final Predicate<Object> DEFAULT_REQUIREMENT = s -> true;
+
+    @SuppressWarnings("unchecked")
+    public static <S> Predicate<S> defaultRequirement() {
+        return (Predicate<S>) DEFAULT_REQUIREMENT;
+    }
+    // Paper end
     private final RootCommandNode<S> arguments = new RootCommandNode<>();
     private Command<S> command;
-    private Predicate<S> requirement = s -> true;
+    private Predicate<S> requirement = defaultRequirement(); // Paper
     private CommandNode<S> target;
     private RedirectModifier<S> modifier = null;
     private boolean forks;
