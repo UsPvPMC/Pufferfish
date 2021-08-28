@@ -102,6 +102,21 @@ public class CraftItem extends CraftEntity implements Item {
      public void setWillAge(boolean willAge) {
         item.age = willAge ? 0 : NO_AGE_TIME;
      }
+
+    @Override
+    public int getHealth() {
+        return item.health;
+    }
+
+    @Override
+    public void setHealth(int health) {
+        if (health <= 0) {
+            item.getItem().onDestroyed(item);
+            item.discard();
+        } else {
+            item.health = health;
+        }
+    }
     // Paper End
 
     @Override
