@@ -146,7 +146,19 @@ public class Util {
 
     private static ExecutorService makeExecutor(String s, int priorityModifier) { // Paper - add priority
         // Paper start - use simpler thread pool that allows 1 thread
-        int i = Math.min(8, Math.max(Runtime.getRuntime().availableProcessors() - 2, 1));
+        // Paper start - also try to avoid suffocating the system with the worldgen workers
+        int cpus = Runtime.getRuntime().availableProcessors() / 2;
+        int i;
+        if (cpus <= 4) {
+            i = cpus <= 2 ? 1 : 2;
+        } else if (cpus <= 8) {
+            // [5, 8]
+            i = Math.max(3, cpus - 2);
+        } else {
+            i = cpus * 2 / 3;
+        }
+        i = Math.min(8, i);
+        // Paper end - also try to avoid suffocating the system with the worldgen workers
         i = Integer.getInteger("Paper.WorkerThreadCount", i);
         ExecutorService executorService;
 
