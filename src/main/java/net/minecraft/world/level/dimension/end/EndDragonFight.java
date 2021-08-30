@@ -419,6 +419,11 @@ public class EndDragonFight {
             }
         }
 
+        // Paper start - Prevent "softlocked" exit portal generation
+        if (this.portalLocation.getY() <= this.level.getMinBuildHeight()) {
+            this.portalLocation = this.portalLocation.atY(this.level.getMinBuildHeight() + 1);
+        }
+        // Paper end
         endPodiumFeature.place(FeatureConfiguration.NONE, this.level, this.level.getChunkSource().getGenerator(), RandomSource.create(), this.portalLocation);
     }
 
