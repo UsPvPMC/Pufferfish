@@ -431,7 +431,14 @@ public abstract class ChunkGenerator {
                                 return (String) optional.orElseGet(placedfeature::toString);
                             };
 
-                            seededrandom.setFeatureSeed(i, l1, l);
+                            // Paper start - change populationSeed used in random
+                            long featurePopulationSeed = i;
+                            final long configFeatureSeed = generatoraccessseed.getMinecraftWorld().paperConfig().featureSeeds.features.getLong(placedfeature.feature());
+                            if (configFeatureSeed != -1) {
+                                featurePopulationSeed = seededrandom.setDecorationSeed(configFeatureSeed, blockposition.getX(), blockposition.getZ()); // See seededrandom.setDecorationSeed from above
+                            }
+                            seededrandom.setFeatureSeed(featurePopulationSeed, l1, l);
+                            // Paper end
 
                             try {
                                 generatoraccessseed.setCurrentlyGenerating(supplier1);
