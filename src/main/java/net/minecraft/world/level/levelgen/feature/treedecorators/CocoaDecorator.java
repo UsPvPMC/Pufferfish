@@ -25,6 +25,7 @@ public class CocoaDecorator extends TreeDecorator {
 
     @Override
     public void place(TreeDecorator.Context generator) {
+        if (generator.logs().isEmpty()) return; // Paper
         RandomSource randomSource = generator.random();
         if (!(randomSource.nextFloat() >= this.probability)) {
             List<BlockPos> list = generator.logs();
