@@ -64,8 +64,10 @@ public final class VanillaCommandWrapper extends BukkitCommand {
     }
 
     public static CommandSourceStack getListener(CommandSender sender) {
-        if (sender instanceof Player) {
-            return ((CraftPlayer) sender).getHandle().createCommandSourceStack();
+        // Paper start - account for other entity command senders
+        if (sender instanceof org.bukkit.craftbukkit.entity.CraftEntity craftEntity) {
+            return craftEntity.getHandle().createCommandSourceStack();
+        // Paper end
         }
         if (sender instanceof BlockCommandSender) {
             return ((CraftBlockCommandSender) sender).getWrapper();
