@@ -3230,6 +3230,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
             if (!tileentitysign.isEditable() || !this.player.getUUID().equals(tileentitysign.getPlayerWhoMayEdit())) {
                 ServerGamePacketListenerImpl.LOGGER.warn("Player {} just tried to change non-editable sign", this.player.getName().getString());
+                if (this.player.distanceToSqr(blockposition.getX(), blockposition.getY(), blockposition.getZ()) < 32 * 32) // Paper
                 this.send(tileentity.getUpdatePacket()); // CraftBukkit
                 return;
             }
