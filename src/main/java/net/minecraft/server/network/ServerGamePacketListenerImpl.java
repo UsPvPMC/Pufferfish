@@ -838,6 +838,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
         // Paper end
         // CraftBukkit end
+        // Paper start - Don't suggest if tab-complete is disabled
+        if (org.spigotmc.SpigotConfig.tabComplete < 0) {
+            return;
+        }
+        // Paper end - Don't suggest if tab-complete is disabled
         // Paper start - async tab completion
         TAB_COMPLETE_EXECUTOR.execute(() -> {
         StringReader stringreader = new StringReader(packet.getCommand());
