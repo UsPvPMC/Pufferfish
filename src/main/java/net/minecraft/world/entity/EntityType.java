@@ -492,6 +492,13 @@ public class EntityType<T extends Entity> implements FeatureElement, EntityTypeT
                 if (world.isClientSide || !entity.onlyOpCanSetNbt() || player != null && minecraftserver.getPlayerList().isOp(player.getGameProfile())) {
                     CompoundTag nbttagcompound1 = entity.saveWithoutId(new CompoundTag());
                     UUID uuid = entity.getUUID();
+                    // Paper start - filter out protected tags
+                    if (player == null || !player.getBukkitEntity().hasPermission("minecraft.nbt.place")) {
+                        for (net.minecraft.commands.arguments.NbtPathArgument.NbtPath tag : world.paperConfig().entities.spawning.filteredEntityTagNbtPaths) {
+                            tag.remove(itemNbt.getCompound("EntityTag"));
+                        }
+                    }
+                    // Paper end
 
                     nbttagcompound1.merge(itemNbt.getCompound("EntityTag"));
                     entity.setUUID(uuid);
