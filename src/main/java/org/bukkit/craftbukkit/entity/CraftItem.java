@@ -103,6 +103,18 @@ public class CraftItem extends CraftEntity implements Item {
         item.age = willAge ? 0 : NO_AGE_TIME;
      }
 
+     @org.jetbrains.annotations.NotNull
+     @Override
+     public net.kyori.adventure.util.TriState getFrictionState() {
+        return this.item.frictionState;
+     }
+
+     @Override
+     public void setFrictionState(@org.jetbrains.annotations.NotNull net.kyori.adventure.util.TriState state) {
+         java.util.Objects.requireNonNull(state, "state may not be null");
+         this.item.frictionState = state;
+     }
+
     @Override
     public int getHealth() {
         return item.health;

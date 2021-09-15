@@ -1043,6 +1043,18 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         });
     }
 
+    @org.jetbrains.annotations.NotNull
+    @Override
+    public net.kyori.adventure.util.TriState getFrictionState() {
+        return this.getHandle().frictionState;
+    }
+
+    @Override
+    public void setFrictionState(@org.jetbrains.annotations.NotNull net.kyori.adventure.util.TriState state) {
+        java.util.Objects.requireNonNull(state, "state may not be null");
+        this.getHandle().frictionState = state;
+    }
+
     @Override
     public void knockback(double strength, double directionX, double directionZ) {
         Preconditions.checkArgument(strength > 0, "Knockback strength must be > 0");

@@ -54,6 +54,7 @@ public class ItemEntity extends Entity implements TraceableEntity {
     private int lastTick = MinecraftServer.currentTick - 1; // CraftBukkit
     public boolean canMobPickup = true; // Paper
     private int despawnRate = -1; // Paper
+    public net.kyori.adventure.util.TriState frictionState = net.kyori.adventure.util.TriState.NOT_SET; // Paper
 
     public ItemEntity(EntityType<? extends ItemEntity> type, Level world) {
         super(type, world);
@@ -159,7 +160,11 @@ public class ItemEntity extends Entity implements TraceableEntity {
                 this.move(MoverType.SELF, this.getDeltaMovement());
                 float f1 = 0.98F;
 
-                if (this.onGround) {
+                // Paper start
+                if (frictionState == net.kyori.adventure.util.TriState.FALSE) {
+                    f1 = 1F;
+                } else if (this.onGround) {
+                    // Paper end
                     f1 = this.level.getBlockState(BlockPos.containing(this.getX(), this.getY() - 1.0D, this.getZ())).getBlock().getFriction() * 0.98F;
                 }
 
@@ -360,6 +365,11 @@ public class ItemEntity extends Entity implements TraceableEntity {
 
     @Override
     public void addAdditionalSaveData(CompoundTag nbt) {
+        // Paper start
+        if (this.frictionState != net.kyori.adventure.util.TriState.NOT_SET) {
+            nbt.putString("Paper.FrictionState", this.frictionState.toString());
+        }
+        // Paper end
         nbt.putShort("Health", (short) this.health);
         nbt.putShort("Age", (short) this.age);
         nbt.putShort("PickupDelay", (short) this.pickupDelay);
@@ -392,6 +402,17 @@ public class ItemEntity extends Entity implements TraceableEntity {
         if (nbt.hasUUID("Thrower")) {
             this.thrower = nbt.getUUID("Thrower");
         }
+
+        // Paper start
+        if (nbt.contains("Paper.FrictionState")) {
+            String fs = nbt.getString("Paper.FrictionState");
+            try {
+                frictionState = net.kyori.adventure.util.TriState.valueOf(fs);
+            } catch (Exception ignored) {
+                com.mojang.logging.LogUtils.getLogger().error("Unknown friction state " + fs + " for " + this);
+            }
+        }
+        // Paper end
 
         CompoundTag nbttagcompound1 = nbt.getCompound("Item");
 
