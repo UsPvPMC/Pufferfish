@@ -27,6 +27,7 @@ public class LevelChunkSection {
     public final PalettedContainer<BlockState> states;
     // CraftBukkit start - read/write
     private PalettedContainer<Holder<Biome>> biomes;
+    public short fluidStateCount; // Pufferfish
     public final com.destroystokyo.paper.util.maplist.IBlockDataList tickingList = new com.destroystokyo.paper.util.maplist.IBlockDataList(); // Paper
 
     public LevelChunkSection(int i, PalettedContainer<BlockState> datapaletteblock, PalettedContainer<Holder<Biome>> palettedcontainerro) {
@@ -198,6 +199,7 @@ public class LevelChunkSection {
 
         if (!fluid.isEmpty()) {
             --this.tickingFluidCount;
+            --this.fluidStateCount; // Pufferfish
         }
 
         if (!state.isAir()) {
@@ -212,6 +214,7 @@ public class LevelChunkSection {
 
         if (!fluid1.isEmpty()) {
             ++this.tickingFluidCount;
+            ++this.fluidStateCount; // Pufferfish
         }
 
         this.updateKnownBlockInfo(x | (z << 4) | (y << 8), iblockdata1, state); // Paper
@@ -260,6 +263,7 @@ public class LevelChunkSection {
                 if (fluid.isRandomlyTicking()) {
                     this.tickingFluidCount = (short) (this.tickingFluidCount + 1);
                 }
+                this.fluidStateCount++; // Pufferfish
             }
 
         });
