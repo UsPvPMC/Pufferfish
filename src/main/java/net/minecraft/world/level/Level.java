@@ -276,6 +276,15 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 
     protected final io.papermc.paper.util.math.ThreadUnsafeRandom randomTickRandom = new io.papermc.paper.util.math.ThreadUnsafeRandom(java.util.concurrent.ThreadLocalRandom.current().nextLong()); // Pufferfish - move thread unsafe random initialization
 
+    // Pufferfish start - ensure these get inlined
+    private final int minBuildHeight, minSection, height, maxBuildHeight, maxSection;
+    @Override public final int getMaxBuildHeight() { return this.maxBuildHeight; }
+    @Override public final int getMinSection() { return this.minSection; }
+    @Override public final int getMaxSection() { return this.maxSection; }
+    @Override public final int getMinBuildHeight() { return this.minBuildHeight; }
+    @Override public final int getHeight() { return this.height; }
+    // Pufferfish end
+
     protected Level(WritableLevelData worlddatamutable, ResourceKey<Level> resourcekey, RegistryAccess iregistrycustom, Holder<DimensionType> holder, Supplier<ProfilerFiller> supplier, boolean flag, boolean flag1, long i, int j, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env, java.util.function.Function<org.spigotmc.SpigotWorldConfig, io.papermc.paper.configuration.WorldConfiguration> paperWorldConfigCreator, java.util.concurrent.Executor executor) { // Paper - Async-Anti-Xray - Pass executor
         this.spigotConfig = new org.spigotmc.SpigotWorldConfig(((net.minecraft.world.level.storage.PrimaryLevelData) worlddatamutable).getLevelName()); // Spigot
         this.paperConfig = paperWorldConfigCreator.apply(this.spigotConfig); // Paper
@@ -298,6 +307,13 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         });
         final DimensionType dimensionmanager = (DimensionType) holder.value();
 
+        // Pufferfish start
+        this.minBuildHeight = dimensionmanager.minY();
+        this.minSection = SectionPos.blockToSectionCoord(this.minBuildHeight);
+        this.height = dimensionmanager.height();
+        this.maxBuildHeight = this.minBuildHeight + this.height;
+        this.maxSection = SectionPos.blockToSectionCoord(this.maxBuildHeight - 1) + 1;
+        // Pufferfish end
         this.dimension = resourcekey;
         this.isClientSide = flag;
         if (dimensionmanager.coordinateScale() != 1.0D) {
