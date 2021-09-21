@@ -234,6 +234,21 @@ final class CraftTeam extends CraftScoreboardComponent implements Team {
         scoreboard.board.addPlayerToTeam(entry, team);
     }
 
+    // Paper start
+    @Override
+    public void addEntities(java.util.Collection<org.bukkit.entity.Entity> entities) throws IllegalStateException, IllegalArgumentException {
+        this.addEntries(entities.stream().map(entity -> ((org.bukkit.craftbukkit.entity.CraftEntity) entity).getHandle().getScoreboardName()).toList());
+    }
+
+    @Override
+    public void addEntries(java.util.Collection<String> entries) throws IllegalStateException, IllegalArgumentException {
+        Validate.notNull(entries, "Entries cannot be null");
+        CraftScoreboard scoreboard = this.checkState();
+
+        ((net.minecraft.server.ServerScoreboard) scoreboard.board).addPlayersToTeam(entries, this.team);
+    }
+    // Paper end
+
     @Override
     public boolean removePlayer(OfflinePlayer player) throws IllegalStateException, IllegalArgumentException {
         Validate.notNull(player, "OfflinePlayer cannot be null");
@@ -252,6 +267,28 @@ final class CraftTeam extends CraftScoreboardComponent implements Team {
         scoreboard.board.removePlayerFromTeam(entry, team);
         return true;
     }
+
+    // Paper start
+    @Override
+    public boolean removeEntities(java.util.Collection<org.bukkit.entity.Entity> entities) throws IllegalStateException, IllegalArgumentException {
+        return this.removeEntries(entities.stream().map(entity -> ((org.bukkit.craftbukkit.entity.CraftEntity) entity).getHandle().getScoreboardName()).toList());
+    }
+
+    @Override
+    public boolean removeEntries(java.util.Collection<String> entries) throws IllegalStateException, IllegalArgumentException {
+        Validate.notNull(entries, "Entry cannot be null");
+        CraftScoreboard scoreboard = this.checkState();
+
+        for (String entry : entries) {
+            if (this.team.getPlayers().contains(entry)) {
+                ((net.minecraft.server.ServerScoreboard) scoreboard.board).removePlayersFromTeam(entries, this.team);
+                return true;
+            }
+        }
+
+        return false;
+    }
+    // Paper end
 
     @Override
     public boolean hasPlayer(OfflinePlayer player) throws IllegalArgumentException, IllegalStateException {

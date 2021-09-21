@@ -92,12 +92,42 @@ public class ServerScoreboard extends Scoreboard {
         }
     }
 
+    // Paper start
+    public boolean addPlayersToTeam(java.util.Collection<String> players, PlayerTeam team) {
+        boolean anyAdded = false;
+        for (String playerName : players) {
+            if (super.addPlayerToTeam(playerName, team)) {
+                anyAdded = true;
+            }
+        }
+
+        if (anyAdded) {
+            this.broadcastAll(ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(team, players, ClientboundSetPlayerTeamPacket.Action.ADD));
+            this.setDirty();
+            return true;
+        } else {
+            return false;
+        }
+    }
+    // Paper end
+
     @Override
     public void removePlayerFromTeam(String playerName, PlayerTeam team) {
         super.removePlayerFromTeam(playerName, team);
         this.broadcastAll(ClientboundSetPlayerTeamPacket.createPlayerPacket(team, playerName, ClientboundSetPlayerTeamPacket.Action.REMOVE));
         this.setDirty();
     }
+
+    // Paper start
+    public void removePlayersFromTeam(java.util.Collection<String> players, PlayerTeam team) {
+        for (String playerName : players) {
+            super.removePlayerFromTeam(playerName, team);
+        }
+
+        this.broadcastAll(ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(team, players, ClientboundSetPlayerTeamPacket.Action.REMOVE));
+        this.setDirty();
+    }
+    // Paper end
 
     @Override
     public void onObjectiveAdded(Objective objective) {

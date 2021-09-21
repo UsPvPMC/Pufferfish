@@ -42,6 +42,12 @@ public class ClientboundSetPlayerTeamPacket implements Packet<ClientGamePacketLi
         return new ClientboundSetPlayerTeamPacket(team.getName(), operation == ClientboundSetPlayerTeamPacket.Action.ADD ? 3 : 4, Optional.empty(), ImmutableList.of(playerName));
     }
 
+    // Paper start
+    public static ClientboundSetPlayerTeamPacket createMultiplePlayerPacket(PlayerTeam team, Collection<String> players, ClientboundSetPlayerTeamPacket.Action operation) {
+        return new ClientboundSetPlayerTeamPacket(team.getName(), operation == ClientboundSetPlayerTeamPacket.Action.ADD ? 3 : 4, Optional.empty(), players);
+    }
+    // Paper end
+
     public ClientboundSetPlayerTeamPacket(FriendlyByteBuf buf) {
         this.name = buf.readUtf();
         this.method = buf.readByte();
