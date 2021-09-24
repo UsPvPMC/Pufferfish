@@ -371,7 +371,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
 
                         // Paper start
                         com.destroystokyo.paper.profile.PlayerProfile profile = com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitMirror(ServerLoginPacketListenerImpl.this.gameProfile);
-                        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, rawAddress, uniqueId, profile); // Paper - add rawAddress
+                        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, rawAddress, uniqueId, profile, ServerLoginPacketListenerImpl.this.connection.hostname); // Paper - add rawAddress & hostname
                         server.getPluginManager().callEvent(asyncEvent);
                         profile = asyncEvent.getPlayerProfile();
                         profile.complete(true); // Paper - setPlayerProfileAPI
