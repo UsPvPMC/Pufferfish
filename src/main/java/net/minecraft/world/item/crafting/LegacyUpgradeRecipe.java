@@ -26,8 +26,15 @@ public class LegacyUpgradeRecipe implements SmithingRecipe {
     final Ingredient addition;
     final ItemStack result;
     private final ResourceLocation id;
+    final boolean copyNBT; // Paper
 
     public LegacyUpgradeRecipe(ResourceLocation id, Ingredient base, Ingredient addition, ItemStack result) {
+        // Paper start
+        this(id, base, addition, result, true);
+    }
+    public LegacyUpgradeRecipe(ResourceLocation id, Ingredient base, Ingredient addition, ItemStack result, boolean copyNBT) {
+        this.copyNBT = copyNBT;
+        // Paper end
         this.id = id;
         this.base = base;
         this.addition = addition;
@@ -42,11 +49,13 @@ public class LegacyUpgradeRecipe implements SmithingRecipe {
     @Override
     public ItemStack assemble(Container inventory, RegistryAccess registryManager) {
         ItemStack itemstack = this.result.copy();
+        if (this.copyNBT) { // Paper - copy nbt conditionally
         CompoundTag nbttagcompound = inventory.getItem(0).getTag();
 
         if (nbttagcompound != null) {
             itemstack.setTag(nbttagcompound.copy());
         }
+        } // Paper
 
         return itemstack;
     }
@@ -98,7 +107,7 @@ public class LegacyUpgradeRecipe implements SmithingRecipe {
     public Recipe toBukkitRecipe() {
         CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
 
-        CraftSmithingRecipe recipe = new CraftSmithingRecipe(CraftNamespacedKey.fromMinecraft(this.id), result, CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
+        CraftSmithingRecipe recipe = new CraftSmithingRecipe(CraftNamespacedKey.fromMinecraft(this.id), result, CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition), this.copyNBT); // Paper
 
         return recipe;
     }
