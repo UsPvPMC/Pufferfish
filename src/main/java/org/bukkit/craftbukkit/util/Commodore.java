@@ -251,6 +251,14 @@ public class Commodore
                             desc = getOriginalOrRewrite( desc );
                         }
                         // Paper end
+                        // Paper start - DisplaySlot
+                        if (owner.equals("org/bukkit/scoreboard/DisplaySlot")) {
+                            if (name.startsWith("SIDEBAR_") && !name.startsWith("SIDEBAR_TEAM_")) {
+                                super.visitFieldInsn(opcode, owner, name.replace("SIDEBAR_", "SIDEBAR_TEAM_"), desc);
+                                return;
+                            }
+                        }
+                        // Paper end - DisplaySlot
 
                         if ( owner.equals( "org/bukkit/block/Biome" ) )
                         {
