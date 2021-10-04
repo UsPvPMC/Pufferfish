@@ -695,6 +695,23 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         return (LightningStrike) lightning.getBukkitEntity();
     }
 
+    // Paper start
+    @Override
+    public Location findLightningRod(Location location) {
+        return this.world.findLightningRod(io.papermc.paper.util.MCUtil.toBlockPosition(location))
+            .map(blockPos -> io.papermc.paper.util.MCUtil.toLocation(this.world, blockPos)
+                // get the actual rod pos
+                .subtract(0, 1, 0))
+            .orElse(null);
+    }
+
+    @Override
+    public Location findLightningTarget(Location location) {
+        final BlockPos pos = this.world.findLightningTargetAround(io.papermc.paper.util.MCUtil.toBlockPosition(location), true);
+        return pos == null ? null : io.papermc.paper.util.MCUtil.toLocation(this.world, pos);
+    }
+    // Paper end
+
     @Override
     public boolean generateTree(Location loc, TreeType type) {
         return generateTree(loc, CraftWorld.rand, type);
