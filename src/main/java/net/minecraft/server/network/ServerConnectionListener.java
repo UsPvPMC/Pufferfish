@@ -207,7 +207,7 @@ public class ServerConnectionListener {
                                 throw new ReportedException(CrashReport.forThrowable(exception, "Ticking memory connection"));
                             }
 
-                            ServerConnectionListener.LOGGER.warn("Failed to handle packet for {}", networkmanager.getRemoteAddress(), exception);
+                            ServerConnectionListener.LOGGER.warn("Failed to handle packet for {}", io.papermc.paper.configuration.GlobalConfiguration.get().logging.logPlayerIpAddresses ? String.valueOf(networkmanager.getRemoteAddress()) : "<ip address withheld>", exception); // Paper
                             MutableComponent ichatmutablecomponent = Component.literal("Internal server error");
 
                             networkmanager.send(new ClientboundDisconnectPacket(ichatmutablecomponent), PacketSendListener.thenRun(() -> {

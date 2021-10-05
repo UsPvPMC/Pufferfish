@@ -206,7 +206,10 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
     }
 
     public String getUserName() {
-        return this.gameProfile != null ? this.gameProfile + " (" + this.connection.getRemoteAddress() + ")" : String.valueOf(this.connection.getRemoteAddress());
+        // Paper start
+        String ip = io.papermc.paper.configuration.GlobalConfiguration.get().logging.logPlayerIpAddresses ? String.valueOf(this.connection.getRemoteAddress()) : "<ip address withheld>";
+        return this.gameProfile != null ? this.gameProfile + " (" + ip + ")" : String.valueOf(ip);
+        // Paper end
     }
 
     @Override

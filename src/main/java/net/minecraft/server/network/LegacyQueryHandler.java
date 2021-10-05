@@ -185,7 +185,7 @@ public class LegacyQueryHandler extends ChannelInboundHandlerAdapter {
         buf.release();
         this.buf = null;
 
-        LOGGER.debug("Ping: (1.6) from {}", ctx.channel().remoteAddress());
+        LOGGER.debug("Ping: (1.6) from {}", io.papermc.paper.configuration.GlobalConfiguration.get().logging.logPlayerIpAddresses ? ctx.channel().remoteAddress() : "<ip address withheld>"); // Paper
 
         InetSocketAddress virtualHost = com.destroystokyo.paper.network.PaperNetworkClient.prepareVirtualHost(host, port);
         com.destroystokyo.paper.event.server.PaperServerListPingEvent event = com.destroystokyo.paper.network.PaperLegacyStatusClient.processRequest(

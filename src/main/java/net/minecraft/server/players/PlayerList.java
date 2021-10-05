@@ -246,7 +246,7 @@ public abstract class PlayerList {
         String s1 = "local";
 
         if (connection.getRemoteAddress() != null) {
-            s1 = connection.getRemoteAddress().toString();
+            s1 = io.papermc.paper.configuration.GlobalConfiguration.get().logging.logPlayerIpAddresses ? connection.getRemoteAddress().toString() : "<ip address withheld>"; // Paper
         }
 
         // Spigot start - spawn location event
