@@ -168,7 +168,7 @@ public class BrewingStandMenu extends AbstractContainerMenu {
         }
 
         public static boolean mayPlaceItem(ItemStack stack) {
-            return stack.is(Items.POTION) || stack.is(Items.SPLASH_POTION) || stack.is(Items.LINGERING_POTION) || stack.is(Items.GLASS_BOTTLE);
+            return stack.is(Items.POTION) || stack.is(Items.SPLASH_POTION) || stack.is(Items.LINGERING_POTION) || stack.is(Items.GLASS_BOTTLE) || PotionBrewing.isCustomInput(stack); // Paper
         }
     }
 

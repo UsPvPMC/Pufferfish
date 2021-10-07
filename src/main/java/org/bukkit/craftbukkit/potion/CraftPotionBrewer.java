@@ -49,4 +49,21 @@ public class CraftPotionBrewer implements PotionBrewer {
     public PotionEffect createEffect(PotionEffectType potion, int duration, int amplifier) {
         return new PotionEffect(potion, potion.isInstant() ? 1 : (int) (duration * potion.getDurationModifier()), amplifier);
     }
+
+    // Paper start
+    @Override
+    public void addPotionMix(io.papermc.paper.potion.PotionMix potionMix) {
+        net.minecraft.world.item.alchemy.PotionBrewing.addPotionMix(potionMix);
+    }
+
+    @Override
+    public void removePotionMix(org.bukkit.NamespacedKey key) {
+        net.minecraft.world.item.alchemy.PotionBrewing.removePotionMix(key);
+    }
+
+    @Override
+    public void resetPotionMixes() {
+        net.minecraft.world.item.alchemy.PotionBrewing.reload();
+    }
+    // Paper end
 }
