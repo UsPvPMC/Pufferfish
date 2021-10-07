@@ -1415,4 +1415,19 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         return getHandle().isInPowderSnow || getHandle().wasInPowderSnow; // depending on the location in the entity "tick" either could be needed.
     }
     // Paper end
+    // Paper Start - Collision API
+    @Override
+    public boolean collidesAt(@org.jetbrains.annotations.NotNull Location location) {
+        net.minecraft.world.phys.AABB aabb = this.getHandle().getBoundingBoxAt(location.getX(), location.getY(), location.getZ());
+
+        return !this.getHandle().level.noCollision(this.getHandle(), aabb);
+    }
+
+    @Override
+    public boolean wouldCollideUsing(@org.jetbrains.annotations.NotNull BoundingBox boundingBox) {
+        net.minecraft.world.phys.AABB aabb = new AABB(boundingBox.getMinX(), boundingBox.getMinY(), boundingBox.getMinZ(), boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ(), false);
+
+        return !this.getHandle().level.noCollision(this.getHandle(), aabb);
+    }
+    // Paper End - Collision API
 }
