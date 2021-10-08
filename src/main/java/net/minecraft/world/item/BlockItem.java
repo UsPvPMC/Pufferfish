@@ -117,6 +117,7 @@ public class BlockItem extends Item {
                                 blockstate.update(true, false);
 
                                 if (this instanceof SolidBucketItem) {
+                                    ((ServerPlayer) entityhuman).connection.send(new net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket(world, blockposition.below())); // Paper - update block below
                                     ((ServerPlayer) entityhuman).getBukkitEntity().updateInventory(); // SPIGOT-4541
                                 }
                                 return InteractionResult.FAIL;

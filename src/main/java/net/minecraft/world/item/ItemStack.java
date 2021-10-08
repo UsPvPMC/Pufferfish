@@ -348,7 +348,7 @@ public final class ItemStack {
             int oldCount = this.getCount();
             ServerLevel world = (ServerLevel) itemactioncontext.getLevel();
 
-            if (!(this.getItem() instanceof BucketItem || this.getItem() instanceof SolidBucketItem)) { // if not bucket
+            if (!(this.getItem() instanceof BucketItem/* || this.getItem() instanceof SolidBucketItem*/)) { // if not bucket // Paper - capture block states for snow buckets
                 world.captureBlockStates = true;
                 // special case bonemeal
                 if (this.getItem() == Items.BONE_MEAL) {
@@ -403,7 +403,7 @@ public final class ItemStack {
                 world.capturedBlockStates.clear();
                 if (blocks.size() > 1) {
                     placeEvent = org.bukkit.craftbukkit.event.CraftEventFactory.callBlockMultiPlaceEvent(world, entityhuman, enumhand, blocks, blockposition.getX(), blockposition.getY(), blockposition.getZ());
-                } else if (blocks.size() == 1) {
+                } else if (blocks.size() == 1 && item != Items.POWDER_SNOW_BUCKET) { // Paper - don't call event twice for snow buckets
                     placeEvent = org.bukkit.craftbukkit.event.CraftEventFactory.callBlockPlaceEvent(world, entityhuman, enumhand, blocks.get(0), blockposition.getX(), blockposition.getY(), blockposition.getZ());
                 }
 
