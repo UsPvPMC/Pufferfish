@@ -147,5 +147,15 @@ public abstract class CraftMob extends CraftLivingEntity implements Mob {
     public int getMaxHeadPitch() {
         return getHandle().getMaxHeadXRot();
     }
+
+    @Override
+    public boolean isLeftHanded() {
+        return getHandle().isLeftHanded();
+    }
+
+    @Override
+    public void setLeftHanded(boolean leftHanded) {
+        getHandle().setLeftHanded(leftHanded);
+    }
     // Paper end
 }
