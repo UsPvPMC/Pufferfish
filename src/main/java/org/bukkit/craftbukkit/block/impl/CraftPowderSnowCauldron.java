@@ -31,4 +31,11 @@ public final class CraftPowderSnowCauldron extends org.bukkit.craftbukkit.block.
     public int getMaximumLevel() {
         return getMax(CraftPowderSnowCauldron.LEVEL);
     }
+
+    // Paper start
+    @Override
+    public int getMinimumLevel() {
+        return getMin(CraftPowderSnowCauldron.LEVEL);
+    }
+    // Paper end
 }
