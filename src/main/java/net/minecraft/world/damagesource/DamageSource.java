@@ -52,6 +52,7 @@ public class DamageSource {
         return this;
     }
     // CraftBukkit end
+    public @Nullable org.bukkit.block.BlockState explodedBlockState; // Paper - add exploded state
 
     public String toString() {
         return "DamageSource (" + this.type().msgId() + ")";

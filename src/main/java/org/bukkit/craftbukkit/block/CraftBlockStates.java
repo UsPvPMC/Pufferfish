@@ -271,6 +271,12 @@ public final class CraftBlockStates {
         BlockEntity tileEntity = (blockEntityTag == null) ? null : BlockEntity.loadStatic(blockPosition, blockData, blockEntityTag);
         return CraftBlockStates.getBlockState(null, blockPosition, blockData, tileEntity);
     }
+    // Paper start
+    public static BlockState getUnplacedBlockState(net.minecraft.world.level.BlockGetter levelAccessor, BlockPos blockPos, net.minecraft.world.level.block.state.BlockState blockData) {
+        BlockEntity tileEntity = levelAccessor.getBlockEntity(blockPos);
+        return CraftBlockStates.getBlockState(null, blockPos, blockData, tileEntity);
+    }
+    // Paper end
 
     // See BlockStateFactory#createBlockState(World, BlockPosition, IBlockData, TileEntity)
     private static CraftBlockState getBlockState(World world, BlockPos blockPosition, net.minecraft.world.level.block.state.BlockState blockData, BlockEntity tileEntity) {

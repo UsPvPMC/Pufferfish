@@ -343,7 +343,7 @@ public class Explosion {
                 bukkitBlocks = event.blockList();
                 yield = event.getYield();
             } else {
-                BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY ? 1.0F / this.radius : 1.0F);
+                BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY ? 1.0F / this.radius : 1.0F, this.damageSource.explodedBlockState); // Paper - exploded block state
                 this.level.getCraftServer().getPluginManager().callEvent(event);
                 cancelled = event.isCancelled();
                 bukkitBlocks = event.blockList();

@@ -114,6 +114,7 @@ public class RespawnAnchorBlock extends Block {
     }
 
     private void explode(BlockState state, Level world, final BlockPos explodedPos) {
+        final org.bukkit.block.BlockState explodedBlockState = org.bukkit.craftbukkit.block.CraftBlockStates.getBlockState(explodedPos, state, null); // Paper - exploded block state
         world.removeBlock(explodedPos, false);
         boolean bl = Direction.Plane.HORIZONTAL.stream().map(explodedPos::relative).anyMatch((pos) -> {
             return isWaterThatWouldFlow(pos, world);
@@ -126,7 +127,7 @@ public class RespawnAnchorBlock extends Block {
             }
         };
         Vec3 vec3 = explodedPos.getCenter();
-        world.explode((Entity)null, world.damageSources().badRespawnPointExplosion(vec3), explosionDamageCalculator, vec3, 5.0F, true, Level.ExplosionInteraction.BLOCK);
+        world.explode((Entity)null, world.damageSources().badRespawnPointExplosion(vec3, explodedBlockState), explosionDamageCalculator, vec3, 5.0F, true, Level.ExplosionInteraction.BLOCK);
     }
 
     public static boolean canSetSpawn(Level world) {
