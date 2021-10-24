@@ -15,7 +15,7 @@ public class PaperTileEntityLootableInventory implements PaperLootableBlockInven
 
     @Override
     public org.bukkit.loot.LootTable getLootTable() {
-        return tileEntityLootable.lootTable != null ? Bukkit.getLootTable(CraftNamespacedKey.fromMinecraft(tileEntityLootable.lootTable)) : null;
+        return tileEntityLootable.lootTable != null && !tileEntityLootable.lootTable.getPath().isEmpty() ? Bukkit.getLootTable(CraftNamespacedKey.fromMinecraft(tileEntityLootable.lootTable)) : null;
     }
 
     @Override

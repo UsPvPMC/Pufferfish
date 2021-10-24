@@ -17,7 +17,7 @@ public class PaperContainerEntityLootableInventory implements PaperLootableEntit
 
     @Override
     public org.bukkit.loot.LootTable getLootTable() {
-        return entity.getLootTable() != null ? Bukkit.getLootTable(CraftNamespacedKey.fromMinecraft(entity.getLootTable())) : null;
+        return entity.getLootTable() != null && !entity.getLootTable().getPath().isEmpty() ? Bukkit.getLootTable(CraftNamespacedKey.fromMinecraft(entity.getLootTable())) : null;
     }
 
     @Override
