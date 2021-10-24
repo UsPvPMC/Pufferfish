@@ -1367,5 +1367,15 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         }
         return set;
     }
+
+    @Override
+    public boolean spawnAt(Location location, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason) {
+        Preconditions.checkNotNull(location, "location cannot be null");
+        Preconditions.checkNotNull(reason, "reason cannot be null");
+        entity.level = ((CraftWorld) location.getWorld()).getHandle();
+        entity.setPos(location.getX(), location.getY(), location.getZ());
+        entity.setRot(location.getYaw(), location.getPitch());
+        return !entity.valid && entity.level.addFreshEntity(entity, reason);
+    }
     // Paper end
 }

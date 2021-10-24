@@ -2018,6 +2018,15 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
         }
     }
 
+    // Paper start - Entity serialization api
+    public boolean serializeEntity(CompoundTag compound) {
+        List<Entity> pass = new java.util.ArrayList<>(this.getPassengers());
+        this.passengers = ImmutableList.of();
+        boolean result = save(compound);
+        this.passengers = ImmutableList.copyOf(pass);
+        return result;
+    }
+    // Paper end
     public boolean save(CompoundTag nbt) {
         return this.isPassenger() ? false : this.saveAsPassenger(nbt);
     }
