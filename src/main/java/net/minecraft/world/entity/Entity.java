@@ -780,7 +780,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     // CraftBukkit start
     public void postTick() {
         // No clean way to break out of ticking once the entity has been copied to a new world, so instead we move the portalling later in the tick cycle
-        if (!(this instanceof ServerPlayer)) {
+        if (!(this instanceof ServerPlayer) && this.isAlive()) { // Paper - don't attempt to teleport dead entities
             this.handleNetherPortal();
         }
     }
