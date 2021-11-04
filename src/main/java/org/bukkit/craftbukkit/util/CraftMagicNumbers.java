@@ -574,6 +574,12 @@ public final class CraftMagicNumbers implements UnsafeValues {
         var supplier = net.minecraft.world.entity.ai.attributes.DefaultAttributes.getSupplier((net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.LivingEntity>) net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(CraftNamespacedKey.toMinecraft(bukkitEntityKey)));
         return new io.papermc.paper.attribute.UnmodifiableAttributeMap(supplier);
     }
+
+    @Override
+    public boolean isCollidable(Material material) {
+        Preconditions.checkArgument(material.isBlock(), material + " is not a block");
+        return getBlock(material).hasCollision;
+    }
     // Paper end
 
     /**

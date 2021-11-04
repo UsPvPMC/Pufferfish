@@ -482,6 +482,11 @@ public class CraftBlock implements Block {
     public boolean isSolid() {
         return getNMS().getMaterial().blocksMotion();
     }
+
+    @Override
+    public boolean isCollidable() {
+        return getNMS().getBlock().hasCollision;
+    }
     // Paper end
 
     @Override

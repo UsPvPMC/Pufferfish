@@ -324,4 +324,11 @@ public class CraftBlockState implements BlockState {
             throw new IllegalStateException("The blockState must be placed to call this method");
         }
     }
+
+    // Paper start
+    @Override
+    public boolean isCollidable() {
+        return this.data.getBlock().hasCollision;
+    }
+    // Paper end
 }
