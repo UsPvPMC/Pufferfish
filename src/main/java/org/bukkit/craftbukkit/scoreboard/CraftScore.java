@@ -68,4 +68,12 @@ final class CraftScore implements Score {
     public CraftScoreboard getScoreboard() {
         return this.objective.getScoreboard();
     }
+
+    // Paper start
+    @Override
+    public void resetScore() {
+        Scoreboard board = this.objective.checkState().board;
+        board.resetPlayerScore(entry, this.objective.getHandle());
+    }
+    // Paper end
 }
