@@ -172,4 +172,13 @@ public class PufferfishConfig {
 				"This can be overridden per-player with the permission pufferfish.usebooks");
 	}
 	
+	public static boolean enableSuffocationOptimization;
+	private static void suffocationOptimization() {
+		enableSuffocationOptimization = getBoolean("enable-suffocation-optimization", true,
+				"Optimizes the suffocation check by selectively skipping",
+				"the check in a way that still appears vanilla. This should",
+				"be left enabled on most servers, but is provided as a",
+				"configuration option if the vanilla deviation is undesirable.");
+	}
+	
 }

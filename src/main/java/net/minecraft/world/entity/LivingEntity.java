@@ -397,7 +397,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
             boolean flag = this instanceof net.minecraft.world.entity.player.Player;
 
             if (!this.level.isClientSide) {
-                if (this.isInWall()) {
+                if ((!gg.pufferfish.pufferfish.PufferfishConfig.enableSuffocationOptimization || (tickCount % 10 == 0 && couldPossiblyBeHurt(1.0F))) && this.isInWall()) { // Pufferfish - optimize suffocation
                     this.hurt(this.damageSources().inWall(), 1.0F);
                 } else if (flag && !this.level.getWorldBorder().isWithinBounds(this.getBoundingBox())) {
                     double d0 = this.level.getWorldBorder().getDistanceToBorder(this) + this.level.getWorldBorder().getDamageSafeZone();
@@ -1320,6 +1320,15 @@ public abstract class LivingEntity extends Entity implements Attackable {
     public boolean isDeadOrDying() {
         return this.getHealth() <= 0.0F;
     }
+
+    // Pufferfish start - optimize suffocation
+    public boolean couldPossiblyBeHurt(float amount) {
+        if ((float) this.invulnerableTime > (float) this.invulnerableDuration / 2.0F && amount <= this.lastHurt) {
+            return false;
+        }
+        return true;
+    }
+    // Pufferfish end
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
