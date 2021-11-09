@@ -221,6 +221,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
         com.destroystokyo.paper.VersionHistoryManager.INSTANCE.getClass(); // load version history now
         io.papermc.paper.brigadier.PaperBrigadierProviderImpl.INSTANCE.getClass(); // init PaperBrigadierProvider
         // Paper end
+        gg.pufferfish.pufferfish.PufferfishConfig.load(); // Pufferfish
+        gg.pufferfish.pufferfish.PufferfishCommand.init(); // Pufferfish
 
         this.setPvpAllowed(dedicatedserverproperties.pvp);
         this.setFlightAllowed(dedicatedserverproperties.allowFlight);

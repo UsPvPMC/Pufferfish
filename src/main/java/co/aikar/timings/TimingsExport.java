@@ -242,7 +242,8 @@ public class TimingsExport extends Thread {
         parent.put("config", createObject(
             pair("spigot", mapAsJSON(Bukkit.spigot().getSpigotConfig(), null)),
             pair("bukkit", mapAsJSON(Bukkit.spigot().getBukkitConfig(), null)),
-            pair("paper", mapAsJSON(Bukkit.spigot().getPaperConfig(), null))
+            pair("paper", mapAsJSON(Bukkit.spigot().getPaperConfig(), null)), // Pufferfish
+            pair("pufferfish", mapAsJSON(gg.pufferfish.pufferfish.PufferfishConfig.getConfigCopy(), null)) // Pufferfish
         ));
 
         new TimingsExport(listeners, parent, history).start();

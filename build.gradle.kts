@@ -46,6 +46,13 @@ dependencies {
     runtimeOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.7.3")
     runtimeOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.7.3")
 
+    // Pufferfish start
+    implementation("org.yaml:snakeyaml:1.32")
+    implementation ("me.carleslc.Simple-YAML:Simple-Yaml:1.8.2") {
+        exclude(group="org.yaml", module="snakeyaml")
+    }
+    // Pufferfish end
+
     testImplementation("io.github.classgraph:classgraph:4.8.47") // Paper - mob goal test
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.hamcrest:hamcrest-library:1.3")
