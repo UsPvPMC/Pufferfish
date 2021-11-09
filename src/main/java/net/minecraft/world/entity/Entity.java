@@ -291,7 +291,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     public double yo;
     public double zo;
     private Vec3 position;
-    private BlockPos blockPosition;
+    public BlockPos blockPosition; // Pufferfish - private->public
     private ChunkPos chunkPosition;
     private Vec3 deltaMovement;
     private float yRot;
