@@ -1215,6 +1215,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
     @Override
     public void handleEditBook(ServerboundEditBookPacket packet) {
+        if (!gg.pufferfish.pufferfish.PufferfishConfig.enableBooks && !this.player.getBukkitEntity().hasPermission("pufferfish.usebooks")) return; // Pufferfish
         // Paper start
         if (!this.cserver.isPrimaryThread()) {
             List<String> pageList = packet.getPages();

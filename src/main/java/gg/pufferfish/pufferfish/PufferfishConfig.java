@@ -163,4 +163,13 @@ public class PufferfishConfig {
 		}
 	}
 	
+	public static boolean enableBooks;
+	private static void books() {
+		enableBooks = getBoolean("enable-books", true,
+				"Whether or not books should be writeable.",
+				"Servers that anticipate being a target for duping may want to consider",
+				"disabling this option.",
+				"This can be overridden per-player with the permission pufferfish.usebooks");
+	}
+	
 }
