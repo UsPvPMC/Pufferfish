@@ -152,4 +152,15 @@ public class PufferfishConfig {
 		return config.getStringList(key);
 	}
 	
+	public static String sentryDsn;
+	private static void sentry() {
+		String sentryEnvironment = System.getenv("SENTRY_DSN");
+		String sentryConfig = getString("sentry-dsn", "", "Sentry DSN for improved error logging, leave blank to disable", "Obtain from https://sentry.io/");
+		
+		sentryDsn = sentryEnvironment == null ? sentryConfig : sentryEnvironment;
+		if (sentryDsn != null && !sentryDsn.isBlank()) {
+			gg.pufferfish.pufferfish.sentry.SentryManager.init();
+		}
+	}
+	
 }
