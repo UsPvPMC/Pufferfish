@@ -181,4 +181,21 @@ public class PufferfishConfig {
 				"configuration option if the vanilla deviation is undesirable.");
 	}
 	
+	public static boolean enableAsyncMobSpawning;
+	public static boolean asyncMobSpawningInitialized;
+	private static void asyncMobSpawning() {
+		boolean temp = getBoolean("enable-async-mob-spawning", true,
+				"Whether or not asynchronous mob spawning should be enabled.",
+				"On servers with many entities, this can improve performance by up to 15%. You must have",
+				"paper's per-player-mob-spawns setting set to true for this to work.",
+				"One quick note - this does not actually spawn mobs async (that would be very unsafe).",
+				"This just offloads some expensive calculations that are required for mob spawning.");
+		
+		// This prevents us from changing the value during a reload.
+		if (!asyncMobSpawningInitialized) {
+			asyncMobSpawningInitialized = true;
+			enableAsyncMobSpawning = temp;
+		}
+	}
+	
 }

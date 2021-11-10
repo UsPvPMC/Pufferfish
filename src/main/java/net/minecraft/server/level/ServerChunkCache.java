@@ -76,6 +76,9 @@ public class ServerChunkCache extends ChunkSource {
     final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<LevelChunk> loadedChunkMap = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>(8192, 0.5f);
 
     private final LevelChunk[] lastLoadedChunks = new LevelChunk[4 * 4];
+    
+    public boolean firstRunSpawnCounts = true; // Pufferfish
+    public final java.util.concurrent.atomic.AtomicBoolean _pufferfish_spawnCountsReady = new java.util.concurrent.atomic.AtomicBoolean(false); // Pufferfish - optimize countmobs
 
     private static int getChunkCacheKey(int x, int z) {
         return x & 3 | ((z & 3) << 2);
@@ -712,18 +715,25 @@ public class ServerChunkCache extends ChunkSource {
             // Paper start - per player mob spawning
             NaturalSpawner.SpawnState spawnercreature_d; // moved down
             if ((this.spawnFriendlies || this.spawnEnemies) && this.chunkMap.playerMobDistanceMap != null) { // don't count mobs when animals and monsters are disabled
-                // re-set mob counts
-                for (ServerPlayer player : this.level.players) {
-                    Arrays.fill(player.mobCounts, 0);
+                // Pufferfish start - moved down when async processing
+                if (!gg.pufferfish.pufferfish.PufferfishConfig.enableAsyncMobSpawning) {
+                    // re-set mob counts
+                    for (ServerPlayer player : this.level.players) {
+                        Arrays.fill(player.mobCounts, 0);
+                    }
+                    lastSpawnState = NaturalSpawner.createState(l, this.level.getAllEntities(), this::getFullChunk, null, true);
                 }
-                spawnercreature_d = NaturalSpawner.createState(l, this.level.getAllEntities(), this::getFullChunk, null, true);
+                // Pufferfish end
             } else {
-                spawnercreature_d = NaturalSpawner.createState(l, this.level.getAllEntities(), this::getFullChunk, this.chunkMap.playerMobDistanceMap == null ? new LocalMobCapCalculator(this.chunkMap) : null, false);
+                // Pufferfish start - this is only implemented for per-player mob spawning so this makes everything work if this setting is disabled.
+                lastSpawnState = NaturalSpawner.createState(l, this.level.getAllEntities(), this::getFullChunk, this.chunkMap.playerMobDistanceMap == null ? new LocalMobCapCalculator(this.chunkMap) : null, false);
+                _pufferfish_spawnCountsReady.set(true);
+                // Pufferfish end
             }
             // Paper end
             this.level.timings.countNaturalMobs.stopTiming(); // Paper - timings
 
-            this.lastSpawnState = spawnercreature_d;
+            //this.lastSpawnState = spawnercreature_d; // Pufferfish - this is managed asynchronously
             gameprofilerfiller.popPush("filteringLoadedChunks");
             // Paper - moved down
             this.level.timings.chunkTicks.startTiming(); // Paper
@@ -761,8 +771,8 @@ public class ServerChunkCache extends ChunkSource {
 
                 if ((true || this.level.isNaturalSpawningAllowed(chunkcoordintpair)) && this.chunkMap.anyPlayerCloseEnoughForSpawning(holder, chunkcoordintpair, false)) { // Paper - optimise anyPlayerCloseEnoughForSpawning // Paper - the chunk is known ticking
                     chunk1.incrementInhabitedTime(j);
-                    if (flag2 && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(holder, chunkcoordintpair, true)) { // Spigot // Paper - optimise anyPlayerCloseEnoughForSpawning & optimise chunk tick iteration
-                        NaturalSpawner.spawnForChunk(this.level, chunk1, spawnercreature_d, this.spawnFriendlies, this.spawnEnemies, flag1);
+                    if (flag2 && (!gg.pufferfish.pufferfish.PufferfishConfig.enableAsyncMobSpawning || _pufferfish_spawnCountsReady.get()) && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(chunkcoordintpair) && this.chunkMap.anyPlayerCloseEnoughForSpawning(holder, chunkcoordintpair, true)) { // Spigot // Paper - optimise anyPlayerCloseEnoughForSpawning & optimise chunk tick iteration
+                        NaturalSpawner.spawnForChunk(this.level, chunk1, lastSpawnState, this.spawnFriendlies, this.spawnEnemies, flag1); // Pufferfish
                     }
 
                     if (true || this.level.shouldTickBlocksAt(chunkcoordintpair.toLong())) { // Paper - the chunk is known ticking
@@ -824,6 +834,30 @@ public class ServerChunkCache extends ChunkSource {
             }
             // Paper end - controlled flush for entity tracker packets
         }
+    
+        // Pufferfish start - optimize mob spawning
+        if (gg.pufferfish.pufferfish.PufferfishConfig.enableAsyncMobSpawning) {
+            for (ServerPlayer player : this.level.players) {
+                Arrays.fill(player.mobCounts, 0);
+            }
+            if (firstRunSpawnCounts) {
+                firstRunSpawnCounts = false;
+                _pufferfish_spawnCountsReady.set(true);
+            }
+            if (chunkMap.playerMobDistanceMap != null && _pufferfish_spawnCountsReady.getAndSet(false)) {
+                net.minecraft.server.MinecraftServer.getServer().mobSpawnExecutor.submit(() -> {
+                    int mapped = distanceManager.getNaturalSpawnChunkCount();
+                    io.papermc.paper.util.maplist.IteratorSafeOrderedReferenceSet.Iterator<Entity> objectiterator =
+                            level.entityTickList.entities.iterator(io.papermc.paper.util.maplist.IteratorSafeOrderedReferenceSet.ITERATOR_FLAG_SEE_ADDITIONS);
+                    gg.pufferfish.pufferfish.util.IterableWrapper<Entity> wrappedIterator =
+                            new gg.pufferfish.pufferfish.util.IterableWrapper<>(objectiterator);
+                    lastSpawnState = NaturalSpawner.createState(mapped, wrappedIterator, this::getFullChunk, null, true);
+                    objectiterator.finishedIterating();
+                    _pufferfish_spawnCountsReady.set(true);
+                });
+            }
+        }
+        // Pufferfish end
     }
 
     private void getFullChunk(long pos, Consumer<LevelChunk> chunkConsumer) {

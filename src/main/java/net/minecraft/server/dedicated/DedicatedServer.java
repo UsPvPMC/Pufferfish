@@ -341,6 +341,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
                 DedicatedServer.LOGGER.info("JMX monitoring enabled");
             }
 
+            if (gg.pufferfish.pufferfish.PufferfishConfig.enableAsyncMobSpawning) mobSpawnExecutor.start(); // Pufferfish
             return true;
         }
     }
