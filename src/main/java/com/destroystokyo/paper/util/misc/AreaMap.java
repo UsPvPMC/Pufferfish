@@ -26,7 +26,7 @@ public abstract class AreaMap<E> {
 
     // we use linked for better iteration.
     // map of: coordinate to set of objects in coordinate
-    protected final Long2ObjectOpenHashMap<PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<E>> areaMap = new Long2ObjectOpenHashMap<>(1024, 0.7f);
+    protected Long2ObjectOpenHashMap<PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<E>> areaMap = new Long2ObjectOpenHashMap<>(1024, 0.7f); // Pufferfish - not actually final
     protected final PooledLinkedHashSets<E> pooledHashSets;
 
     protected final ChangeCallback<E> addCallback;
@@ -160,7 +160,8 @@ public abstract class AreaMap<E> {
     protected abstract PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<E> getEmptySetFor(final E object);
 
     // expensive op, only for debug
-    protected void validate(final E object, final int viewDistance) {
+    protected void validate0(final E object, final int viewDistance) { // Pufferfish - rename this thing just in case it gets used I'd rather a compile time error.
+        if (true) throw new UnsupportedOperationException(); // Pufferfish - not going to put in the effort to fix this if it doesn't ever get used.
         int entiesGot = 0;
         int expectedEntries = (2 * viewDistance + 1);
         expectedEntries *= expectedEntries;
