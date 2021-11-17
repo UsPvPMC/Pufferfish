@@ -2384,9 +2384,11 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         this.getHandle().maxHealthCache = getMaxHealth();
     }
 
-    public void sendHealthUpdate() {
+    // Paper start
+    @Override
+    public void sendHealthUpdate(final double health, final int foodLevel, final float saturationLevel) {
         // Paper start - cancellable death event
-        ClientboundSetHealthPacket packet = new ClientboundSetHealthPacket(this.getScaledHealth(), this.getHandle().getFoodData().getFoodLevel(), this.getHandle().getFoodData().getSaturationLevel());
+        ClientboundSetHealthPacket packet = new ClientboundSetHealthPacket((float) health, foodLevel, saturationLevel);
         if (this.getHandle().queueHealthUpdatePacket) {
             this.getHandle().queuedHealthUpdatePacket = packet;
         } else {
@@ -2394,6 +2396,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         }
         // Paper end
     }
+
+    @Override
+    public void sendHealthUpdate() {
+        this.sendHealthUpdate(this.getScaledHealth(), this.getHandle().getFoodData().getFoodLevel(), this.getHandle().getFoodData().getSaturationLevel());
+    }
+    // Paper end
 
     public void injectScaledMaxHealth(Collection<AttributeInstance> collection, boolean force) {
         if (!this.scaledHealth && !force) {
