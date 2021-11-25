@@ -2614,14 +2614,27 @@ public abstract class LivingEntity extends Entity implements Attackable {
         return this.hasEffect(MobEffects.JUMP) ? (double) (0.1F * (float) (this.getEffect(MobEffects.JUMP).getAmplifier() + 1)) : 0.0D;
     }
 
+    protected long lastJumpTime = 0L; // Paper
     protected void jumpFromGround() {
         double d0 = (double) this.getJumpPower() + this.getJumpBoostPower();
         Vec3 vec3d = this.getDeltaMovement();
+        // Paper start
+        long time = System.nanoTime();
+        boolean canCrit = true;
+        if (this instanceof net.minecraft.world.entity.player.Player) {
+            canCrit = false;
+            if (time - this.lastJumpTime > (long)(0.250e9)) {
+                this.lastJumpTime = time;
+                canCrit = true;
+            }
+        }
+        // Paper end
 
         this.setDeltaMovement(vec3d.x, d0, vec3d.z);
         if (this.isSprinting()) {
             float f = this.getYRot() * 0.017453292F;
 
+            if (canCrit) // Paper
             this.setDeltaMovement(this.getDeltaMovement().add((double) (-Mth.sin(f) * 0.2F), 0.0D, (double) (Mth.cos(f) * 0.2F)));
         }
 
