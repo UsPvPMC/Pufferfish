@@ -36,10 +36,13 @@ public class LevelChunkSection {
         this.recalcBlockCounts();
     }
 
-    public LevelChunkSection(int chunkPos, Registry<Biome> biomeRegistry) {
+    // Paper start - Anti-Xray - Add parameters
+    @Deprecated @io.papermc.paper.annotation.DoNotUse public LevelChunkSection(int chunkPos, Registry<Biome> biomeRegistry) { this(chunkPos, biomeRegistry, null, null); }
+    public LevelChunkSection(int chunkPos, Registry<Biome> biomeRegistry, net.minecraft.world.level.ChunkPos pos, net.minecraft.world.level.Level level) {
+        // Paper end
         this.bottomBlockY = LevelChunkSection.getBottomBlockY(chunkPos);
-        this.states = new PalettedContainer<>(Block.BLOCK_STATE_REGISTRY, Blocks.AIR.defaultBlockState(), PalettedContainer.Strategy.SECTION_STATES);
-        this.biomes = new PalettedContainer<>(biomeRegistry.asHolderIdMap(), biomeRegistry.getHolderOrThrow(Biomes.PLAINS), PalettedContainer.Strategy.SECTION_BIOMES);
+        this.states = new PalettedContainer<>(Block.BLOCK_STATE_REGISTRY, Blocks.AIR.defaultBlockState(), PalettedContainer.Strategy.SECTION_STATES, level == null || level.chunkPacketBlockController == null ? null : level.chunkPacketBlockController.getPresetBlockStates(level, pos, this.bottomBlockY())); // Paper - Anti-Xray - Add preset block states
+        this.biomes = new PalettedContainer<>(biomeRegistry.asHolderIdMap(), biomeRegistry.getHolderOrThrow(Biomes.PLAINS), PalettedContainer.Strategy.SECTION_BIOMES, null); // Paper - Anti-Xray - Add preset biomes
     }
 
     public static int getBottomBlockY(int chunkPos) {
@@ -184,10 +187,13 @@ public class LevelChunkSection {
         this.biomes = datapaletteblock;
     }
 
-    public void write(FriendlyByteBuf buf) {
+    // Paper start - Anti-Xray - Add chunk packet info
+    @Deprecated @io.papermc.paper.annotation.DoNotUse public void write(FriendlyByteBuf buf) { this.write(buf, null); }
+    public void write(FriendlyByteBuf buf, com.destroystokyo.paper.antixray.ChunkPacketInfo<BlockState> chunkPacketInfo) {
         buf.writeShort(this.nonEmptyBlockCount);
-        this.states.write(buf);
-        this.biomes.write(buf);
+        this.states.write(buf, chunkPacketInfo, this.bottomBlockY());
+        this.biomes.write(buf, null, this.bottomBlockY());
+        // Paper end
     }
 
     public int getSerializedSize() {
