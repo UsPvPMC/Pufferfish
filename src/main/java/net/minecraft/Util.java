@@ -888,17 +888,7 @@ public class Util {
         }
 
         public void openUrl(URL url) {
-            try {
-                Process process = AccessController.doPrivileged((PrivilegedExceptionAction<Process>)(() -> {
-                    return Runtime.getRuntime().exec(this.getOpenUrlArguments(url));
-                }));
-                process.getInputStream().close();
-                process.getErrorStream().close();
-                process.getOutputStream().close();
-            } catch (IOException | PrivilegedActionException var3) {
-                Util.LOGGER.error("Couldn't open url '{}'", url, var3);
-            }
-
+            throw new IllegalStateException("This method is not useful on dedicated servers."); // Paper
         }
 
         public void openUri(URI uri) {
