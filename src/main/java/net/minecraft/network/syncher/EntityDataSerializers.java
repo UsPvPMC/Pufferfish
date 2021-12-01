@@ -42,7 +42,7 @@ public class EntityDataSerializers {
     public static final EntityDataSerializer<ItemStack> ITEM_STACK = new EntityDataSerializer<ItemStack>() {
         @Override
         public void write(FriendlyByteBuf buf, ItemStack value) {
-            buf.writeItem(value);
+            buf.writeItem(net.minecraft.world.entity.LivingEntity.sanitizeItemStack(value, false)); // Paper - prevent oversized data
         }
 
         @Override

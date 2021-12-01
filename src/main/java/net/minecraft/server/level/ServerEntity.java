@@ -344,7 +344,10 @@ public class ServerEntity {
                 ItemStack itemstack = ((LivingEntity) this.entity).getItemBySlot(enumitemslot);
 
                 if (!itemstack.isEmpty()) {
-                    list.add(Pair.of(enumitemslot, itemstack.copy()));
+                    // Paper start - prevent oversized data
+                    final ItemStack sanitized = LivingEntity.sanitizeItemStack(itemstack.copy(), false);
+                    list.add(Pair.of(enumitemslot, sanitized));
+                    // Paper end
                 }
             }
 

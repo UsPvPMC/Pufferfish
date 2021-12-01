@@ -3126,7 +3126,10 @@ public abstract class LivingEntity extends Entity implements Attackable {
         equipmentChanges.forEach((enumitemslot, itemstack) -> {
             ItemStack itemstack1 = itemstack.copy();
 
-            list.add(Pair.of(enumitemslot, itemstack1));
+            // Paper start - prevent oversized data
+            ItemStack toSend = sanitizeItemStack(itemstack1, true);
+            list.add(Pair.of(enumitemslot, toSend));
+            // Paper end
             switch (enumitemslot.getType()) {
                 case HAND:
                     this.setLastHandItem(enumitemslot, itemstack1);
@@ -3138,6 +3141,34 @@ public abstract class LivingEntity extends Entity implements Attackable {
         });
         ((ServerLevel) this.level).getChunkSource().broadcast(this, new ClientboundSetEquipmentPacket(this.getId(), list));
     }
+
+    // Paper start - prevent oversized data
+    public static ItemStack sanitizeItemStack(final ItemStack itemStack, final boolean copyItemStack) {
+        if (itemStack.isEmpty() || !itemStack.hasTag()) {
+            return itemStack;
+        }
+
+        final ItemStack copy = copyItemStack ? itemStack.copy() : itemStack;
+        final CompoundTag tag = copy.getTag();
+        if (copy.is(Items.BUNDLE) && tag.get("Items") instanceof ListTag oldItems && !oldItems.isEmpty()) {
+            // Bundles change their texture based on their fullness.
+            org.bukkit.inventory.meta.BundleMeta bundleMeta = (org.bukkit.inventory.meta.BundleMeta) copy.asBukkitMirror().getItemMeta();
+            int sizeUsed = 0;
+            for (org.bukkit.inventory.ItemStack item : bundleMeta.getItems()) {
+                int scale = 64 / item.getMaxStackSize();
+                sizeUsed += scale * item.getAmount();
+            }
+            // Now we add a single fake item that uses the same amount of slots as all other items.
+            ListTag items = new ListTag();
+            items.add(new ItemStack(Items.PAPER, sizeUsed).save(new CompoundTag()));
+            tag.put("Items", items);
+        }
+        if (tag.get("BlockEntityTag") instanceof CompoundTag blockEntityTag) {
+            blockEntityTag.remove("Items");
+        }
+        return copy;
+    }
+    // Paper end
 
     private ItemStack getLastArmorItem(EquipmentSlot slot) {
         return (ItemStack) this.lastArmorItemStacks.get(slot.getIndex());
