@@ -254,4 +254,12 @@ public abstract class BlockEntity {
         return null;
     }
     // CraftBukkit end
+    // Paper start
+    public CompoundTag sanitizeSentNbt(CompoundTag tag) {
+        tag.remove("PublicBukkitValues");
+
+        return tag;
+    }
+    // Paper end
+
 }

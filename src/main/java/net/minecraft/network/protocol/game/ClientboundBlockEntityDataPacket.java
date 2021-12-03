@@ -17,7 +17,7 @@ public class ClientboundBlockEntityDataPacket implements Packet<ClientGamePacket
     private final CompoundTag tag;
 
     public static ClientboundBlockEntityDataPacket create(BlockEntity blockEntity, Function<BlockEntity, CompoundTag> nbtGetter) {
-        return new ClientboundBlockEntityDataPacket(blockEntity.getBlockPos(), blockEntity.getType(), nbtGetter.apply(blockEntity));
+        return new ClientboundBlockEntityDataPacket(blockEntity.getBlockPos(), blockEntity.getType(), blockEntity.sanitizeSentNbt(nbtGetter.apply(blockEntity))); // Paper - Sanitize sent data
     }
 
     public static ClientboundBlockEntityDataPacket create(BlockEntity blockEntity) {
