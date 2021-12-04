@@ -106,6 +106,7 @@ public class SpigotWorldConfig
     public int twistingVinesModifier;
     public int weepingVinesModifier;
     public int caveVinesModifier;
+    public int glowBerryModifier; // Paper
     private int getAndValidateGrowth(String crop)
     {
         int modifier = this.getInt( "growth." + crop.toLowerCase(java.util.Locale.ENGLISH) + "-modifier", 100 );
@@ -139,6 +140,7 @@ public class SpigotWorldConfig
         this.twistingVinesModifier = this.getAndValidateGrowth( "TwistingVines" );
         this.weepingVinesModifier = this.getAndValidateGrowth( "WeepingVines" );
         this.caveVinesModifier = this.getAndValidateGrowth( "CaveVines" );
+        this.glowBerryModifier = this.getAndValidateGrowth("GlowBerry"); // Paper
     }
 
     public double itemMerge;
