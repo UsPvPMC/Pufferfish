@@ -3330,6 +3330,13 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     }
 
     public void restoreFrom(Entity original) {
+        // Paper start
+        CraftEntity bukkitEntity = original.bukkitEntity;
+        if (bukkitEntity != null) {
+            bukkitEntity.setHandle(this);
+            this.bukkitEntity = bukkitEntity;
+        }
+        // Paper end
         CompoundTag nbttagcompound = original.saveWithoutId(new CompoundTag());
 
         nbttagcompound.remove("Dimension");
@@ -3411,10 +3418,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                     if (worldserver.getTypeKey() == LevelStem.END) { // CraftBukkit
                         ServerLevel.makeObsidianPlatform(worldserver, this); // CraftBukkit
                     }
-                    // CraftBukkit start - Forward the CraftEntity to the new entity
-                    this.getBukkitEntity().setHandle(entity);
-                    entity.bukkitEntity = this.getBukkitEntity();
-                    // CraftBukkit end
+                    // // CraftBukkit start - Forward the CraftEntity to the new entity // Paper - moved to Entity#restoreFrom
+                    // this.getBukkitEntity().setHandle(entity);
+                    // entity.bukkitEntity = this.getBukkitEntity();
+                    // // CraftBukkit end
                 }
 
                 this.removeAfterChangingDimensions();
