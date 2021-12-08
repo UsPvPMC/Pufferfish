@@ -24,4 +24,34 @@ public class CraftDolphin extends CraftWaterMob implements Dolphin {
     public EntityType getType() {
         return EntityType.DOLPHIN;
     }
+
+    @Override
+    public int getMoistness() {
+        return this.getHandle().getMoistnessLevel();
+    }
+
+    @Override
+    public void setMoistness(int moistness) {
+        this.getHandle().setMoisntessLevel(moistness);
+    }
+
+    @Override
+    public void setHasFish(boolean hasFish) {
+        this.getHandle().setGotFish(hasFish);
+    }
+
+    @Override
+    public boolean hasFish() {
+        return this.getHandle().gotFish();
+    }
+
+    @Override
+    public org.bukkit.Location getTreasureLocation() {
+        return io.papermc.paper.util.MCUtil.toLocation(this.getHandle().level, this.getHandle().getTreasurePos());
+    }
+
+    @Override
+    public void setTreasureLocation(org.bukkit.Location location) {
+        this.getHandle().setTreasurePos(io.papermc.paper.util.MCUtil.toBlockPosition(location));
+    }
 }
