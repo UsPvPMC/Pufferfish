@@ -289,13 +289,17 @@ public class CraftChunk implements Chunk {
         PalettedContainerRO<Holder<net.minecraft.world.level.biome.Biome>>[] biome = (includeBiome || includeBiomeTempRain) ? new PalettedContainer[cs.length] : null;
 
         Registry<net.minecraft.world.level.biome.Biome> iregistry = this.worldServer.registryAccess().registryOrThrow(Registries.BIOME);
-        Codec<PalettedContainerRO<Holder<net.minecraft.world.level.biome.Biome>>> biomeCodec = PalettedContainer.codecRO(iregistry.asHolderIdMap(), iregistry.holderByNameCodec(), PalettedContainer.Strategy.SECTION_BIOMES, iregistry.getHolderOrThrow(Biomes.PLAINS));
 
         for (int i = 0; i < cs.length; i++) {
-            CompoundTag data = new CompoundTag();
 
-            data.put("block_states", ChunkSerializer.BLOCK_STATE_CODEC.encodeStart(NbtOps.INSTANCE, cs[i].getStates()).get().left().get());
-            sectionBlockIDs[i] = ChunkSerializer.BLOCK_STATE_CODEC.parse(NbtOps.INSTANCE, data.getCompound("block_states")).get().left().get();
+            // Paper start
+            sectionEmpty[i] = cs[i].hasOnlyAir(); // Paper - fix sectionEmpty array not being filled
+            if (!sectionEmpty[i]) {
+                sectionBlockIDs[i] = cs[i].getStates().copy(); // Paper - use copy instead of round tripping with codecs
+            } else {
+                sectionBlockIDs[i] = CraftChunk.emptyBlockIDs; // Paper - use cached instance for empty block sections
+            }
+            // Paper end
 
             LevelLightEngine lightengine = this.worldServer.getLightEngine();
             DataLayer skyLightArray = lightengine.getLayerListener(LightLayer.SKY).getDataLayerData(SectionPos.of(x, i, z));
@@ -314,8 +318,7 @@ public class CraftChunk implements Chunk {
             }
 
             if (biome != null) {
-                data.put("biomes", biomeCodec.encodeStart(NbtOps.INSTANCE, cs[i].getBiomes()).get().left().get());
-                biome[i] = biomeCodec.parse(NbtOps.INSTANCE, data.getCompound("biomes")).get().left().get();
+                biome[i] = ((PalettedContainer<Holder<net.minecraft.world.level.biome.Biome>>) cs[i].getBiomes()).copy(); // Paper - use copy instead of round tripping with codecs
             }
         }
 
