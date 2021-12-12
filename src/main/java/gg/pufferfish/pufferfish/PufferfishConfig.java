@@ -253,6 +253,13 @@ public class PufferfishConfig {
 
         setComment("dab", "Optimizes entity brains when", "they're far away from the player");
     }
+    
+    public static boolean throttleInactiveGoalSelectorTick;
+	private static void inactiveGoalSelectorThrottle() {
+		getBoolean("inactive-goal-selector-throttle", "inactive-goal-selector-disable", true,
+				"Throttles the AI goal selector in entity inactive ticks.",
+				"This can improve performance by a few percent, but has minor gameplay implications.");
+	}
 
     public static URI profileWebUrl;
     private static void profilerOptions() {
