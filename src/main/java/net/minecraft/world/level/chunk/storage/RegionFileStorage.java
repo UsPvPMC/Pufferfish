@@ -302,10 +302,17 @@ public class RegionFileStorage implements AutoCloseable {
                 NbtIo.write(nbt, (DataOutput) dataoutputstream);
                 regionfile.setStatus(pos.x, pos.z, ChunkSerializer.getStatus(nbt)); // Paper - cache status on disk
                 regionfile.setOversized(pos.x, pos.z, false); // Paper - We don't do this anymore, mojang stores differently, but clear old meta flag if it exists to get rid of our own meta file once last oversized is gone
+                dataoutputstream.close(); // Paper - only write if successful
+            // Paper start - don't write garbage data to disk if writing serialization fails
+            } catch (RegionFileSizeException e) {
+                attempts = 5; // Don't retry
+                regionfile.clear(pos);
+                throw e;
+                // Paper end - don't write garbage data to disk if writing serialization fails
             } catch (Throwable throwable) {
                 if (dataoutputstream != null) {
                     try {
-                        dataoutputstream.close();
+                        //dataoutputstream.close(); // Paper - don't write garbage data to disk if writing serialization fails
                     } catch (Throwable throwable1) {
                         throwable.addSuppressed(throwable1);
                     }
@@ -313,10 +320,7 @@ public class RegionFileStorage implements AutoCloseable {
 
                 throw throwable;
             }
-
-            if (dataoutputstream != null) {
-                dataoutputstream.close();
-            }
+            // Paper - move into try block to only write if successfully serialized
         }
         // Paper start
         return;
@@ -362,4 +366,13 @@ public class RegionFileStorage implements AutoCloseable {
         }
 
     }
+
+    // Paper start
+    public static final class RegionFileSizeException extends RuntimeException {
+
+        public RegionFileSizeException(String message) {
+            super(message);
+        }
+    }
+    // Paper end
 }
