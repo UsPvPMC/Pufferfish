@@ -74,7 +74,7 @@ public class TripWireBlock extends Block {
     @Override
     public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
         if (!moved && !state.is(newState.getBlock())) {
-            this.updateSource(world, pos, (BlockState) state.setValue(TripWireBlock.POWERED, true));
+            this.updateSource(world, pos, (BlockState) state.setValue(TripWireBlock.POWERED, true), true); // Paper - fix state inconsistency
         }
     }
 
@@ -89,6 +89,12 @@ public class TripWireBlock extends Block {
     }
 
     private void updateSource(Level world, BlockPos pos, BlockState state) {
+        // Paper start - fix state inconsistency
+        this.updateSource(world, pos, state, false);
+    }
+
+    private void updateSource(Level world, BlockPos pos, BlockState state, boolean beingRemoved) {
+        // Paper end
         Direction[] aenumdirection = new Direction[]{Direction.SOUTH, Direction.WEST};
         int i = aenumdirection.length;
         int j = 0;
@@ -104,7 +110,7 @@ public class TripWireBlock extends Block {
 
                     if (iblockdata1.is((Block) this.hook)) {
                         if (iblockdata1.getValue(TripWireHookBlock.FACING) == enumdirection.getOpposite()) {
-                            this.hook.calculateState(world, blockposition1, iblockdata1, false, true, k, state);
+                            this.hook.calculateState(world, blockposition1, iblockdata1, false, true, k, state, beingRemoved); // Paper - fix state inconsistency
                         }
                     } else if (iblockdata1.is((Block) this)) {
                         ++k;

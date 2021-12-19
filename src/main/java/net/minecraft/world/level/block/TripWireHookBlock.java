@@ -108,6 +108,12 @@ public class TripWireHookBlock extends Block {
     }
 
     public void calculateState(Level world, BlockPos pos, BlockState state, boolean beingRemoved, boolean flag1, int i, @Nullable BlockState iblockdata1) {
+        // Paper start - fix tripwire inconsistency
+        this.calculateState(world, pos, state, beingRemoved, flag1, i, iblockdata1, false);
+    }
+
+    public void calculateState(Level world, BlockPos pos, BlockState state, boolean beingRemoved, boolean flag1, int i, @Nullable BlockState iblockdata1, boolean tripWireBeingRemoved) {
+        // Paper end
         Direction enumdirection = (Direction) state.getValue(TripWireHookBlock.FACING);
         boolean flag2 = (Boolean) state.getValue(TripWireHookBlock.ATTACHED);
         boolean flag3 = (Boolean) state.getValue(TripWireHookBlock.POWERED);
@@ -141,6 +147,7 @@ public class TripWireHookBlock extends Block {
                 boolean flag7 = (Boolean) iblockdata2.getValue(TripWireBlock.POWERED);
 
                 flag5 |= flag6 && flag7;
+                if (k != i || !tripWireBeingRemoved || !flag6) // Paper - don't update the tripwire again if being removed and not disarmed
                 aiblockdata[k] = iblockdata2;
                 if (k == i) {
                     world.scheduleTick(pos, (Block) this, 10);
