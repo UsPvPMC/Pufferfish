@@ -146,15 +146,15 @@ public class PistonBaseBlock extends DirectionalBlock {
             }
 
             // CraftBukkit start
-            if (!this.isSticky) {
-                org.bukkit.block.Block block = world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
-                BlockPistonRetractEvent event = new BlockPistonRetractEvent(block, ImmutableList.<org.bukkit.block.Block>of(), CraftBlock.notchToBlockFace(enumdirection));
-                world.getCraftServer().getPluginManager().callEvent(event);
-
-                if (event.isCancelled()) {
-                    return;
-                }
-            }
+            // if (!this.isSticky) { // Paper - Move further down
+            //     org.bukkit.block.Block block = world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+            //     BlockPistonRetractEvent event = new BlockPistonRetractEvent(block, ImmutableList.<org.bukkit.block.Block>of(), CraftBlock.notchToBlockFace(enumdirection));
+            //     world.getCraftServer().getPluginManager().callEvent(event);
+            //
+            //     if (event.isCancelled()) {
+            //         return;
+            //     }
+            // }
             // PAIL: checkME - what happened to setTypeAndData?
             // CraftBukkit end
             world.blockEvent(pos, this, b0, enumdirection.get3DDataValue());
@@ -236,6 +236,13 @@ public class PistonBaseBlock extends DirectionalBlock {
 
             BlockState iblockdata1 = (BlockState) ((BlockState) Blocks.MOVING_PISTON.defaultBlockState().setValue(MovingPistonBlock.FACING, enumdirection)).setValue(MovingPistonBlock.TYPE, this.isSticky ? PistonType.STICKY : PistonType.DEFAULT);
 
+            // Paper start - Move empty piston retract call to fix multiple event fires
+            if (!this.isSticky) {
+                if (!new BlockPistonRetractEvent(CraftBlock.at(world, pos), java.util.Collections.emptyList(), CraftBlock.notchToBlockFace(enumdirection)).callEvent()) {
+                    return false;
+                }
+            }
+            // Paper end
             world.setBlock(pos, iblockdata1, 20);
             world.setBlockEntity(MovingPistonBlock.newMovingBlockEntity(pos, iblockdata1, (BlockState) this.defaultBlockState().setValue(PistonBaseBlock.FACING, Direction.from3DDataValue(data & 7)), enumdirection, false, true)); // Paper - diff on change
             world.blockUpdated(pos, iblockdata1.getBlock());
@@ -262,6 +269,13 @@ public class PistonBaseBlock extends DirectionalBlock {
                     if (type == 1 && !iblockdata2.isAir() && PistonBaseBlock.isPushable(iblockdata2, world, blockposition1, enumdirection.getOpposite(), false, enumdirection) && (iblockdata2.getPistonPushReaction() == PushReaction.NORMAL || iblockdata2.is(Blocks.PISTON) || iblockdata2.is(Blocks.STICKY_PISTON))) {
                         this.moveBlocks(world, pos, enumdirection, false);
                     } else {
+                        // Paper start - fire BlockPistonRetractEvent for sticky pistons retracting nothing (air)
+                        if (type == TRIGGER_CONTRACT && iblockdata2.isAir()) {
+                            if (!new BlockPistonRetractEvent(CraftBlock.at(world, pos), java.util.Collections.emptyList(), CraftBlock.notchToBlockFace(enumdirection)).callEvent()) {
+                                return false;
+                            }
+                        }
+                        // Paper end
                         world.removeBlock(pos.relative(enumdirection), false);
                     }
                 }
