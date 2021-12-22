@@ -286,7 +286,7 @@ public class MobEffectInstance implements Comparable<MobEffectInstance> {
     }
 
     private static MobEffectInstance loadSpecifiedEffect(MobEffect type, CompoundTag nbt) {
-        int i = nbt.getByte("Amplifier");
+        int i = Byte.toUnsignedInt(nbt.getByte("Amplifier")); // Paper - correctly load amplifiers > 127
         int j = nbt.getInt("Duration");
         boolean bl = nbt.getBoolean("Ambient");
         boolean bl2 = true;
