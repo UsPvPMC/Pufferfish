@@ -675,4 +675,11 @@ public class CraftBlockData implements BlockData {
     public void mirror(Mirror mirror) {
         this.state = this.state.mirror(net.minecraft.world.level.block.Mirror.valueOf(mirror.name()));
     }
+
+    // Paper start - Block tick API
+    @Override
+    public boolean isRandomlyTicked() {
+        return this.state.isRandomlyTicking();
+    }
+    // Paper end
 }

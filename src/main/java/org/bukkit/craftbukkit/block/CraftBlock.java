@@ -756,5 +756,21 @@ public class CraftBlock implements Block {
     public boolean isValidTool(ItemStack itemStack) {
         return getDrops(itemStack).size() != 0;
     }
+
+    @Override
+    public void tick() {
+        net.minecraft.world.level.block.state.BlockState blockData = this.getNMS();
+        net.minecraft.server.level.ServerLevel level = this.world.getMinecraftWorld();
+
+        blockData.getBlock().tick(blockData, level, this.position, level.random);
+    }
+
+    @Override
+    public void randomTick() {
+        net.minecraft.world.level.block.state.BlockState blockData = this.getNMS();
+        net.minecraft.server.level.ServerLevel level = this.world.getMinecraftWorld();
+
+        blockData.getBlock().randomTick(blockData, level, this.position, level.random);
+    }
     // Paper end
 }
