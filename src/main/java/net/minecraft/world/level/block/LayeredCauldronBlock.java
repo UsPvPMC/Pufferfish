@@ -64,7 +64,7 @@ public class LayeredCauldronBlock extends AbstractCauldronBlock {
         if (!world.isClientSide && entity.isOnFire() && this.isEntityInsideContent(state, pos, entity)) {
             // CraftBukkit start
             if (entity.mayInteract(world, pos)) {
-                if (!LayeredCauldronBlock.lowerFillLevel(state, world, pos, entity, CauldronLevelChangeEvent.ChangeReason.EXTINGUISH)) {
+                if (!this.handleEntityOnFireInsideWithEvent(state, world, pos, entity)) { // Paper - fix powdered snow cauldron extinguishing entities
                     return;
                 }
             }
@@ -74,9 +74,15 @@ public class LayeredCauldronBlock extends AbstractCauldronBlock {
 
     }
 
+    @Deprecated // Paper - use #handleEntityOnFireInsideWithEvent
     protected void handleEntityOnFireInside(BlockState state, Level world, BlockPos pos) {
         LayeredCauldronBlock.lowerFillLevel(state, world, pos);
     }
+    // Paper start
+    protected boolean handleEntityOnFireInsideWithEvent(BlockState state, Level world, BlockPos pos, Entity entity) {
+        return LayeredCauldronBlock.lowerFillLevel(state, world, pos, entity, CauldronLevelChangeEvent.ChangeReason.EXTINGUISH);
+    }
+    // Paper end
 
     public static void lowerFillLevel(BlockState state, Level world, BlockPos pos) {
         // CraftBukkit start

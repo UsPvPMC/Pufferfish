@@ -16,7 +16,14 @@ public class PowderSnowCauldronBlock extends LayeredCauldronBlock {
     }
 
     @Override
+    @Deprecated // Paper - use #handleEntityOnFireInsideWithEvent
     protected void handleEntityOnFireInside(BlockState state, Level world, BlockPos pos) {
         lowerFillLevel(Blocks.WATER_CAULDRON.defaultBlockState().setValue(LEVEL, state.getValue(LEVEL)), world, pos);
     }
+    // Paper - replace powdered snow with water (taken from #handleEntityOnFireInside)
+    @Override
+    protected boolean handleEntityOnFireInsideWithEvent(BlockState state, Level world, BlockPos pos, net.minecraft.world.entity.Entity entity) {
+        return super.handleEntityOnFireInsideWithEvent(Blocks.WATER_CAULDRON.defaultBlockState().setValue(LEVEL, state.getValue(LEVEL)), world, pos, entity);
+    }
+    // Paper end
 }
