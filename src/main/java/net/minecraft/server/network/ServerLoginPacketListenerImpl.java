@@ -60,6 +60,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
     private final String serverId;
     @Nullable
     private ServerPlayer delayedAcceptPlayer;
+    public boolean iKnowThisMayNotBeTheBestIdeaButPleaseDisableUsernameValidation = false; // Paper - username validation overriding
 
     public ServerLoginPacketListenerImpl(MinecraftServer server, Connection connection) {
         this.state = ServerLoginPacketListenerImpl.State.HELLO;
@@ -212,10 +213,38 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
         // Paper end
     }
 
+    // Paper start - validate usernames
+    public static boolean validateUsername(String in) {
+        if (in == null || in.isEmpty() || in.length() > 16) {
+            return false;
+        }
+
+        for (int i = 0, len = in.length(); i < len; ++i) {
+            char c = in.charAt(i);
+
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_' || c == '.')) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+    // Paper end - validate usernames
+
     @Override
     public void handleHello(ServerboundHelloPacket packet) {
         Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet", new Object[0]);
         Validate.validState(ServerLoginPacketListenerImpl.isValidUsername(packet.name()), "Invalid characters in username", new Object[0]);
+        // Paper start - validate usernames
+        if (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode() && io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.performUsernameValidation) {
+            if (!this.iKnowThisMayNotBeTheBestIdeaButPleaseDisableUsernameValidation && !validateUsername(packet.name())) {
+                ServerLoginPacketListenerImpl.this.disconnect("Failed to verify username!");
+                return;
+            }
+        }
+        // Paper end - validate usernames
         GameProfile gameprofile = this.server.getSingleplayerProfile();
 
         if (gameprofile != null && packet.name().equalsIgnoreCase(gameprofile.getName())) {
