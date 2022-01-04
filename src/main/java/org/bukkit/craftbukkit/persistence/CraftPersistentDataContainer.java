@@ -161,5 +161,12 @@ public class CraftPersistentDataContainer implements PersistentDataContainer {
     public void clear() {
         this.customDataTags.clear();
     }
+
+    @Override
+    public boolean has(NamespacedKey key) {
+        Validate.notNull(key, "The provided key for the custom value was null");
+
+        return this.customDataTags.containsKey(key.toString());
+    }
     // Paper end
 }
