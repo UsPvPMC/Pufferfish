@@ -80,6 +80,7 @@ public class BlockItem extends Item {
                 if (this instanceof PlaceOnWaterBlockItem || this instanceof SolidBucketItem) {
                     blockstate = org.bukkit.craftbukkit.block.CraftBlockStates.getBlockState(blockactioncontext1.getLevel(), blockactioncontext1.getClickedPos());
                 }
+                final org.bukkit.block.BlockState oldBlockstate = blockstate != null ? blockstate : org.bukkit.craftbukkit.block.CraftBlockStates.getBlockState(blockactioncontext1.getLevel(), blockactioncontext1.getClickedPos()); // Paper
                 // CraftBukkit end
 
                 if (iblockdata == null) {
@@ -95,7 +96,19 @@ public class BlockItem extends Item {
 
                     if (iblockdata1.is(iblockdata.getBlock())) {
                         iblockdata1 = this.updateBlockStateFromTag(blockposition, world, itemstack, iblockdata1);
+                        // Paper start - reset block on exception
+                        try {
                         this.updateCustomBlockEntityTag(blockposition, world, entityhuman, itemstack, iblockdata1);
+                        } catch (Exception e) {
+                            oldBlockstate.update(true, false);
+                            if (entityhuman instanceof ServerPlayer player) {
+                                org.apache.logging.log4j.LogManager.getLogger().error("Player {} tried placing invalid block", player.getScoreboardName(), e);
+                                player.getBukkitEntity().kickPlayer("Packet processing error");
+                                return InteractionResult.FAIL;
+                            }
+                            throw e; // Rethrow exception if not placed by a player
+                        }
+                        // Paper end
                         iblockdata1.getBlock().setPlacedBy(world, blockposition, iblockdata1, entityhuman, itemstack);
                         // CraftBukkit start
                         if (blockstate != null) {
