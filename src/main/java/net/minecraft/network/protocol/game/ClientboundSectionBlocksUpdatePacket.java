@@ -63,6 +63,15 @@ public class ClientboundSectionBlocksUpdatePacket implements Packet<ClientGamePa
 
     }
 
+    // Paper start
+    public ClientboundSectionBlocksUpdatePacket(SectionPos sectionPos, it.unimi.dsi.fastutil.shorts.Short2ObjectMap<BlockState> blockChanges, boolean suppressLightUpdates) {
+        this.sectionPos = sectionPos;
+        this.positions = blockChanges.keySet().toShortArray();
+        this.states = blockChanges.values().toArray(new BlockState[0]);
+        this.suppressLightUpdates = suppressLightUpdates;
+    }
+    // Paper end
+
     @Override
     public void write(FriendlyByteBuf buf) {
         buf.writeLong(this.sectionPos.asLong());
