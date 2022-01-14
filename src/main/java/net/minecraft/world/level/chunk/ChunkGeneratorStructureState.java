@@ -50,13 +50,14 @@ public class ChunkGeneratorStructureState {
     private final Map<ConcentricRingsStructurePlacement, CompletableFuture<List<ChunkPos>>> ringPositions = new Object2ObjectArrayMap();
     private boolean hasGeneratedPositions;
     private final List<Holder<StructureSet>> possibleStructureSets;
+    public final SpigotWorldConfig conf; // Paper
 
     public static ChunkGeneratorStructureState createForFlat(RandomState randomstate, long i, BiomeSource worldchunkmanager, Stream<Holder<StructureSet>> stream, SpigotWorldConfig conf) { // Spigot
         List<Holder<StructureSet>> list = stream.filter((holder) -> {
             return ChunkGeneratorStructureState.hasBiomesForStructureSet((StructureSet) holder.value(), worldchunkmanager);
         }).toList();
 
-        return new ChunkGeneratorStructureState(randomstate, worldchunkmanager, i, 0L, ChunkGeneratorStructureState.injectSpigot(list, conf)); // Spigot
+        return new ChunkGeneratorStructureState(randomstate, worldchunkmanager, i, 0L, ChunkGeneratorStructureState.injectSpigot(list, conf), conf); // Spigot
     }
 
     public static ChunkGeneratorStructureState createForNormal(RandomState randomstate, long i, BiomeSource worldchunkmanager, HolderLookup<StructureSet> holderlookup, SpigotWorldConfig conf) { // Spigot
@@ -64,14 +65,24 @@ public class ChunkGeneratorStructureState {
             return ChunkGeneratorStructureState.hasBiomesForStructureSet((StructureSet) holder_c.value(), worldchunkmanager);
         }).collect(Collectors.toUnmodifiableList());
 
-        return new ChunkGeneratorStructureState(randomstate, worldchunkmanager, i, i, ChunkGeneratorStructureState.injectSpigot(list, conf)); // Spigot
+        return new ChunkGeneratorStructureState(randomstate, worldchunkmanager, i, i, ChunkGeneratorStructureState.injectSpigot(list, conf), conf); // Spigot
     }
+    // Paper start - horrible hack because spigot creates a ton of direct Holders which lose track of the identifying key
+    public static final class KeyedRandomSpreadStructurePlacement extends RandomSpreadStructurePlacement {
+        public final net.minecraft.resources.ResourceKey<StructureSet> key;
+        public KeyedRandomSpreadStructurePlacement(net.minecraft.resources.ResourceKey<StructureSet> key, net.minecraft.core.Vec3i locateOffset, FrequencyReductionMethod frequencyReductionMethod, float frequency, int salt, java.util.Optional<StructurePlacement.ExclusionZone> exclusionZone, int spacing, int separation, net.minecraft.world.level.levelgen.structure.placement.RandomSpreadType spreadType) {
+            super(locateOffset, frequencyReductionMethod, frequency, salt, exclusionZone, spacing, separation, spreadType);
+            this.key = key;
+        }
+    }
+    // Paper end
 
     // Spigot start
     private static List<Holder<StructureSet>> injectSpigot(List<Holder<StructureSet>> list, SpigotWorldConfig conf) {
         return list.stream().map((holder) -> {
             StructureSet structureset = holder.value();
-            if (structureset.placement() instanceof RandomSpreadStructurePlacement randomConfig) {
+            final Holder<StructureSet> newHolder; // Paper
+            if (structureset.placement() instanceof RandomSpreadStructurePlacement randomConfig && holder.unwrapKey().orElseThrow().location().getNamespace().equals(net.minecraft.resources.ResourceLocation.DEFAULT_NAMESPACE)) { // Paper - check namespace cause datapacks could add structure sets with the same path
                 String name = holder.unwrapKey().orElseThrow().location().getPath();
                 int seed = randomConfig.salt;
 
@@ -118,11 +129,21 @@ public class ChunkGeneratorStructureState {
                     case "villages":
                         seed = conf.villageSeed;
                         break;
+                    // Paper start
+                    case "ancient_cities":
+                        seed = conf.ancientCitySeed;
+                        break;
+                    // Paper end
                 }
 
-                structureset = new StructureSet(structureset.structures(), new RandomSpreadStructurePlacement(randomConfig.locateOffset, randomConfig.frequencyReductionMethod, randomConfig.frequency, seed, randomConfig.exclusionZone, randomConfig.spacing(), randomConfig.separation(), randomConfig.spreadType()));
+            // Paper start
+                structureset = new StructureSet(structureset.structures(), new KeyedRandomSpreadStructurePlacement(holder.unwrapKey().orElseThrow(), randomConfig.locateOffset, randomConfig.frequencyReductionMethod, randomConfig.frequency, seed, randomConfig.exclusionZone, randomConfig.spacing(), randomConfig.separation(), randomConfig.spreadType()));
+                newHolder = Holder.direct(structureset); // I really wish we didn't have to do this here
+            } else {
+                newHolder = holder;
             }
-            return Holder.direct(structureset);
+            return newHolder;
+            // Paper end
         }).collect(Collectors.toUnmodifiableList());
     }
     // Spigot end
@@ -139,12 +160,13 @@ public class ChunkGeneratorStructureState {
         return stream.anyMatch(set::contains);
     }
 
-    private ChunkGeneratorStructureState(RandomState noiseConfig, BiomeSource biomeSource, long structureSeed, long concentricRingSeed, List<Holder<StructureSet>> structureSets) {
+    private ChunkGeneratorStructureState(RandomState noiseConfig, BiomeSource biomeSource, long structureSeed, long concentricRingSeed, List<Holder<StructureSet>> structureSets, SpigotWorldConfig conf) { // Paper
         this.randomState = noiseConfig;
         this.levelSeed = structureSeed;
         this.biomeSource = biomeSource;
         this.concentricRingsSeed = concentricRingSeed;
         this.possibleStructureSets = structureSets;
+        this.conf = conf; // Paper
     }
 
     public List<Holder<StructureSet>> possibleStructureSets() {
@@ -198,7 +220,13 @@ public class ChunkGeneratorStructureState {
             HolderSet<Biome> holderset = placement.preferredBiomes();
             RandomSource randomsource = RandomSource.create();
 
+            // Paper start
+            if (this.conf.strongholdSeed != null && structureSetEntry.is(net.minecraft.world.level.levelgen.structure.BuiltinStructureSets.STRONGHOLDS)) {
+                randomsource.setSeed(this.conf.strongholdSeed);
+            } else {
+            // Paper end
             randomsource.setSeed(this.concentricRingsSeed);
+            } // Paper
             double d0 = randomsource.nextDouble() * 3.141592653589793D * 2.0D;
             int l = 0;
             int i1 = 0;
@@ -275,7 +303,7 @@ public class ChunkGeneratorStructureState {
 
         for (int l = centerChunkX - chunkCount; l <= centerChunkX + chunkCount; ++l) {
             for (int i1 = centerChunkZ - chunkCount; i1 <= centerChunkZ + chunkCount; ++i1) {
-                if (structureplacement.isStructureChunk(this, l, i1)) {
+                if (structureplacement.isStructureChunk(this, l, i1, structureplacement instanceof KeyedRandomSpreadStructurePlacement keyed ? keyed.key : null)) { // Paper - add missing structure set configs
                     return true;
                 }
             }
