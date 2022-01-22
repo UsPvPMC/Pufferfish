@@ -27,7 +27,18 @@ public final class EntitySelector {
         return !entity.isSpectator();
     };
     public static final Predicate<Entity> CAN_BE_COLLIDED_WITH = EntitySelector.NO_SPECTATORS.and(Entity::canBeCollidedWith);
-    public static Predicate<Player> isInsomniac = (player) -> net.minecraft.util.Mth.clamp(((net.minecraft.server.level.ServerPlayer) player).getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.TIME_SINCE_REST)), 1, Integer.MAX_VALUE) >= 72000; // Paper
+    // Paper start
+    public static Predicate<Player> isInsomniac = (player) -> {
+        net.minecraft.server.level.ServerPlayer serverPlayer = (net.minecraft.server.level.ServerPlayer) player;
+        int playerInsomniaTicks = serverPlayer.getLevel().paperConfig().entities.behavior.playerInsomniaStartTicks;
+
+        if (playerInsomniaTicks <= 0) {
+            return false;
+        }
+
+        return net.minecraft.util.Mth.clamp(serverPlayer.getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.TIME_SINCE_REST)), 1, Integer.MAX_VALUE) >= playerInsomniaTicks;
+    };
+    // Paper end
 
     private EntitySelector() {}
     // Paper start
