@@ -13,8 +13,14 @@ import org.bukkit.plugin.Plugin;
 
 public abstract class ServerCommandSender implements CommandSender {
     private static PermissibleBase blockPermInst;
-    private final PermissibleBase perm;
+    public final PermissibleBase perm; // Paper
     private net.kyori.adventure.pointer.Pointers adventure$pointers; // Paper - implement pointers
+
+    // Paper start
+    public ServerCommandSender(final PermissibleBase permissibleBase) {
+        this.perm = permissibleBase;
+    }
+    // Paper end
 
     public ServerCommandSender() {
         if (this instanceof CraftBlockCommandSender) {
