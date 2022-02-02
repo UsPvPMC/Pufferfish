@@ -427,12 +427,16 @@ public class ServerPlayerGameMode {
                     block.destroy(this.level, pos, iblockdata);
                 }
 
+                ItemStack mainHandStack = null; // Paper
+                boolean isCorrectTool = false; // Paper
                 if (this.isCreative()) {
                     // return true; // CraftBukkit
                 } else {
                     ItemStack itemstack = this.player.getMainHandItem();
                     ItemStack itemstack1 = itemstack.copy();
                     boolean flag1 = this.player.hasCorrectToolForDrops(iblockdata);
+                    mainHandStack = itemstack1; // Paper
+                    isCorrectTool = flag1; // Paper
 
                     itemstack.mineBlock(this.level, iblockdata, pos, this.player);
                     if (flag && flag1 && event.isDropItems()) { // CraftBukkit - Check if block should drop items
@@ -453,6 +457,13 @@ public class ServerPlayerGameMode {
                 if (flag && event != null) {
                     iblockdata.getBlock().popExperience(this.level, pos, event.getExpToDrop(), this.player); // Paper
                 }
+                // Paper start - trigger after items are dropped (check impls of block#playerDestroy)
+                if (mainHandStack != null) {
+                    if (flag && isCorrectTool && event.isDropItems() && block instanceof net.minecraft.world.level.block.BeehiveBlock && tileentity instanceof net.minecraft.world.level.block.entity.BeehiveBlockEntity beehiveBlockEntity) { // simulates the guard on block#playerDestroy above
+                        CriteriaTriggers.BEE_NEST_DESTROYED.trigger(player, iblockdata, mainHandStack, beehiveBlockEntity.getOccupantCount());
+                    }
+                }
+                // Paper end
 
                 return true;
                 // CraftBukkit end
