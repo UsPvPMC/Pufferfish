@@ -61,6 +61,14 @@ dependencies {
 }
 
 val craftbukkitPackageVersion = "1_19_R3" // Paper
+
+// Pufferfish Start
+tasks.withType<JavaCompile> {
+    val compilerArgs = options.compilerArgs
+    compilerArgs.add("--add-modules=jdk.incubator.vector")
+}
+// Pufferfish End
+
 tasks.jar {
     archiveClassifier.set("dev")
 
