@@ -2169,6 +2169,8 @@ public final class CraftServer implements Server {
     @Override
     public int getSpawnLimit(SpawnCategory spawnCategory) {
         // Paper start
+        Validate.notNull(spawnCategory, "SpawnCategory cannot be null");
+        Validate.isTrue(CraftSpawnCategory.isValidForLimits(spawnCategory), "SpawnCategory." + spawnCategory + " does not have a spawn limit.");
         return this.getSpawnLimitUnsafe(spawnCategory);
     }
     public int getSpawnLimitUnsafe(final SpawnCategory spawnCategory) {
