@@ -290,6 +290,19 @@ public abstract class AbstractArrow extends Projectile {
         }
     }
 
+    // Paper start
+    @Override
+    public void preOnHit(HitResult hitResult) {
+        super.preOnHit(hitResult);
+        if (hitResult instanceof EntityHitResult entityHitResult && this.hitCancelled && this.getPierceLevel() > 0) {
+            if (this.piercingIgnoreEntityIds == null) {
+                this.piercingIgnoreEntityIds = new IntOpenHashSet(5);
+            }
+            this.piercingIgnoreEntityIds.add(entityHitResult.getEntity().getId());
+        }
+    }
+    // Paper end
+
     private boolean shouldFall() {
         return this.inGround && this.level.noCollision((new AABB(this.position(), this.position())).inflate(0.06D));
     }
