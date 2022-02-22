@@ -603,9 +603,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             }
 
             worlddata.setModdedInfo(this.getServerModName(), this.getModdedStatus().shouldReportAsModified());
+            this.addLevel(world); // Paper - move up
             this.initWorld(world, worlddata, worldData, worldoptions);
 
-            this.addLevel(world);
+            // Paper - move up
             this.getPlayerList().addWorldborderListener(world);
 
             if (worlddata.getCustomBossEvents() != null) {
