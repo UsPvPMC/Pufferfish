@@ -43,7 +43,7 @@ public class StructureCheck {
     private final Registry<Biome> biomes;
     private final Registry<Structure> structureConfigs;
     private final StructureTemplateManager structureTemplateManager;
-    private final ResourceKey<Level> dimension;
+    private final ResourceKey<net.minecraft.world.level.dimension.LevelStem> dimension; // Paper - fix missing CB diff
     private final ChunkGenerator chunkGenerator;
     private final RandomState randomState;
     private final LevelHeightAccessor heightAccessor;
@@ -53,7 +53,7 @@ public class StructureCheck {
     private final Long2ObjectMap<Object2IntMap<Structure>> loadedChunks = new Long2ObjectOpenHashMap<>();
     private final Map<Structure, Long2BooleanMap> featureChecks = new HashMap<>();
 
-    public StructureCheck(ChunkScanAccess chunkIoWorker, RegistryAccess registryManager, StructureTemplateManager structureTemplateManager, ResourceKey<Level> worldKey, ChunkGenerator chunkGenerator, RandomState noiseConfig, LevelHeightAccessor world, BiomeSource biomeSource, long seed, DataFixer dataFixer) {
+    public StructureCheck(ChunkScanAccess chunkIoWorker, RegistryAccess registryManager, StructureTemplateManager structureTemplateManager, ResourceKey<net.minecraft.world.level.dimension.LevelStem> worldKey, ChunkGenerator chunkGenerator, RandomState noiseConfig, LevelHeightAccessor world, BiomeSource biomeSource, long seed, DataFixer dataFixer) { // Paper - fix missing CB diff
         this.storageAccess = chunkIoWorker;
         this.registryAccess = registryManager;
         this.structureTemplateManager = structureTemplateManager;

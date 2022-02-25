@@ -49,8 +49,8 @@ public class Marker extends Entity {
     }
 
     @Override
-    protected void addPassenger(Entity passenger) {
-        throw new IllegalStateException("Should never addPassenger without checking couldAcceptPassenger()");
+    protected boolean addPassenger(Entity passenger) { // Paper - fix return type
+        return false; // Paper
     }
 
     @Override

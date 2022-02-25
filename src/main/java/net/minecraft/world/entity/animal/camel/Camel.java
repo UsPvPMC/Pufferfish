@@ -441,9 +441,9 @@ public class Camel extends AbstractHorse implements PlayerRideableJumping, Rider
     }
 
     @Override
-    protected void actuallyHurt(DamageSource source, float amount) {
+    protected boolean damageEntity0(DamageSource source, float amount) { // Paper - fix CB method rename issue
         this.standUpPanic();
-        super.actuallyHurt(source, amount);
+        return super.damageEntity0(source, amount); // Paper - fix CB method rename issue
     }
 
     @Override
