@@ -387,6 +387,16 @@ public abstract class PlayerList {
 
         // Paper start - move vehicle into method so it can be called above - short circuit around that code
         onPlayerJoinFinish(player, worldserver1, s1);
+        // Paper start - Send empty chunk, so players aren't stuck in the world loading screen with our chunk system not sending chunks when dead
+        if (player.isDeadOrDying()) {
+            net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> plains = worldserver1.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME)
+                .getHolderOrThrow(net.minecraft.world.level.biome.Biomes.PLAINS);
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket(
+                new net.minecraft.world.level.chunk.EmptyLevelChunk(worldserver1, player.chunkPosition(), plains),
+                worldserver1.getLightEngine(), null, null, true, false)
+            );
+        }
+        // Paper end
     }
     private void mountSavedVehicle(ServerPlayer player, ServerLevel worldserver1, CompoundTag nbttagcompound) {
         // Paper end
