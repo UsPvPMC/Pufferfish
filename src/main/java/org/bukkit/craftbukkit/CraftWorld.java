@@ -1404,7 +1404,12 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         Validate.notNull(material, "Material cannot be null");
         Validate.isTrue(material.isBlock(), "Material must be a block");
 
-        FallingBlockEntity entity = FallingBlockEntity.fall(world, BlockPos.containing(location.getX(), location.getY(), location.getZ()), CraftMagicNumbers.getBlock(material).defaultBlockState(), SpawnReason.CUSTOM);
+        // Paper start - restore API behavior for spawning falling blocks
+        FallingBlockEntity entity = new FallingBlockEntity(this.world, location.getX(), location.getY(), location.getZ(), CraftMagicNumbers.getBlock(material).defaultBlockState()); // Paper
+        entity.time = 1;
+
+        this.world.addFreshEntity(entity, SpawnReason.CUSTOM);
+        // Paper end
         return (FallingBlock) entity.getBukkitEntity();
     }
 
@@ -1413,7 +1418,12 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         Validate.notNull(location, "Location cannot be null");
         Validate.notNull(data, "BlockData cannot be null");
 
-        FallingBlockEntity entity = FallingBlockEntity.fall(world, BlockPos.containing(location.getX(), location.getY(), location.getZ()), ((CraftBlockData) data).getState(), SpawnReason.CUSTOM);
+        // Paper start - restore API behavior for spawning falling blocks
+        FallingBlockEntity entity = new FallingBlockEntity(this.world, location.getX(), location.getY(), location.getZ(), ((CraftBlockData) data).getState());
+        entity.time = 1;
+
+        this.world.addFreshEntity(entity, SpawnReason.CUSTOM);
+        // Paper end
         return (FallingBlock) entity.getBukkitEntity();
     }
 
