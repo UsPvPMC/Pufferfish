@@ -42,18 +42,11 @@ public interface NeutralMob {
                 UUID uuid = nbt.getUUID("AngryAt");
 
                 this.setPersistentAngerTarget(uuid);
-                Entity entity = ((ServerLevel) world).getEntity(uuid);
-
-                if (entity != null) {
-                    if (entity instanceof Mob) {
-                        this.setLastHurtByMob((Mob) entity);
-                    }
-
-                    if (entity.getType() == EntityType.PLAYER) {
-                        this.setLastHurtByPlayer((Player) entity);
-                    }
-
-                }
+                // Paper - Moved diff to separate method
+                // If this entity already survived its first tick, e.g. is loaded and ticked in sync, actively
+                // tick the initial persistent anger.
+                // If not, let the first tick on the baseTick call the method later down the line.
+                if (this instanceof Entity entity && !entity.firstTick) this.tickInitialPersistentAnger(world);
             }
         }
     }
@@ -127,4 +120,26 @@ public interface NeutralMob {
 
     @Nullable
     LivingEntity getTarget();
+
+    // Paper start - Update last hurt when ticking
+    default void tickInitialPersistentAnger(Level level) {
+        UUID target = getPersistentAngerTarget();
+        if (target == null) {
+            return;
+        }
+
+        Entity entity = ((ServerLevel) level).getEntity(target);
+
+        if (entity != null) {
+            if (entity instanceof Mob) {
+                this.setLastHurtByMob((Mob) entity);
+            }
+
+            if (entity.getType() == EntityType.PLAYER) {
+                this.setLastHurtByPlayer((Player) entity);
+            }
+
+        }
+    }
+    // Paper end
 }
