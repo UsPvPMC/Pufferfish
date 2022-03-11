@@ -132,6 +132,7 @@ public class Panda extends Animal {
     }
 
     public void sit(boolean sitting) {
+        if (!new io.papermc.paper.event.entity.EntityToggleSitEvent(this.getBukkitEntity(), sitting).callEvent()) return; // Paper start - call EntityToggleSitEvent
         this.setFlag(8, sitting);
     }
 

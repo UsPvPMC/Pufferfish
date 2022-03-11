@@ -67,7 +67,7 @@ public abstract class TamableAnimal extends Animal implements OwnableEntity {
         }
 
         this.orderedToSit = nbt.getBoolean("Sitting");
-        this.setInSittingPose(this.orderedToSit);
+        this.setInSittingPose(this.orderedToSit, false); // Paper - Don't fire event
     }
 
     @Override
@@ -125,6 +125,12 @@ public abstract class TamableAnimal extends Animal implements OwnableEntity {
     }
 
     public void setInSittingPose(boolean inSittingPose) {
+    // Paper start
+        this.setInSittingPose(inSittingPose, true);
+    }
+    public void setInSittingPose(boolean inSittingPose, boolean callEvent) {
+    // Paper end
+        if (callEvent && !new io.papermc.paper.event.entity.EntityToggleSitEvent(this.getBukkitEntity(), inSittingPose).callEvent()) return; // Paper start - call EntityToggleSitEvent
         byte b = this.entityData.get(DATA_FLAGS_ID);
         if (inSittingPose) {
             this.entityData.set(DATA_FLAGS_ID, (byte)(b | 1));

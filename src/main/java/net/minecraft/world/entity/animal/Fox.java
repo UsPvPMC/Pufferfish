@@ -427,7 +427,7 @@ public class Fox extends Animal implements VariantHolder<Fox.Type> {
 
         this.setSleeping(nbt.getBoolean("Sleeping"));
         this.setVariant(Fox.Type.byName(nbt.getString("Type")));
-        this.setSitting(nbt.getBoolean("Sitting"));
+        this.setSitting(nbt.getBoolean("Sitting"), false); // Paper
         this.setIsCrouching(nbt.getBoolean("Crouching"));
         if (this.level instanceof ServerLevel) {
             this.setTargetGoals();
@@ -440,6 +440,12 @@ public class Fox extends Animal implements VariantHolder<Fox.Type> {
     }
 
     public void setSitting(boolean sitting) {
+        this.setSitting(sitting, true);
+    }
+    // Paper start
+    public void setSitting(boolean sitting, boolean fireEvent) {
+        if (fireEvent && !new io.papermc.paper.event.entity.EntityToggleSitEvent(this.getBukkitEntity(), sitting).callEvent()) return;
+    // Paper end
         this.setFlag(1, sitting);
     }
 
