@@ -363,7 +363,7 @@ public class Cat extends TamableAnimal implements VariantHolder<CatVariant> {
         });
         ServerLevel worldserver = world.getLevel();
 
-        if (worldserver.structureManager().getStructureWithPieceAt(this.blockPosition(), StructureTags.CATS_SPAWN_AS_BLACK).isValid()) {
+        if (worldserver.structureManager().getStructureWithPieceAt(this.blockPosition(), StructureTags.CATS_SPAWN_AS_BLACK, world).isValid()) { // Paper - fix deadlock
             this.setVariant((CatVariant) BuiltInRegistries.CAT_VARIANT.getOrThrow(CatVariant.ALL_BLACK));
             this.setPersistenceRequired();
         }
