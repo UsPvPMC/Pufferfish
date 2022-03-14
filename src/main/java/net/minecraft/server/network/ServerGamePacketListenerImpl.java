@@ -576,6 +576,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         } else {
             Entity entity = this.player.getRootVehicle();
 
+            // Paper start
+            if (this.awaitingPositionFromClient != null || this.player.isImmobile() || entity.isRemoved()) {
+                return;
+            }
+            // Paper end
+
             if (entity != this.player && entity.getControllingPassenger() == this.player && entity == this.lastVehicle) {
                 ServerLevel worldserver = this.player.getLevel();
                 double d0 = entity.getX();final double fromX = d0; // Paper - OBFHELPER
