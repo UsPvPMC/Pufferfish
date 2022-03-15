@@ -219,6 +219,13 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
         return CraftBlock.biomeBaseToBiome(this.getHandle().registryAccess().registryOrThrow(Registries.BIOME), this.getHandle().getNoiseBiome(x >> 2, y >> 2, z >> 2));
     }
 
+    // Paper start
+    @Override
+    public Biome getComputedBiome(int x, int y, int z) {
+        return CraftBlock.biomeBaseToBiome(this.getHandle().registryAccess().registryOrThrow(Registries.BIOME), this.getHandle().getBiome(new BlockPos(x, y, z)));
+    }
+    // Paper end
+
     @Override
     public void setBiome(Location location, Biome biome) {
         this.setBiome(location.getBlockX(), location.getBlockY(), location.getBlockZ(), biome);
