@@ -443,6 +443,21 @@ public final class CraftItemFactory implements ItemFactory {
 
     // Paper start
     @Override
+    public ItemStack enchantWithLevels(ItemStack itemStack, int levels, boolean allowTreasure, java.util.Random random) {
+        Validate.notNull(itemStack, "Argument 'itemStack' must not be null");
+        Validate.isTrue(itemStack.getType() != Material.AIR, "Argument 'itemStack' must not be of type AIR");
+        Validate.isTrue(itemStack.getAmount() > 0, "Argument 'itemStack' amount must be greater than 0");
+        Validate.isTrue(levels > 0 && levels <= 30, "Argument 'levels' must be in range [1, 30] (attempted " + levels + ")");
+        Validate.notNull(random, "Argument 'random' must not be null");
+        final net.minecraft.world.item.ItemStack internalStack = CraftItemStack.asNMSCopy(itemStack);
+        if (internalStack.getTag() != null) {
+            internalStack.getTag().remove(net.minecraft.world.item.ItemStack.TAG_ENCH);
+        }
+        final net.minecraft.world.item.ItemStack enchanted = net.minecraft.world.item.enchantment.EnchantmentHelper.enchantItem(new org.bukkit.craftbukkit.util.RandomSourceWrapper(random), internalStack, levels, allowTreasure);
+        return CraftItemStack.asCraftMirror(enchanted);
+    }
+
+    @Override
     public net.kyori.adventure.text.event.HoverEvent<net.kyori.adventure.text.event.HoverEvent.ShowItem> asHoverEvent(final ItemStack item, final java.util.function.UnaryOperator<net.kyori.adventure.text.event.HoverEvent.ShowItem> op) {
         final net.minecraft.nbt.CompoundTag tag = CraftItemStack.asNMSCopy(item).getTag();
         return net.kyori.adventure.text.event.HoverEvent.showItem(op.apply(net.kyori.adventure.text.event.HoverEvent.ShowItem.of(item.getType().getKey(), item.getAmount(), io.papermc.paper.adventure.PaperAdventure.asBinaryTagHolder(tag))));
