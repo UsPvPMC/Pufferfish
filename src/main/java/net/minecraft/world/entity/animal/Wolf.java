@@ -392,6 +392,13 @@ public class Wolf extends TamableAnimal implements NeutralMob {
                 DyeColor enumcolor = ((DyeItem) item).getDyeColor();
 
                 if (enumcolor != this.getCollarColor()) {
+                    // Paper start
+                    final io.papermc.paper.event.entity.EntityDyeEvent event = new io.papermc.paper.event.entity.EntityDyeEvent(this.getBukkitEntity(), org.bukkit.DyeColor.getByWoolData((byte) enumcolor.getId()), ((net.minecraft.server.level.ServerPlayer) player).getBukkitEntity());
+                    if (!event.callEvent()) {
+                        return InteractionResult.FAIL;
+                    }
+                    enumcolor = DyeColor.byId(event.getColor().getWoolData());
+                    // Paper end
                     this.setCollarColor(enumcolor);
                     if (!player.getAbilities().instabuild) {
                         itemstack.shrink(1);
