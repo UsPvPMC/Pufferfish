@@ -170,7 +170,7 @@ public class Ravager extends Raider {
                     BlockState iblockdata = this.level.getBlockState(blockposition);
                     Block block = iblockdata.getBlock();
 
-                    if (block instanceof LeavesBlock && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(this, blockposition, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()).isCancelled()) { // CraftBukkit
+                    if (block instanceof LeavesBlock && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(this, blockposition, iblockdata.getFluidState().createLegacyBlock()).isCancelled()) { // CraftBukkit // Paper
                         flag = this.level.destroyBlock(blockposition, true, this) || flag;
                     }
                 }

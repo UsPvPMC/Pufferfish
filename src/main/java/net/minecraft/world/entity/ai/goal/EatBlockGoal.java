@@ -79,7 +79,7 @@ public class EatBlockGoal extends Goal {
 
                 if (this.level.getBlockState(blockposition1).is(Blocks.GRASS_BLOCK)) {
                     // CraftBukkit
-                    if (!CraftEventFactory.callEntityChangeBlockEvent(this.mob, blockposition1, Blocks.AIR.defaultBlockState(), !this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)).isCancelled()) {
+                    if (!CraftEventFactory.callEntityChangeBlockEvent(this.mob, blockposition1, Blocks.DIRT.defaultBlockState(), !this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)).isCancelled()) { // Paper - Fix wrong block state
                         this.level.levelEvent(2001, blockposition1, Block.getId(Blocks.GRASS_BLOCK.defaultBlockState()));
                         this.level.setBlock(blockposition1, Blocks.DIRT.defaultBlockState(), 2);
                     }

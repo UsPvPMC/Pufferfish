@@ -176,7 +176,11 @@ public class Silverfish extends Monster {
 
                             if (block instanceof InfestedBlock) {
                                 // CraftBukkit start
-                                if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(this.silverfish, blockposition1, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()).isCancelled()) {
+                                // Paper start
+                                BlockState afterState = world.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING) ? net.minecraft.world.level.block.Blocks.AIR.defaultBlockState() : ((InfestedBlock) block).hostStateByInfested(world.getBlockState(blockposition1));
+                                org.bukkit.event.entity.EntityChangeBlockEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(this.silverfish, blockposition1, afterState);
+                                if (event.isCancelled()) {
+                                // Paper end
                                     continue;
                                 }
                                 // CraftBukkit end

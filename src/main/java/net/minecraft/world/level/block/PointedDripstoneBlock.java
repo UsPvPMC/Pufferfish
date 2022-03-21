@@ -131,7 +131,7 @@ public class PointedDripstoneBlock extends Block implements Fallable, SimpleWate
 
         if (!world.isClientSide && projectile.mayInteract(world, blockposition) && projectile instanceof ThrownTrident && projectile.getDeltaMovement().length() > 0.6D) {
             // CraftBukkit start
-            if (CraftEventFactory.callEntityChangeBlockEvent(projectile, blockposition, Blocks.AIR.defaultBlockState()).isCancelled()) {
+            if (CraftEventFactory.callEntityChangeBlockEvent(projectile, blockposition, state.getFluidState().createLegacyBlock()).isCancelled()) { // Paper
                 return;
             }
             // CraftBukkit end

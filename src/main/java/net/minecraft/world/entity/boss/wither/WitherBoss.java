@@ -373,7 +373,7 @@ public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob
 
                                 if (WitherBoss.canDestroy(iblockdata)) {
                                     // CraftBukkit start
-                                    if (CraftEventFactory.callEntityChangeBlockEvent(this, blockposition, Blocks.AIR.defaultBlockState()).isCancelled()) {
+                                    if (CraftEventFactory.callEntityChangeBlockEvent(this, blockposition, iblockdata.getFluidState().createLegacyBlock()).isCancelled()) { // Paper
                                         continue;
                                     }
                                     // CraftBukkit end
