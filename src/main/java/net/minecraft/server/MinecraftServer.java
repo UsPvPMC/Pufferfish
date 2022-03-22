@@ -312,6 +312,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 
     public volatile Thread shutdownThread; // Paper
     public volatile boolean abnormalExit = false; // Paper
+    public boolean isIteratingOverLevels = false; // Paper
 
     public static <S extends MinecraftServer> S spin(Function<Thread, S> serverFactory) {
         AtomicReference<S> atomicreference = new AtomicReference();
@@ -1486,7 +1487,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         this.getFunctions().tick();
         MinecraftTimings.commandFunctionsTimer.stopTiming(); // Spigot // Paper
         this.profiler.popPush("levels");
-        Iterator iterator = this.getAllLevels().iterator();
+        //Iterator iterator = this.getAllLevels().iterator(); // Paper - moved down
 
         // CraftBukkit start
         // Run tasks that are waiting on processing
@@ -1518,6 +1519,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         // Paper end
         MinecraftTimings.timeUpdateTimer.stopTiming(); // Spigot // Paper
 
+        this.isIteratingOverLevels = true; // Paper
+        Iterator iterator = this.getAllLevels().iterator(); // Paper - move down
         while (iterator.hasNext()) {
             ServerLevel worldserver = (ServerLevel) iterator.next();
             worldserver.hasPhysicsEvent =  org.bukkit.event.block.BlockPhysicsEvent.getHandlerList().getRegisteredListeners().length > 0; // Paper
@@ -1564,6 +1567,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             this.profiler.pop();
             worldserver.explosionDensityCache.clear(); // Paper - Optimize explosions
         }
+        this.isIteratingOverLevels = false; // Paper
 
         this.profiler.popPush("connection");
         MinecraftTimings.connectionTimer.startTiming(); // Spigot
