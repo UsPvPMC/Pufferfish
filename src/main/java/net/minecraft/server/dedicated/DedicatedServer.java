@@ -304,7 +304,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface 
 
             //DedicatedServer.LOGGER.info("Done ({})! For help, type \"help\"", s); // Paper moved to after init
             if (dedicatedserverproperties.announcePlayerAchievements != null) {
-                ((GameRules.BooleanValue) this.getGameRules().getRule(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)).set(dedicatedserverproperties.announcePlayerAchievements, this);
+                ((GameRules.BooleanValue) this.getGameRules().getRule(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)).set(dedicatedserverproperties.announcePlayerAchievements, null); // Paper
             }
 
             if (dedicatedserverproperties.enableQuery) {
