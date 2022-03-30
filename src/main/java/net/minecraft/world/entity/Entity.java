@@ -3900,9 +3900,21 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
         EnchantmentHelper.doPostDamageEffects(attacker, target);
     }
 
-    public void startSeenByPlayer(ServerPlayer player) {}
+    // Paper start
+    public void startSeenByPlayer(ServerPlayer player) {
+        if (io.papermc.paper.event.player.PlayerTrackEntityEvent.getHandlerList().getRegisteredListeners().length > 0) {
+            new io.papermc.paper.event.player.PlayerTrackEntityEvent(player.getBukkitEntity(), this.getBukkitEntity()).callEvent();
+        }
+    }
+    // Paper end
 
-    public void stopSeenByPlayer(ServerPlayer player) {}
+    // Paper start
+    public void stopSeenByPlayer(ServerPlayer player) {
+        if(io.papermc.paper.event.player.PlayerUntrackEntityEvent.getHandlerList().getRegisteredListeners().length > 0) {
+            new io.papermc.paper.event.player.PlayerUntrackEntityEvent(player.getBukkitEntity(), this.getBukkitEntity()).callEvent();
+        }
+    }
+    // Paper end
 
     public float rotate(Rotation rotation) {
         float f = Mth.wrapDegrees(this.getYRot());
