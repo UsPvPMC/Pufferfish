@@ -4326,11 +4326,33 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
         return this.getZ((2.0D * this.random.nextDouble() - 1.0D) * widthScale);
     }
 
+    // Paper start - block invalid positions
+    public static boolean checkPosition(Entity entity, double newX, double newY, double newZ) {
+        if (Double.isFinite(newX) && Double.isFinite(newY) && Double.isFinite(newZ)) {
+            return true;
+        }
+
+        String entityInfo = null;
+        try {
+            entityInfo = entity.toString();
+        } catch (Exception ex) {
+            entityInfo = "[Entity info unavailable] ";
+        }
+        LOGGER.error("New entity position is invalid! Tried to set invalid position (" + newX + "," + newY + "," + newZ + ") for entity " + entity.getClass().getName() + " located at " + entity.position + ", entity info: " + entityInfo, new Throwable());
+        return false;
+    }
+    // Paper end - block invalid positions
+
     public final void setPosRaw(double x, double y, double z) {
         // Paper start
         this.setPosRaw(x, y, z, false);
     }
     public final void setPosRaw(double x, double y, double z, boolean forceBoundingBoxUpdate) {
+        // Paper start - block invalid positions
+        if (!checkPosition(this, x, y, z)) {
+            return;
+        }
+        // Paper end - block invalid positions
         // Paper end
         // Paper start - rewrite chunk system
         if (this.updatingSectionStatus) {
