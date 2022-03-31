@@ -2723,6 +2723,12 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     }
 
     protected boolean addPassenger(Entity entity) { // CraftBukkit
+        // Paper start
+        if (entity.level != this.level) {
+            LOGGER.error("Entity passenger world must match, cannot add " + entity + " as passenger to " + this, new Throwable());
+            return false;
+        }
+        // Paper end
         if (entity == this) throw new IllegalArgumentException("Entities cannot become a passenger of themselves"); // Paper - issue 572
         if (entity.getVehicle() != this) {
             throw new IllegalStateException("Use x.startRiding(y), not y.addPassenger(x)");
