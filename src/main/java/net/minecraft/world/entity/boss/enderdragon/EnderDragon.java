@@ -100,6 +100,10 @@ public class EnderDragon extends Mob implements Enemy {
     private final int[] nodeAdjacency = new int[24];
     private final BinaryHeap openSet = new BinaryHeap();
     private final Explosion explosionSource; // CraftBukkit - reusable source for CraftTNTPrimed.getSource()
+    // Paper start - add var for save custom podium
+    @Nullable
+    private BlockPos podium;
+    // Paper end
 
     public EnderDragon(EntityType<? extends EnderDragon> entitytypes, Level world) {
         super(EntityType.ENDER_DRAGON, world);
@@ -120,6 +124,19 @@ public class EnderDragon extends Mob implements Enemy {
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 200.0D);
     }
+
+    // Paper start
+    public BlockPos getPodium() {
+        if (this.podium == null) {
+            return EndPodiumFeature.END_PODIUM_LOCATION;
+        }
+        return this.podium;
+    }
+
+    public void setPodium(@Nullable BlockPos blockPos) {
+        this.podium = blockPos;
+    }
+    // Paper end
 
     @Override
     public boolean isFlapping() {
@@ -969,7 +986,7 @@ public class EnderDragon extends Mob implements Enemy {
                 d0 = segment2[1] - segment1[1];
             }
         } else {
-            BlockPos blockposition = this.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EndPodiumFeature.END_PODIUM_LOCATION);
+            BlockPos blockposition = this.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, this.getPodium()); // Paper - use custom podium
             double d1 = Math.max(Math.sqrt(blockposition.distToCenterSqr(this.position())) / 4.0D, 1.0D);
 
             d0 = (double) segmentOffset / d1;
@@ -996,7 +1013,7 @@ public class EnderDragon extends Mob implements Enemy {
                 vec3d = this.getViewVector(tickDelta);
             }
         } else {
-            BlockPos blockposition = this.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EndPodiumFeature.END_PODIUM_LOCATION);
+            BlockPos blockposition = this.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, this.getPodium()); // Paper - use custom podium
 
             f1 = Math.max((float) Math.sqrt(blockposition.distToCenterSqr(this.position())) / 4.0F, 1.0F);
             float f3 = 6.0F / f1;
