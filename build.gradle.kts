@@ -20,6 +20,7 @@ dependencies {
      */
     implementation("org.apache.logging.log4j:log4j-core:2.14.1") // Paper - implementation
     annotationProcessor("org.apache.logging.log4j:log4j-core:2.14.1") // Paper - Needed to generate meta for our Log4j plugins
+    implementation("io.netty:netty-codec-haproxy:4.1.87.Final") // Paper - Add support for proxy protocol
     // Paper end
     implementation("org.apache.logging.log4j:log4j-iostreams:2.19.0") // Paper - remove exclusion
     implementation("org.ow2.asm:asm:9.4")
