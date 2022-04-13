@@ -3302,7 +3302,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                 BlockPos blockposition = BlockEntity.getPosFromTag(nbttagcompound);
 
                 if (this.player.level.isLoaded(blockposition)) {
-                    BlockEntity tileentity = this.player.level.getBlockEntity(blockposition);
+                    // Paper start
+                    BlockEntity tileentity = null;
+                    if (this.player.distanceToSqr(blockposition.getX(), blockposition.getY(), blockposition.getZ()) < 32 * 32 && this.player.getLevel().isLoadedAndInBounds(blockposition)) {
+                        tileentity = this.player.level.getBlockEntity(blockposition);
+                    }
+                    // Paper end
 
                     if (tileentity != null) {
                         tileentity.saveToItem(itemstack);
