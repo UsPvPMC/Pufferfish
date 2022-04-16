@@ -322,6 +322,11 @@ public class Slime extends Mob implements Enemy {
 
     public static boolean checkSlimeSpawnRules(EntityType<Slime> type, LevelAccessor world, MobSpawnType spawnReason, BlockPos pos, RandomSource random) {
         if (world.getDifficulty() != Difficulty.PEACEFUL) {
+            // Paper start - fix slime spawners; Fixes MC-50647
+            if (spawnReason == MobSpawnType.SPAWNER) {
+                return random.nextInt(10) == 0;
+            }
+            // Paper end
             // Paper start - Replace rules for Height in Swamp Biome
             final double maxHeightSwamp = world.getMinecraftWorld().paperConfig().entities.spawning.slimeSpawnHeight.surfaceBiome.maximum;
             final double minHeightSwamp = world.getMinecraftWorld().paperConfig().entities.spawning.slimeSpawnHeight.surfaceBiome.minimum;
