@@ -3934,6 +3934,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
 
     public void releaseUsingItem() {
         if (!this.useItem.isEmpty()) {
+            if (this instanceof ServerPlayer) new io.papermc.paper.event.player.PlayerStopUsingItemEvent((Player) getBukkitEntity(), useItem.asBukkitMirror(), getTicksUsingItem()).callEvent(); // Paper
             this.useItem.releaseUsing(this.level, this, this.getUseItemRemainingTicks());
             if (this.useItem.useOnRelease()) {
                 this.updatingUsingItem();
