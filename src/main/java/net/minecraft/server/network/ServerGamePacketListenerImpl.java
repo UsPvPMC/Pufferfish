@@ -3481,6 +3481,13 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     @Override
     public void handleClientInformation(ServerboundClientInformationPacket packet) {
         PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
+        // Paper start - do not accept invalid information
+        if (packet.viewDistance() < 0) {
+            LOGGER.warn("Disconnecting " + this.player.getScoreboardName() + " for invalid view distance: " + packet.viewDistance());
+            this.disconnect("Invalid client settings", PlayerKickEvent.Cause.ILLEGAL_ACTION);
+            return;
+        }
+        // Paper end - do not accept invalid information
         this.player.updateOptions(packet);
     }
 
