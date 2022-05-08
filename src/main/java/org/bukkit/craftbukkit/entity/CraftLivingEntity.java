@@ -997,6 +997,53 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     }
 
     @Override
+    public void broadcastSlotBreak(org.bukkit.inventory.EquipmentSlot slot) {
+        this.getHandle().broadcastBreakEvent(org.bukkit.craftbukkit.CraftEquipmentSlot.getNMS(slot));
+    }
+
+    @Override
+    public void broadcastSlotBreak(org.bukkit.inventory.EquipmentSlot slot, Collection<org.bukkit.entity.Player> players) {
+        if (players.isEmpty()) {
+            return;
+        }
+        final net.minecraft.network.protocol.game.ClientboundEntityEventPacket packet = new net.minecraft.network.protocol.game.ClientboundEntityEventPacket(
+            this.getHandle(),
+            net.minecraft.world.entity.LivingEntity.entityEventForEquipmentBreak(org.bukkit.craftbukkit.CraftEquipmentSlot.getNMS(slot))
+        );
+        players.forEach(player -> ((CraftPlayer) player).getHandle().connection.send(packet));
+    }
+
+    @Override
+    public ItemStack damageItemStack(ItemStack stack, int amount) {
+        final net.minecraft.world.item.ItemStack nmsStack;
+        if (stack instanceof CraftItemStack craftItemStack) {
+            if (craftItemStack.handle == null || craftItemStack.handle.isEmpty()) {
+                return stack;
+            }
+            nmsStack = craftItemStack.handle;
+        } else {
+            nmsStack = CraftItemStack.asNMSCopy(stack);
+            stack = CraftItemStack.asCraftMirror(nmsStack); // mirror to capture changes in hurt logic & events
+        }
+        this.damageItemStack0(nmsStack, amount, null);
+        return stack;
+    }
+
+    @Override
+    public void damageItemStack(org.bukkit.inventory.EquipmentSlot slot, int amount) {
+        final net.minecraft.world.entity.EquipmentSlot nmsSlot = org.bukkit.craftbukkit.CraftEquipmentSlot.getNMS(slot);
+        this.damageItemStack0(this.getHandle().getItemBySlot(nmsSlot), amount, nmsSlot);
+    }
+
+    private void damageItemStack0(net.minecraft.world.item.ItemStack nmsStack, int amount, net.minecraft.world.entity.EquipmentSlot slot) {
+        nmsStack.hurtAndBreak(amount, this.getHandle(), livingEntity -> {
+            if (slot != null) {
+                livingEntity.broadcastBreakEvent(slot);
+            }
+        });
+    }
+
+    @Override
     public void knockback(double strength, double directionX, double directionZ) {
         Preconditions.checkArgument(strength > 0, "Knockback strength must be > 0");
         getHandle().knockback(strength, directionX, directionZ);
