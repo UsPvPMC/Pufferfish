@@ -184,6 +184,7 @@ public abstract class Player extends LivingEntity {
     public float hurtDir; // Paper - protected -> public
     // Paper start
     public boolean affectsSpawning = true;
+    public net.kyori.adventure.util.TriState flyingFallDamage = net.kyori.adventure.util.TriState.NOT_SET;
     // Paper end
 
     // CraftBukkit start
@@ -1754,7 +1755,7 @@ public abstract class Player extends LivingEntity {
 
     @Override
     public boolean causeFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
-        if (this.abilities.mayfly) {
+        if (this.abilities.mayfly && !this.flyingFallDamage.toBooleanOrElse(false)) { // Paper - flying fall damage
             return false;
         } else {
             if (fallDistance >= 2.0F) {

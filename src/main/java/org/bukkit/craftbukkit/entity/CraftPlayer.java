@@ -2321,6 +2321,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         this.getHandle().onUpdateAbilities();
     }
 
+    // Paper start - flying fall damage
+    @Override
+    public void setFlyingFallDamage(@NotNull net.kyori.adventure.util.TriState flyingFallDamage) {
+        getHandle().flyingFallDamage = flyingFallDamage;
+    }
+
+    @NotNull
+    @Override
+    public net.kyori.adventure.util.TriState hasFlyingFallDamage() {
+        return getHandle().flyingFallDamage;
+    }
+    // Paper end
+
     @Override
     public int getNoDamageTicks() {
         if (this.getHandle().spawnInvulnerableTime > 0) {
