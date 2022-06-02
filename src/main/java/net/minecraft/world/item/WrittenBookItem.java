@@ -111,7 +111,7 @@ public class WrittenBookItem extends Item {
 
     public static boolean resolveBookComponents(ItemStack book, @Nullable CommandSourceStack commandSource, @Nullable Player player) {
         CompoundTag compoundTag = book.getTag();
-        if (compoundTag != null && !compoundTag.getBoolean("resolved")) {
+        if (io.papermc.paper.configuration.GlobalConfiguration.get().itemValidation.resolveSelectorsInBooks && compoundTag != null && !compoundTag.getBoolean("resolved")) { // Paper
             compoundTag.putBoolean("resolved", true);
             if (!makeSureTagIsValid(compoundTag)) {
                 return false;
