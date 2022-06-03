@@ -5,7 +5,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import net.minecraft.core.registries.BuiltInRegistries;
+import java.util.Locale;
+import java.util.Map;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tags.TagKey;
 import org.apache.logging.log4j.Level;
 import org.bukkit.configuration.ConfigurationSection;
 import net.minecraft.world.entity.EntityType;
@@ -253,6 +256,23 @@ public class PufferfishConfig {
 
         setComment("dab", "Optimizes entity brains when", "they're far away from the player");
     }
+	
+	public static Map<String, Integer> projectileTimeouts;
+	private static void projectileTimeouts() {
+		// Set some defaults
+		getInt("entity_timeouts.SNOWBALL", -1);
+		getInt("entity_timeouts.LLAMA_SPIT", -1);
+		setComment("entity_timeouts",
+				"These values define a entity's maximum lifespan. If an",
+				"entity is in this list and it has survived for longer than",
+				"that number of ticks, then it will be removed. Setting a value to",
+				"-1 disables this feature.");
+		
+		for (EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
+			String type = EntityType.getKey(entityType).getPath().toUpperCase(Locale.ROOT);
+			entityType.ttl = config.getInt("entity_timeouts." + type, -1);
+		}
+	}
     
     public static boolean throttleInactiveGoalSelectorTick;
 	private static void inactiveGoalSelectorThrottle() {

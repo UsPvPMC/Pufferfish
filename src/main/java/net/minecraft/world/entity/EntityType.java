@@ -301,6 +301,7 @@ public class EntityType<T extends Entity> implements FeatureElement, EntityTypeT
     private final int clientTrackingRange;
     private final int updateInterval;
     public boolean dabEnabled = false; // Pufferfish
+    public int ttl = -1; // Pufferfish
     @Nullable
     private String descriptionId;
     @Nullable

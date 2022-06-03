@@ -817,6 +817,12 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     // CraftBukkit end
 
     public void baseTick() {
+        // Pufferfish start - entity TTL
+        if (type != EntityType.PLAYER && type.ttl >= 0 && this.tickCount >= type.ttl) {
+            remove(RemovalReason.DISCARDED);
+            return;
+        }
+        // Pufferfish end - entity TTL
         this.level.getProfiler().push("entityBaseTick");
         if (firstTick && this instanceof net.minecraft.world.entity.NeutralMob neutralMob) neutralMob.tickInitialPersistentAnger(level); // Paper - Update last hurt when ticking
         this.feetBlockState = null;
