@@ -252,7 +252,7 @@ public class RedStoneWireBlock extends Block {
         return floor.isFaceSturdy(world, pos, Direction.UP) || floor.is(Blocks.HOPPER);
     }
 
-    // Paper start - Optimize redstone
+    // Paper start - Optimize redstone (Eigencraft)
     // The bulk of the new functionality is found in RedstoneWireTurbo.java
     com.destroystokyo.paper.util.RedstoneWireTurbo turbo = new com.destroystokyo.paper.util.RedstoneWireTurbo(this);
 
@@ -454,7 +454,13 @@ public class RedStoneWireBlock extends Block {
     @Override
     public void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean notify) {
         if (!oldState.is(state.getBlock()) && !world.isClientSide) {
-            this.updateSurroundingRedstone(world, pos, state, null); // Paper - Optimize redstone
+            // Paper start - optimize redstone - replace call to updatePowerStrength
+            if (world.paperConfig().misc.redstoneImplementation == io.papermc.paper.configuration.WorldConfiguration.Misc.RedstoneImplementation.ALTERNATE_CURRENT) {
+                world.getWireHandler().onWireAdded(pos); // Alternate Current
+            } else {
+                this.updateSurroundingRedstone(world, pos, state, null); // vanilla/Eigencraft
+            }
+            // Paper end
             Iterator iterator = Direction.Plane.VERTICAL.iterator();
 
             while (iterator.hasNext()) {
@@ -481,7 +487,13 @@ public class RedStoneWireBlock extends Block {
                     world.updateNeighborsAt(pos.relative(enumdirection), this);
                 }
 
-                this.updateSurroundingRedstone(world, pos, state, null); // Paper - Optimize redstone
+                // Paper start - optimize redstone - replace call to updatePowerStrength
+                if (world.paperConfig().misc.redstoneImplementation == io.papermc.paper.configuration.WorldConfiguration.Misc.RedstoneImplementation.ALTERNATE_CURRENT) {
+                    world.getWireHandler().onWireRemoved(pos, state); // Alternate Current
+                } else {
+                    this.updateSurroundingRedstone(world, pos, state, null); // vanilla/Eigencraft
+                }
+                // Paper end
                 this.updateNeighborsOfNeighboringWires(world, pos);
             }
         }
@@ -515,8 +527,14 @@ public class RedStoneWireBlock extends Block {
     @Override
     public void neighborChanged(BlockState state, Level world, BlockPos pos, Block sourceBlock, BlockPos sourcePos, boolean notify) {
         if (!world.isClientSide) {
+            // Paper start - optimize redstone (Alternate Current)
+            // Alternate Current handles breaking of redstone wires in the WireHandler.
+            if (world.paperConfig().misc.redstoneImplementation == io.papermc.paper.configuration.WorldConfiguration.Misc.RedstoneImplementation.ALTERNATE_CURRENT) {
+                world.getWireHandler().onWireUpdated(pos);
+            } else
+            // Paper end
             if (state.canSurvive(world, pos)) {
-                this.updateSurroundingRedstone(world, pos, state, sourcePos); // Paper - Optimize redstone
+                this.updateSurroundingRedstone(world, pos, state, sourcePos); // Paper - Optimize redstone (Eigencraft)
             } else {
                 dropResources(state, world, pos);
                 world.removeBlock(pos, false);

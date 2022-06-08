@@ -219,6 +219,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     public final UUID uuid;
     public boolean hasPhysicsEvent = true; // Paper
     public boolean hasEntityMoveEvent = false; // Paper
+    private final alternate.current.wire.WireHandler wireHandler = new alternate.current.wire.WireHandler(this); // Paper - optimize redstone (Alternate Current)
     public static Throwable getAddToWorldStackTrace(Entity entity) {
         final Throwable thr = new Throwable(entity + " Added to world at " + new java.util.Date());
         io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(thr);
@@ -2485,6 +2486,13 @@ public class ServerLevel extends Level implements WorldGenLevel {
     public FeatureFlagSet enabledFeatures() {
         return this.server.getWorldData().enabledFeatures();
     }
+
+    // Paper start - optimize redstone (Alternate Current)
+    @Override
+    public alternate.current.wire.WireHandler getWireHandler() {
+        return wireHandler;
+    }
+    // Paper end
 
     private final class EntityCallbacks implements LevelCallback<Entity> {
 

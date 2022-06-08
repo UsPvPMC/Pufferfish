@@ -1532,4 +1532,15 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
         return ret;
     }
     // Paper end
+
+    // Paper start - optimize redstone (Alternate Current)
+    public alternate.current.wire.WireHandler getWireHandler() {
+        // This method is overridden in ServerLevel.
+        // Since Paper is a server platform there is no risk
+        // of this implementation being called. It is here
+        // only so this method can be called without casting
+        // an instance of Level to ServerLevel.
+        return null;
+    }
+    // Paper end
 }
