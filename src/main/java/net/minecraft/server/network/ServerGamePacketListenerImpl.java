@@ -1812,6 +1812,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         if (itemstack.isItemEnabled(worldserver.enabledFeatures())) {
             BlockHitResult movingobjectpositionblock = packet.getHitResult();
             Vec3 vec3d = movingobjectpositionblock.getLocation();
+            // Paper start - improve distance check
+            if (!Double.isFinite(vec3d.x) || !Double.isFinite(vec3d.y) || !Double.isFinite(vec3d.z)) {
+                return;
+            }
+            // Paper end
             BlockPos blockposition = movingobjectpositionblock.getBlockPos();
             Vec3 vec3d1 = Vec3.atCenterOf(blockposition);
 
