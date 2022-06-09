@@ -13,6 +13,7 @@ dependencies {
     implementation("org.ow2.asm:asm:9.4")
     implementation("org.ow2.asm:asm-commons:9.4") // Paper - ASM event executor generation
     testImplementation("org.mockito:mockito-core:4.9.0") // Paper - switch to mockito
+    implementation("org.spongepowered:configurate-yaml:4.1.2") // Paper - config files
     implementation("commons-lang:commons-lang:2.6")
     runtimeOnly("org.xerial:sqlite-jdbc:3.41.0.0")
     runtimeOnly("com.mysql:mysql-connector-j:8.0.32")

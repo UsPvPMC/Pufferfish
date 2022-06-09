@@ -62,6 +62,7 @@ public abstract class AbstractTestingBase {
         BIOMES = REGISTRY_CUSTOM.registryOrThrow(Registries.BIOME);
 
         DummyEnchantments.setup();
+        io.papermc.paper.configuration.GlobalConfigTestingBase.setupGlobalConfigForTest(); // Paper
 
         ImmutableList.Builder<Material> builder = ImmutableList.builder();
         for (Material m : Material.values()) {

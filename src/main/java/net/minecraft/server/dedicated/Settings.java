@@ -75,6 +75,7 @@ public abstract class Settings<T extends Settings<T>> {
         try {
             // CraftBukkit start - Don't attempt writing to file if it's read only
             if (path.toFile().exists() && !path.toFile().canWrite()) {
+                Settings.LOGGER.warn("Can not write to file {}, skipping.", path); // Paper
                 return;
             }
             // CraftBukkit end

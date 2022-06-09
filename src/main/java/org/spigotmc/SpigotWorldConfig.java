@@ -58,8 +58,14 @@ public class SpigotWorldConfig
 
     public int getInt(String path, int def)
     {
-        this.config.addDefault( "world-settings.default." + path, def );
-        return this.config.getInt( "world-settings." + this.worldName + "." + path, this.config.getInt( "world-settings.default." + path ) );
+        // Paper start - get int without setting default
+        return this.getInt(path, def, true);
+    }
+    public int getInt(String path, int def, boolean setDef)
+    {
+        if (setDef) this.config.addDefault( "world-settings.default." + path, def );
+        return this.config.getInt( "world-settings." + this.worldName + "." + path, this.config.getInt( "world-settings.default." + path, def ) );
+        // Paper end
     }
 
     public <T> List getList(String path, T def)
