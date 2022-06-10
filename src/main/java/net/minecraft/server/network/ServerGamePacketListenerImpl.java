@@ -3611,7 +3611,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
                     this.resetPlayerChatState(remotechatsession_a.validate(this.player.getGameProfile(), signaturevalidator, Duration.ZERO));
                 } catch (ProfilePublicKey.ValidationException profilepublickey_b) {
-                    ServerGamePacketListenerImpl.LOGGER.error("Failed to validate profile key: {}", profilepublickey_b.getMessage());
+                    // ServerGamePacketListenerImpl.LOGGER.error("Failed to validate profile key: {}", profilepublickey_b.getMessage()); // Paper - unnecessary log
                     this.disconnect(profilepublickey_b.getComponent(), profilepublickey_b.kickCause); // Paper - kick event causes
                 }
 
