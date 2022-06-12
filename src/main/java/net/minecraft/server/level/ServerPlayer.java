@@ -1271,6 +1271,12 @@ public class ServerPlayer extends Player {
         // CraftBukkit start
         ResourceKey<Level> maindimensionkey = CraftDimensionUtil.getMainDimensionKey(origin);
         ResourceKey<Level> maindimensionkey1 = CraftDimensionUtil.getMainDimensionKey(this.level);
+        // Paper start - config for strict advancement checks for dimensions
+        if (io.papermc.paper.configuration.GlobalConfiguration.get().misc.strictAdvancementDimensionCheck) {
+            maindimensionkey = resourcekey;
+            maindimensionkey1 = resourcekey1;
+        }
+        // Paper end
 
         CriteriaTriggers.CHANGED_DIMENSION.trigger(this, maindimensionkey, maindimensionkey1);
         if (maindimensionkey != resourcekey || maindimensionkey1 != resourcekey1) {
