@@ -273,5 +273,17 @@ public class DummyGeneratorAccess implements WorldGenLevel {
 
     @Override
     public <T> void getEntitiesByClass(Class<? extends T> clazz, Entity except, AABB box, List<? super T> into, Predicate<? super T> predicate) {}
+
+    @Override
+    public void scheduleTick(BlockPos pos, Fluid fluid, int delay) {
+    }
+
+    @Override
+    public void scheduleTick(BlockPos pos, Block block, int delay, net.minecraft.world.ticks.TickPriority priority) {
+    }
+
+    @Override
+    public void scheduleTick(BlockPos pos, Fluid fluid, int delay, net.minecraft.world.ticks.TickPriority priority) {
+    }
     // Paper end
 }

@@ -128,7 +128,7 @@ public class BlockStateListPopulator extends DummyGeneratorAccess {
 
     @Override
     public boolean isFluidAtPosition(BlockPos pos, Predicate<FluidState> state) {
-        return this.world.isFluidAtPosition(pos, state);
+        return state.test(this.getFluidState(pos)); // Paper - fix
     }
 
     @Override
@@ -140,4 +140,38 @@ public class BlockStateListPopulator extends DummyGeneratorAccess {
     public RegistryAccess registryAccess() {
         return this.world.registryAccess();
     }
+
+    // Paper start
+    @Override
+    public <T extends BlockEntity> java.util.Optional<T> getBlockEntity(BlockPos pos, net.minecraft.world.level.block.entity.BlockEntityType<T> type) {
+        BlockEntity tileentity = this.getBlockEntity(pos);
+
+        return tileentity != null && tileentity.getType() == type ? (java.util.Optional<T>) java.util.Optional.of(tileentity) : java.util.Optional.empty();
+    }
+
+    @Override
+    public BlockPos getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types heightmap, BlockPos pos) {
+        return world.getHeightmapPos(heightmap, pos);
+    }
+
+    @Override
+    public int getHeight(net.minecraft.world.level.levelgen.Heightmap.Types heightmap, int x, int z) {
+        return world.getHeight(heightmap, x, z);
+    }
+
+    @Override
+    public net.minecraft.world.level.storage.LevelData getLevelData() {
+        return world.getLevelData();
+    }
+
+    @Override
+    public int getRawBrightness(BlockPos pos, int ambientDarkness) {
+        return world.getRawBrightness(pos, ambientDarkness);
+    }
+
+    @Override
+    public int getBrightness(net.minecraft.world.level.LightLayer type, BlockPos pos) {
+        return world.getBrightness(type, pos);
+    }
+    // Paper end
 }
