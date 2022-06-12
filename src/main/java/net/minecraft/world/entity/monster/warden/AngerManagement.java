@@ -146,7 +146,7 @@ public class AngerManagement {
     public int increaseAnger(Entity entity, int amount) {
         boolean bl = !this.angerBySuspect.containsKey(entity);
         int i = this.angerBySuspect.computeInt(entity, (suspect, anger) -> {
-            return Math.min(150, (anger == null ? 0 : anger) + amount);
+            return Math.min(150, (anger == null ? 0 : anger) + amount); // Paper - diff on change
         });
         if (bl) {
             int j = this.angerByUuid.removeInt(entity.getUUID());

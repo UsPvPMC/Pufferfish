@@ -495,6 +495,15 @@ public class Warden extends Monster implements VibrationListener.VibrationListen
     @VisibleForTesting
     public void increaseAngerAt(@Nullable Entity entity, int amount, boolean listening) {
         if (!this.isNoAi() && this.canTargetEntity(entity)) {
+            // Paper start
+            int activeAnger = this.angerManagement.getActiveAnger(entity);
+            io.papermc.paper.event.entity.WardenAngerChangeEvent event = new io.papermc.paper.event.entity.WardenAngerChangeEvent((org.bukkit.entity.Warden) this.getBukkitEntity(), entity.getBukkitEntity(), activeAnger, Math.min(150, activeAnger + amount));
+            this.level.getCraftServer().getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return;
+            }
+            amount = event.getNewAnger() - activeAnger;
+            // Paper end
             WardenAi.setDigCooldown(this);
             boolean flag1 = !(this.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).orElse(null) instanceof Player); // CraftBukkit - decompile error
             int j = this.angerManagement.increaseAnger(entity, amount);
