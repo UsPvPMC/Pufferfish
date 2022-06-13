@@ -793,7 +793,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     }
     // Paper start - optimise random block ticking
     private final BlockPos.MutableBlockPos chunkTickMutablePosition = new BlockPos.MutableBlockPos();
-    private final io.papermc.paper.util.math.ThreadUnsafeRandom randomTickRandom = new io.papermc.paper.util.math.ThreadUnsafeRandom(this.random.nextLong());
+    // private final io.papermc.paper.util.math.ThreadUnsafeRandom randomTickRandom = new io.papermc.paper.util.math.ThreadUnsafeRandom(); // Pufferfish - moved to super
     // Paper end
 
     public void tickChunk(LevelChunk chunk, int randomTickSpeed) {
