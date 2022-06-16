@@ -511,7 +511,7 @@ public class ItemEntity extends Entity implements TraceableEntity {
     }
 
     public void setItem(ItemStack stack) {
-        com.google.common.base.Preconditions.checkArgument(!stack.isEmpty(), "Cannot drop air"); // CraftBukkit
+        // com.google.common.base.Preconditions.checkArgument(!stack.isEmpty(), "Cannot drop air"); // CraftBukkit // Paper - Remove check
         this.getEntityData().set(ItemEntity.DATA_ITEM, stack);
         this.getEntityData().markDirty(ItemEntity.DATA_ITEM); // CraftBukkit - SPIGOT-4591, must mark dirty
         this.despawnRate = level.paperConfig().entities.spawning.altItemDespawnRate.enabled ? level.paperConfig().entities.spawning.altItemDespawnRate.items.getOrDefault(stack.getItem(), level.spigotConfig.itemDespawnRate) : level.spigotConfig.itemDespawnRate; // Paper
