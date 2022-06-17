@@ -520,6 +520,7 @@ public class ServerPlayerGameMode {
         BlockState iblockdata = world.getBlockState(blockposition);
         InteractionResult enuminteractionresult = InteractionResult.PASS;
         boolean cancelledBlock = false;
+        boolean cancelledItem = false; // Paper - correctly handle items on cooldown
 
         if (!iblockdata.getBlock().isEnabled(world.enabledFeatures())) {
             return InteractionResult.FAIL;
@@ -529,10 +530,10 @@ public class ServerPlayerGameMode {
         }
 
         if (player.getCooldowns().isOnCooldown(stack.getItem())) {
-            cancelledBlock = true;
+            cancelledItem = true; // Paper - correctly handle items on cooldown
         }
 
-        PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, blockposition, hitResult.getDirection(), stack, cancelledBlock, hand, hitResult.getLocation()); // Paper
+        PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, blockposition, hitResult.getDirection(), stack, cancelledBlock, cancelledItem, hand, hitResult.getLocation()); // Paper
         this.firedInteract = true;
         this.interactResult = event.useItemInHand() == Event.Result.DENY;
         this.interactPosition = blockposition.immutable();
