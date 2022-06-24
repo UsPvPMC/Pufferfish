@@ -252,6 +252,17 @@ public class Frog extends Animal implements VariantHolder<FrogVariant> {
             serverPlayer = other.getLoveCause();
         }
 
+        // Paper start
+        int experience = this.getRandom().nextInt(7) + 1;
+        io.papermc.paper.event.entity.EntityFertilizeEggEvent event = new io.papermc.paper.event.entity.EntityFertilizeEggEvent((org.bukkit.entity.LivingEntity) this.getBukkitEntity(), (org.bukkit.entity.LivingEntity) other.getBukkitEntity(), serverPlayer == null ? null : serverPlayer.getBukkitEntity(), this.breedItem == null ? null : org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(this.breedItem).clone(), experience);
+        if (!event.callEvent()) {
+            resetLove();
+            other.resetLove(); // stop the pathfinding to avoid infinite loop
+            return;
+        }
+        experience = event.getExperience();
+        // Paper end
+
         if (serverPlayer != null) {
             serverPlayer.awardStat(Stats.ANIMALS_BRED);
             CriteriaTriggers.BRED_ANIMALS.trigger(serverPlayer, this, other, (AgeableMob)null);
@@ -263,8 +274,8 @@ public class Frog extends Animal implements VariantHolder<FrogVariant> {
         other.resetLove();
         this.getBrain().setMemory(MemoryModuleType.IS_PREGNANT, Unit.INSTANCE);
         world.broadcastEntityEvent(this, (byte)18);
-        if (world.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
-            world.addFreshEntity(new ExperienceOrb(world, this.getX(), this.getY(), this.getZ(), this.getRandom().nextInt(7) + 1, org.bukkit.entity.ExperienceOrb.SpawnReason.BREED, serverPlayer)); // Paper
+        if (experience > 0 && world.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) { // Paper
+            world.addFreshEntity(new ExperienceOrb(world, this.getX(), this.getY(), this.getZ(), experience, org.bukkit.entity.ExperienceOrb.SpawnReason.BREED, serverPlayer)); // Paper
         }
 
     }
