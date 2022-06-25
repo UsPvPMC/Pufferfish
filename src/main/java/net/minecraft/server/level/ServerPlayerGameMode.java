@@ -62,6 +62,8 @@ public class ServerPlayerGameMode {
     private BlockPos delayedDestroyPos;
     private int delayedTickStart;
     private int lastSentState;
+    public boolean captureSentBlockEntities = false; // Paper
+    public boolean capturedBlockEntity = false; // Paper
 
     public ServerPlayerGameMode(ServerPlayer player) {
         this.gameModeForPlayer = GameType.DEFAULT_MODE;
@@ -187,10 +189,7 @@ public class ServerPlayerGameMode {
                     this.player.connection.send(new ClientboundBlockUpdatePacket(pos, this.level.getBlockState(pos)));
                     this.debugLogging(pos, false, sequence, "may not interact");
                     // Update any tile entity data for this block
-                    BlockEntity tileentity = this.level.getBlockEntity(pos);
-                    if (tileentity != null) {
-                        this.player.connection.send(tileentity.getUpdatePacket());
-                    }
+                    capturedBlockEntity = true; // Paper - send block entity after predicting
                     // CraftBukkit end
                     return;
                 }
@@ -206,10 +205,7 @@ public class ServerPlayerGameMode {
                     // Paper end
                     this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, pos));
                     // Update any tile entity data for this block
-                    BlockEntity tileentity = this.level.getBlockEntity(pos);
-                    if (tileentity != null) {
-                        this.player.connection.send(tileentity.getUpdatePacket());
-                    }
+                    capturedBlockEntity = true; // Paper - send block entity after predicting
                     return;
                 }
                 // CraftBukkit end
@@ -393,10 +389,12 @@ public class ServerPlayerGameMode {
                 }
 
                 // Update any tile entity data for this block
+                if (!captureSentBlockEntities) { // Paper - Toggle this location for capturing as this is used for api
                 BlockEntity tileentity = this.level.getBlockEntity(pos);
                 if (tileentity != null) {
                     this.player.connection.send(tileentity.getUpdatePacket());
                 }
+                } else {capturedBlockEntity = true;} // Paper end
                 return false;
             }
         }

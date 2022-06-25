@@ -1855,8 +1855,28 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                     return;
                 }
                 // Paper end - Don't allow digging in unloaded chunks
+                // Paper start - send block entities after prediction
+                this.player.gameMode.capturedBlockEntity = false;
+                this.player.gameMode.captureSentBlockEntities = true;
+                // Paper end - send block entities after prediction
                 this.player.gameMode.handleBlockBreakAction(blockposition, packetplayinblockdig_enumplayerdigtype, packet.getDirection(), this.player.level.getMaxBuildHeight(), packet.getSequence());
                 this.player.connection.ackBlockChangesUpTo(packet.getSequence());
+                // Paper start - send block entities after prediction
+                this.player.gameMode.captureSentBlockEntities = false;
+                // If a block entity was modified speedup the block change ack to avoid the block entity
+                // being overriden.
+                if (this.player.gameMode.capturedBlockEntity) {
+                    // manually tick
+                    this.send(new ClientboundBlockChangedAckPacket(this.ackBlockChangesUpTo));
+                    this.player.connection.ackBlockChangesUpTo = -1;
+
+                    this.player.gameMode.capturedBlockEntity = false;
+                    BlockEntity tileentity = this.player.level.getBlockEntity(blockposition);
+                    if (tileentity != null) {
+                        this.player.connection.send(tileentity.getUpdatePacket());
+                    }
+                }
+                // Paper end - send block entities after prediction
                 return;
             default:
                 throw new IllegalArgumentException("Invalid player action");
