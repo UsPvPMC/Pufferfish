@@ -2033,7 +2033,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     public void handleResourcePackResponse(ServerboundResourcePackPacket packet) {
         PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
         if (packet.getAction() == ServerboundResourcePackPacket.Action.DECLINED && this.server.isResourcePackRequired()) {
-            ServerGamePacketListenerImpl.LOGGER.info("Disconnecting {} due to resource pack rejection", this.player.getName());
+            ServerGamePacketListenerImpl.LOGGER.info("Disconnecting {} due to resource pack rejection", this.player.getGameProfile().getName()); // Paper - Don't print component in resource pack rejection message
             this.disconnect(Component.translatable("multiplayer.requiredTexturePrompt.disconnect"), org.bukkit.event.player.PlayerKickEvent.Cause.RESOURCE_PACK_REJECTION); // Paper - add cause
         }
         // Paper start
