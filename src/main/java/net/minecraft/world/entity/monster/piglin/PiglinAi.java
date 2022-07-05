@@ -241,7 +241,10 @@ public class PiglinAi {
         ItemStack itemstack;
 
         // CraftBukkit start
-        if (drop.getItem().is(Items.GOLD_NUGGET) && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityPickupItemEvent(piglin, drop, 0, false).isCancelled()) {
+        // Paper start - fix event firing twice
+        if (drop.getItem().is(Items.GOLD_NUGGET) /* && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityPickupItemEvent(piglin, drop, 0, false).isCancelled() */) {
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityPickupItemEvent(piglin, drop, 0, false).isCancelled()) return;
+            // Paper end
             piglin.take(drop, drop.getItem().getCount());
             itemstack = drop.getItem();
             drop.discard();
@@ -251,6 +254,7 @@ public class PiglinAi {
         } else {
             return;
         }
+        piglin.onItemPickup(drop); // Paper - moved from Piglin#pickUpItem
         // CraftBukkit end
 
         if (PiglinAi.isLovedItem(itemstack, piglin)) { // CraftBukkit - Changes to allow for custom payment in bartering
