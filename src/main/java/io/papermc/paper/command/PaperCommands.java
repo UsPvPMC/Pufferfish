@@ -23,5 +23,6 @@ public final class PaperCommands {
         COMMANDS.forEach((s, command) -> {
             server.server.getCommandMap().register(s, "Paper", command);
         });
+        server.server.getCommandMap().register("bukkit", new PaperPluginsCommand());
     }
 }

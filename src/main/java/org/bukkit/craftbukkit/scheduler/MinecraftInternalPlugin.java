@@ -42,6 +42,12 @@ public class MinecraftInternalPlugin extends PluginBase {
     public PluginDescriptionFile getDescription() {
         return pdf;
     }
+    // Paper start
+    @Override
+    public io.papermc.paper.plugin.configuration.PluginMeta getPluginMeta() {
+        return pdf;
+    }
+    // Paper end
 
     @Override
     public FileConfiguration getConfig() {

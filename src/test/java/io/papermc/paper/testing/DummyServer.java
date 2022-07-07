@@ -58,7 +58,7 @@ public final class DummyServer {
             return new LazyRegistry(() -> CraftRegistry.createRegistry(invocation.getArgument(0, Class.class), AbstractTestingBase.REGISTRY_CUSTOM));
         });
 
-        final PluginManager pluginManager = new SimplePluginManager(dummyServer, new SimpleCommandMap(dummyServer));
+        final PluginManager pluginManager = new  io.papermc.paper.plugin.manager.PaperPluginManagerImpl(dummyServer, new SimpleCommandMap(dummyServer), null);
         when(dummyServer.getPluginManager()).thenReturn(pluginManager);
 
         Bukkit.setServer(dummyServer);

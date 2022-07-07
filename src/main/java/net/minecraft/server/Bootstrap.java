@@ -69,7 +69,11 @@ public class Bootstrap {
                     EntitySelectorOptions.bootStrap();
                     DispenseItemBehavior.bootStrap();
                     CauldronInteraction.bootStrap();
-                    BuiltInRegistries.bootStrap();
+                    // Paper start
+                    BuiltInRegistries.bootStrap(() -> {
+                        io.papermc.paper.plugin.entrypoint.LaunchEntryPointHandler.enterBootstrappers(); // Paper - Entrypoint for bootstrapping
+                    });
+                    // Paper end
                     Bootstrap.wrapStreams();
                 }
                 // CraftBukkit start - easier than fixing the decompile

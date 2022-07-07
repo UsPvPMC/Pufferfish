@@ -437,6 +437,12 @@ public final class CraftMagicNumbers implements UnsafeValues {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         return nmsItemStack.getItem().getDescriptionId(nmsItemStack);
     }
+    // Paper start
+    @Override
+    public boolean isSupportedApiVersion(String apiVersion) {
+        return apiVersion != null && SUPPORTED_API.contains(apiVersion);
+    }
+    // Paper end
 
     /**
      * This helper class represents the different NBT Tags.
