@@ -1026,7 +1026,7 @@ public class Bee extends Animal implements NeutralMob, FlyingAnimal {
 
         BeeGoToHiveGoal() {
             super();
-            this.travellingTicks = Bee.this.level.random.nextInt(10);
+            this.travellingTicks = Bee.this./* level. */random.nextInt(10); // Paper - use entity random
             this.blacklistedTargets = Lists.newArrayList();
             this.setFlags(EnumSet.of(Goal.Flag.MOVE));
         }
@@ -1143,7 +1143,7 @@ public class Bee extends Animal implements NeutralMob, FlyingAnimal {
 
         BeeGoToKnownFlowerGoal() {
             super();
-            this.travellingTicks = Bee.this.level.random.nextInt(10);
+            this.travellingTicks = Bee.this./* level. */random.nextInt(10); // Paper - use entity random
             this.setFlags(EnumSet.of(Goal.Flag.MOVE));
         }
 
