@@ -38,7 +38,7 @@ public class OpCommand {
             if (!playerList.isOp(gameProfile)) {
                 playerList.op(gameProfile);
                 ++i;
-                source.sendSuccess(Component.translatable("commands.op.success", targets.iterator().next().getName()), true);
+                source.sendSuccess(Component.translatable("commands.op.success", gameProfile.getName()), true); // Paper - fixes MC-253721
             }
         }
 

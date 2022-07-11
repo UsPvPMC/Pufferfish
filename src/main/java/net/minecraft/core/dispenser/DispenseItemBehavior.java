@@ -351,7 +351,7 @@ public interface DispenseItemBehavior {
                         }
                     }
                     // CraftBukkit end
-                    ((Saddleable) list.get(0)).equipSaddle(SoundSource.BLOCKS);
+                    ((Saddleable) list.get(0)).equipSaddle(SoundSource.BLOCKS, CraftItemStack.asNMSCopy(event.getItem())); // Paper - Fix saddles losing nbt data - MC-191591
                     // itemstack.shrink(1); // CraftBukkit - handled above
                     this.setSuccess(true);
                     return stack;

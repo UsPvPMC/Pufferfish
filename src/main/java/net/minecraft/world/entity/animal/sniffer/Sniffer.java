@@ -347,9 +347,10 @@ public class Sniffer extends Animal {
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
+        boolean wasFood = this.isFood(itemstack); // Paper - Fix MC-260219
         InteractionResult enuminteractionresult = super.mobInteract(player, hand);
 
-        if (enuminteractionresult.consumesAction() && this.isFood(itemstack)) {
+        if (enuminteractionresult.consumesAction() && wasFood) { // Paper - Fix MC-260219
             this.level.playSound((Player) null, (Entity) this, this.getEatingSound(itemstack), SoundSource.NEUTRAL, 1.0F, Mth.randomBetween(this.level.random, 0.8F, 1.2F));
         }
 

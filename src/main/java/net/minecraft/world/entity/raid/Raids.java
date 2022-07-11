@@ -125,7 +125,7 @@ public class Raids extends SavedData {
                     // CraftBukkit end
                 } else {
                     player.removeEffect(MobEffects.BAD_OMEN);
-                    player.connection.send(new ClientboundEntityEventPacket(player, (byte) 43));
+                    this.level.broadcastEntityEvent(player, net.minecraft.world.entity.EntityEvent.BAD_OMEN_TRIGGERED /* (byte) 43 */); // Paper - Fix MC-253884
                 }
 
                 if (flag) {
@@ -140,7 +140,7 @@ public class Raids extends SavedData {
                     }
                     // CraftBukkit end
                     raid.absorbBadOmen(player);
-                    player.connection.send(new ClientboundEntityEventPacket(player, (byte) 43));
+                    this.level.broadcastEntityEvent(player, net.minecraft.world.entity.EntityEvent.BAD_OMEN_TRIGGERED /* (byte) 43 */); // Paper - Fix MC-253884
                     if (!raid.hasFirstWaveSpawned()) {
                         player.awardStat(Stats.RAID_TRIGGER);
                         CriteriaTriggers.BAD_OMEN.trigger(player);

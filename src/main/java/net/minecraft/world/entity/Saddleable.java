@@ -9,6 +9,11 @@ public interface Saddleable {
     boolean isSaddleable();
 
     void equipSaddle(@Nullable SoundSource sound);
+    // Paper start - Fix saddles losing nbt data - MC-191591
+    default void equipSaddle(final @Nullable SoundSource sound, final @Nullable net.minecraft.world.item.ItemStack stack) {
+        this.equipSaddle(sound);
+    }
+    // Paper end
 
     default SoundEvent getSaddleSoundEvent() {
         return SoundEvents.HORSE_SADDLE;

@@ -18,7 +18,7 @@ public class SaddleItem extends Item {
         if (entity instanceof Saddleable saddleable && entity.isAlive()) {
             if (!saddleable.isSaddled() && saddleable.isSaddleable()) {
                 if (!user.level.isClientSide) {
-                    saddleable.equipSaddle(SoundSource.NEUTRAL);
+                    saddleable.equipSaddle(SoundSource.NEUTRAL, stack.copyWithCount(1)); // Paper - Fix saddles losing nbt data - MC-191591
                     entity.level.gameEvent(entity, GameEvent.EQUIP, entity.position());
                     stack.shrink(1);
                 }
