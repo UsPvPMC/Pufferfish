@@ -2532,7 +2532,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         }
         // Spigot end
         // this.chatSpamTickCount += 20;
-        if (this.chatSpamTickCount.addAndGet(20) > 200 && !this.server.getPlayerList().isOp(this.player.getGameProfile())) {
+        if (counted && this.chatSpamTickCount.addAndGet(20) > 200 && !this.server.getPlayerList().isOp(this.player.getGameProfile())) { // Paper - exclude from SpigotConfig.spamExclusions
             // CraftBukkit end
             this.disconnect(Component.translatable("disconnect.spam"), org.bukkit.event.player.PlayerKickEvent.Cause.SPAM); // Paper - kick event cause
         }
