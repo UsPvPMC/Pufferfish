@@ -670,6 +670,22 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
         this.getHandle().getServer().getPlayerList().sendPlayerPermissionLevel(this.getHandle(), level, false);
     }
+
+    @Override
+    public void addAdditionalChatCompletions(@NotNull Collection<String> completions) {
+        this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundCustomChatCompletionsPacket(
+            net.minecraft.network.protocol.game.ClientboundCustomChatCompletionsPacket.Action.ADD,
+            new ArrayList<>(completions)
+        ));
+    }
+
+    @Override
+    public void removeAdditionalChatCompletions(@NotNull Collection<String> completions) {
+        this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundCustomChatCompletionsPacket(
+            net.minecraft.network.protocol.game.ClientboundCustomChatCompletionsPacket.Action.REMOVE,
+            new ArrayList<>(completions)
+        ));
+    }
     // Paper end
 
     @Override
