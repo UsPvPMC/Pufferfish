@@ -307,8 +307,10 @@ public class PufferfishConfig {
 
 
     public static boolean disableMethodProfiler;
+	public static boolean disableOutOfOrderChat;
     private static void miscSettings() {
-        disableMethodProfiler = getBoolean("misc.disable-method-profiler", true);
+		disableMethodProfiler = getBoolean("misc.disable-method-profiler", true);
+		disableOutOfOrderChat = getBoolean("misc.disable-out-of-order-chat", false);
         setComment("misc", "Settings for things that don't belong elsewhere");
     }
 

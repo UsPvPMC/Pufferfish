@@ -2357,6 +2357,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     }
 
     private boolean updateChatOrder(Instant timestamp) {
+        if (gg.pufferfish.pufferfish.PufferfishConfig.disableOutOfOrderChat) return true;
         Instant instant1;
 
         do {
