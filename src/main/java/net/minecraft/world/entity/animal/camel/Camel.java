@@ -381,7 +381,7 @@ public class Camel extends AbstractHorse implements PlayerRideableJumping, Rider
         } else {
             boolean bl = this.getHealth() < this.getMaxHealth();
             if (bl) {
-                this.heal(2.0F);
+                this.heal(2.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.EATING); // Paper
             }
 
             boolean bl2 = this.isTamed() && this.getAge() == 0 && this.canFallInLove();

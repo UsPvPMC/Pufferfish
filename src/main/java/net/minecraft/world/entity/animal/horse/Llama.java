@@ -217,7 +217,7 @@ public class Llama extends AbstractChestedHorse implements VariantHolder<Llama.V
         }
 
         if (this.getHealth() < this.getMaxHealth() && f > 0.0F) {
-            this.heal(f);
+            this.heal(f, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.EATING); // Paper
             flag = true;
         }
 

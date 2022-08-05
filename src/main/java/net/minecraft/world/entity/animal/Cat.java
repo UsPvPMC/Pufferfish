@@ -386,7 +386,7 @@ public class Cat extends TamableAnimal implements VariantHolder<CatVariant> {
                     if (!(item instanceof DyeItem)) {
                         if (item.isEdible() && this.isFood(itemstack) && this.getHealth() < this.getMaxHealth()) {
                             this.usePlayerItem(player, hand, itemstack);
-                            this.heal((float) item.getFoodProperties().getNutrition());
+                            this.heal((float) item.getFoodProperties().getNutrition(), org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.EATING); // Paper
                             return InteractionResult.CONSUME;
                         }
 
