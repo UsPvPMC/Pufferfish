@@ -1174,6 +1174,7 @@ public class ServerPlayer extends Player {
 
                 // CraftBukkit end
                 this.setLevel(worldserver);
+                this.moveTo(exit.getX(), exit.getY(), exit.getZ(), exit.getYaw(), exit.getPitch()); // Paper - Set the location before
                 this.connection.teleport(exit); // CraftBukkit - use internal teleport without event
                 this.connection.resetPosition();
                 worldserver.addDuringPortalTeleport(this);
