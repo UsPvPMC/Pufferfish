@@ -119,7 +119,27 @@ public class CollectingNeighborUpdater implements NeighborUpdater {
         public boolean runNext(Level world) {
             BlockPos blockPos = this.sourcePos.relative(NeighborUpdater.UPDATE_ORDER[this.idx++]);
             BlockState blockState = world.getBlockState(blockPos);
-            blockState.neighborChanged(world, blockPos, this.sourceBlock, this.sourcePos, false);
+            // Paper start
+            try {
+                boolean cancelled = false;
+                org.bukkit.craftbukkit.CraftWorld cworld = world.getWorld();
+                if (cworld != null) {
+                    org.bukkit.event.block.BlockPhysicsEvent event = new org.bukkit.event.block.BlockPhysicsEvent(
+                        org.bukkit.craftbukkit.block.CraftBlock.at(world, blockPos),
+                        org.bukkit.craftbukkit.block.data.CraftBlockData.fromData(blockState),
+                        org.bukkit.craftbukkit.block.CraftBlock.at(world, sourcePos));
+
+                    if (!event.callEvent()) {
+                        cancelled = true;
+                    }
+                }
+                if (!cancelled) { // continue to check for adjacent block (increase idx)
+                    blockState.neighborChanged(world, blockPos, this.sourceBlock, this.sourcePos, false);
+                }
+            } catch (StackOverflowError ex) {
+                world.lastPhysicsProblem = new BlockPos(blockPos);
+            }
+            // Paper end
             if (this.idx < NeighborUpdater.UPDATE_ORDER.length && NeighborUpdater.UPDATE_ORDER[this.idx] == this.skipDirection) {
                 ++this.idx;
             }
