@@ -71,7 +71,7 @@ public class SuspiciousStewItem extends Item {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level world, LivingEntity user) {
         ItemStack itemStack = super.finishUsingItem(stack, world, user);
-        listPotionEffects(itemStack, user::addEffect);
+        listPotionEffects(itemStack, effect -> user.addEffect(effect, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.FOOD)); // Paper
         return user instanceof Player && ((Player)user).getAbilities().instabuild ? itemStack : new ItemStack(Items.BOWL);
     }
 }
