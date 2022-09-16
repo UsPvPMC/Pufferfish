@@ -113,9 +113,11 @@ public class EndDragonFight {
             if (nbt.contains("ExitPortalLocation", 10)) {
                 this.portalLocation = NbtUtils.readBlockPos(nbt.getCompound("ExitPortalLocation"));
             }
-        } else {
-            this.dragonKilled = true;
-            this.previouslyKilled = true;
+            // Paper start - Killed statuses should be false for newly created worlds
+            // } else {
+            //     this.dragonKilled = true;
+            //     this.previouslyKilled = true;
+            // Paper end
         }
 
         if (nbt.contains("Gateways", 9)) {
