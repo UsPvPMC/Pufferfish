@@ -466,6 +466,12 @@ public class Commodore
                             super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, CB_PACKAGE + "/advancement/CraftAdvancement", "getDisplay0", desc, false);
                             return;
                         }
+                        if (owner.equals("org/bukkit/WorldCreator") && name.equals("keepSpawnLoaded") && desc.equals("(Lnet/kyori/adventure/util/TriState;)V")) {
+                            super.visitMethodInsn(opcode, owner, name, "(Lnet/kyori/adventure/util/TriState;)Lorg/bukkit/WorldCreator;", itf);
+                            // new method has a return, so, make sure we pop it
+                            super.visitInsn(Opcodes.POP);
+                            return;
+                        }
                         // Paper end
                         if ( modern )
                         {
