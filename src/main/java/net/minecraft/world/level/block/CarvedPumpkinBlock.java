@@ -90,7 +90,17 @@ public class CarvedPumpkinBlock extends HorizontalDirectionalBlock implements Eq
         // clearPatternBlocks(world, shapedetector_shapedetectorcollection); // CraftBukkit - moved down
         entity.moveTo((double) pos.getX() + 0.5D, (double) pos.getY() + 0.05D, (double) pos.getZ() + 0.5D, 0.0F, 0.0F);
         // CraftBukkit start
-        if (!world.addFreshEntity(entity, SpawnReason.BUILD_IRONGOLEM)) {
+        // Paper start - correct spawn reason
+        final SpawnReason spawnReason;
+        if (entity.getType() == EntityType.SNOW_GOLEM) {
+            spawnReason = SpawnReason.BUILD_SNOWMAN;
+        } else if (entity.getType() == EntityType.IRON_GOLEM) {
+            spawnReason = SpawnReason.BUILD_IRONGOLEM;
+        } else {
+            spawnReason = SpawnReason.DEFAULT;
+        }
+        if (!world.addFreshEntity(entity, spawnReason)) {
+        // Paper end
             return;
         }
         CarvedPumpkinBlock.clearPatternBlocks(world, patternResult); // CraftBukkit - from above

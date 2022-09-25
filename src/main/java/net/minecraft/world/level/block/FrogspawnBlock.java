@@ -110,7 +110,7 @@ public class FrogspawnBlock extends Block {
                 int k = random.nextInt(1, 361);
                 tadpole.moveTo(d, (double)pos.getY() - 0.5D, e, (float)k, 0.0F);
                 tadpole.setPersistenceRequired();
-                world.addFreshEntity(tadpole);
+                world.addFreshEntity(tadpole, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.EGG); // Paper
             }
         }
 
