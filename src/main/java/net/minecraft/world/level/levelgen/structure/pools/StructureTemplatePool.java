@@ -85,7 +85,13 @@ public class StructureTemplatePool {
     }
 
     public StructurePoolElement getRandomTemplate(RandomSource random) {
+        //Paper start - Prevent random.nextInt throwing an IllegalArgumentException
+        if (this.templates.size() == 0) {
+            return EmptyPoolElement.INSTANCE;
+        } else {
         return this.templates.get(random.nextInt(this.templates.size()));
+        }
+        // Paper end
     }
 
     public List<StructurePoolElement> getShuffledTemplates(RandomSource random) {
