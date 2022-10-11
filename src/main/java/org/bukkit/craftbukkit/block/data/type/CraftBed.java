@@ -22,4 +22,11 @@ public abstract class CraftBed extends CraftBlockData implements Bed {
     public boolean isOccupied() {
         return get(CraftBed.OCCUPIED);
     }
+
+    // Paper start
+    @Override
+    public void setOccupied(boolean occupied) {
+        set(CraftBed.OCCUPIED, occupied);
+    }
+    // Paper end
 }
