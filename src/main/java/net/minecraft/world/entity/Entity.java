@@ -1104,7 +1104,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
                     }
 
                     if (!bl.getType().isAir()) {
-                        VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, bl);
+                        VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, bl, org.bukkit.craftbukkit.util.CraftVector.toBukkit(moveVector)); // Paper - Expose pre-collision velocity
                         this.level.getCraftServer().getPluginManager().callEvent(event);
                     }
                 }
