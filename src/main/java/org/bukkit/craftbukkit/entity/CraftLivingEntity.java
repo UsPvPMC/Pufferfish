@@ -995,5 +995,11 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         }
         throw new IllegalArgumentException(entityCategory + " is an unrecognized entity category");
     }
+
+    @Override
+    public void knockback(double strength, double directionX, double directionZ) {
+        Preconditions.checkArgument(strength > 0, "Knockback strength must be > 0");
+        getHandle().knockback(strength, directionX, directionZ);
+    };
     // Paper end
 }
