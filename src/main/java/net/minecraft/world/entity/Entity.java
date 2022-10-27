@@ -398,6 +398,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
     @javax.annotation.Nullable
     private UUID originWorld;
     public boolean freezeLocked = false; // Paper - Freeze Tick Lock API
+    public boolean collidingWithWorldBorder; // Paper
 
     public void setOrigin(@javax.annotation.Nonnull Location location) {
         this.origin = location.toVector();
@@ -1392,7 +1393,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
             io.papermc.paper.util.CollisionUtil.getCollisions(world, this, collisionBox, potentialCollisions, false, this.level.paperConfig().chunks.preventMovingIntoUnloadedChunks,
                 false, false, null, null);
 
-            if (io.papermc.paper.util.CollisionUtil.isCollidingWithBorderEdge(world.getWorldBorder(), collisionBox)) {
+            if (collidingWithWorldBorder = io.papermc.paper.util.CollisionUtil.isCollidingWithBorderEdge(world.getWorldBorder(), collisionBox)) { // Paper - this line *is* correct, ignore the IDE warning about assignments being used as a condition
                 io.papermc.paper.util.CollisionUtil.addBoxesToIfIntersects(world.getWorldBorder().getCollisionShape(), collisionBox, potentialCollisions);
             }
 

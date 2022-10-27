@@ -84,7 +84,7 @@ public class Spider extends Monster {
     public void tick() {
         super.tick();
         if (!this.level.isClientSide) {
-            this.setClimbing(this.horizontalCollision);
+            this.setClimbing(this.horizontalCollision && (this.level.paperConfig().entities.behavior.allowSpiderWorldBorderClimbing || !collidingWithWorldBorder)); // Paper
         }
 
     }
