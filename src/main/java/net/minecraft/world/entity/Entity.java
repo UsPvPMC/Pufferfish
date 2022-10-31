@@ -3183,6 +3183,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
             pluginManager.callEvent(entityCombustEvent);
             if (!entityCombustEvent.isCancelled()) {
                 this.setSecondsOnFire(entityCombustEvent.getDuration(), false);
+            // Paper start - fix EntityCombustEvent cancellation.
+            } else {
+                this.setRemainingFireTicks(this.remainingFireTicks - 1);
+            // Paper end
             }
             // CraftBukkit end
         }

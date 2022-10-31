@@ -130,6 +130,10 @@ public abstract class BaseFireBlock extends Block {
 
                 if (!event.isCancelled()) {
                     entity.setSecondsOnFire(event.getDuration(), false);
+                    // Paper start - fix EntityCombustEvent cancellation.
+                } else {
+                    entity.setRemainingFireTicks(entity.getRemainingFireTicks() - 1);
+                    // Paper end
                 }
                 // CraftBukkit end
             }
