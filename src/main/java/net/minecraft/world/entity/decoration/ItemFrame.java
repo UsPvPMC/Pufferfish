@@ -288,7 +288,9 @@ public class ItemFrame extends HangingEntity {
     }
 
     private void removeFramedMap(ItemStack itemstack) {
-        this.getFramedMapId().ifPresent((i) -> {
+        // Paper start - fix MC-252817 (green map markers do not disappear)
+        this.getFramedMapIdFromItem(itemstack).ifPresent((i) -> {
+            // Paper end
             MapItemSavedData worldmap = MapItem.getSavedData(i, this.level);
 
             if (worldmap != null) {
@@ -306,7 +308,12 @@ public class ItemFrame extends HangingEntity {
 
     public OptionalInt getFramedMapId() {
         ItemStack itemstack = this.getItem();
+        // Paper start - fix MC-252817 (green map markers do not disappear)
+        return this.getFramedMapIdFromItem(itemstack);
+    }
 
+    public OptionalInt getFramedMapIdFromItem(ItemStack itemstack) {
+        // Paper end
         if (itemstack.is(Items.FILLED_MAP)) {
             Integer integer = MapItem.getMapId(itemstack);
 
