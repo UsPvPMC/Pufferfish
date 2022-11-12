@@ -68,7 +68,8 @@ public class EndDragonFight {
     private static final int GATEWAY_DISTANCE = 96;
     public static final int DRAGON_SPAWN_Y = 128;
     private static final Predicate<Entity> VALID_PLAYER = EntitySelector.ENTITY_STILL_ALIVE.and(EntitySelector.withinDistance(0.0D, 128.0D, 0.0D, 192.0D));
-    public final ServerBossEvent dragonEvent = (ServerBossEvent)(new ServerBossEvent(Component.translatable("entity.minecraft.ender_dragon"), BossEvent.BossBarColor.PINK, BossEvent.BossBarOverlay.PROGRESS)).setPlayBossMusic(true).setCreateWorldFog(true);
+    private static final Component DEFAULT_BOSS_EVENT_NAME = Component.translatable("entity.minecraft.ender_dragon"); // Paper
+    public final ServerBossEvent dragonEvent = (ServerBossEvent)(new ServerBossEvent(DEFAULT_BOSS_EVENT_NAME, BossEvent.BossBarColor.PINK, BossEvent.BossBarOverlay.PROGRESS)).setPlayBossMusic(true).setCreateWorldFog(true); // Paper
     public final ServerLevel level;
     private final ObjectArrayList<Integer> gateways = new ObjectArrayList<>();
     private final BlockPattern exitPortalPattern;
@@ -450,6 +451,10 @@ public class EndDragonFight {
             this.ticksSinceDragonSeen = 0;
             if (dragon.hasCustomName()) {
                 this.dragonEvent.setName(dragon.getDisplayName());
+                // Paper start - reset to default name
+            } else {
+                this.dragonEvent.setName(DEFAULT_BOSS_EVENT_NAME);
+                // Paper end
             }
         }
 
