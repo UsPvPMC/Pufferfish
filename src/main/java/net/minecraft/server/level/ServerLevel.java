@@ -2655,4 +2655,12 @@ public class ServerLevel extends Level implements WorldGenLevel {
             entity.updateDynamicGameEventListener(DynamicGameEventListener::move);
         }
     }
+
+    // Paper start
+    @Override
+    @Nullable
+    public Player getGlobalPlayerByUUID(UUID uuid) {
+        return this.server.getPlayerList().getPlayer(uuid);
+    }
+    // Paper end
 }

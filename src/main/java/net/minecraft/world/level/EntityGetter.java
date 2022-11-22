@@ -243,4 +243,11 @@ public interface EntityGetter {
 
         return null;
     }
+
+    // Paper start
+    @Nullable
+    default Player getGlobalPlayerByUUID(UUID uuid) {
+        return this.getPlayerByUUID(uuid);
+    }
+    // Paper end
 }

@@ -210,7 +210,7 @@ public abstract class Animal extends AgeableMob {
         if (this.loveCause == null) {
             return null;
         } else {
-            Player entityhuman = this.level.getPlayerByUUID(this.loveCause);
+            Player entityhuman = this.level.getGlobalPlayerByUUID(this.loveCause); // Paper - check all players
 
             return entityhuman instanceof ServerPlayer ? (ServerPlayer) entityhuman : null;
         }
