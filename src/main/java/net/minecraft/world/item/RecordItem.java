@@ -46,7 +46,7 @@ public class RecordItem extends Item {
             ItemStack itemstack = context.getItemInHand();
 
             if (!world.isClientSide) {
-                if (true) return InteractionResult.SUCCESS; // CraftBukkit - handled in ItemStack
+                if (true) return InteractionResult.sidedSuccess(world.isClientSide); // CraftBukkit - handled in ItemStack // Paper - fix duplicate animate packet
                 Player entityhuman = context.getPlayer();
                 BlockEntity tileentity = world.getBlockEntity(blockposition);
 
