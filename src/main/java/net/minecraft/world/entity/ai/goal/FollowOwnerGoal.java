@@ -93,7 +93,7 @@ public class FollowOwnerGoal extends Goal {
 
     @Override
     public void tick() {
-        this.tamable.getLookControl().setLookAt(this.owner, 10.0F, (float) this.tamable.getMaxHeadXRot());
+        if (this.tamable.distanceToSqr(this.owner) <= 16 * 16) this.tamable.getLookControl().setLookAt(this.owner, 10.0F, (float) this.tamable.getMaxHeadXRot()); // Paper
         if (--this.timeToRecalcPath <= 0) {
             this.timeToRecalcPath = this.adjustedTickDelay(10);
             if (this.tamable.distanceToSqr((Entity) this.owner) >= 144.0D) {
