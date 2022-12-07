@@ -362,7 +362,7 @@ public abstract class PlayerList {
         ((ServerLevel)player.level).getChunkSource().chunkMap.addEntity(player); // Paper - track entity now
         // CraftBukkit end
 
-        player.getEntityData().refresh(player); // CraftBukkit - BungeeCord#2321, send complete data to self on spawn
+        //player.getEntityData().refresh(player); // CraftBukkit - BungeeCord#2321, send complete data to self on spawn Paper - THIS IS NOT NEEDED ANYMORE
 
         this.sendLevelInfo(player, worldserver1);
 

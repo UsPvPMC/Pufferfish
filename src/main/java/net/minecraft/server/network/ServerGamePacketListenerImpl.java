@@ -2791,7 +2791,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
                             // Entity in bucket - SPIGOT-4048 and SPIGOT-6859a
                             if ((entity instanceof Bucketable && entity instanceof LivingEntity && origItem != null && origItem.asItem() == Items.WATER_BUCKET) && (event.isCancelled() || ServerGamePacketListenerImpl.this.player.getInventory().getSelected() == null || ServerGamePacketListenerImpl.this.player.getInventory().getSelected().getItem() != origItem)) {
-                                ServerGamePacketListenerImpl.this.send(new ClientboundAddEntityPacket(entity));
+                                entity.getEntityData().resendPossiblyDesyncedEntity(player); // Paper - The entire mob gets deleted, so resend it.
                                 player.containerMenu.sendAllDataToRemote();
                             }
 
