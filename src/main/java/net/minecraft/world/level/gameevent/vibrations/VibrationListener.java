@@ -99,7 +99,7 @@ public class VibrationListener implements GameEventListener {
                 return vibrationlistener.listenerRange;
             }), VibrationInfo.CODEC.optionalFieldOf("event").forGetter((vibrationlistener) -> {
                 return Optional.ofNullable(vibrationlistener.currentVibration);
-            }), VibrationSelector.CODEC.fieldOf("selector").forGetter((vibrationlistener) -> {
+            }), Codec.optionalField("selector", VibrationSelector.CODEC).xmap(o -> o.orElseGet(VibrationSelector::new), Optional::of).forGetter((vibrationlistener) -> { // Paper - fix MapLike spam for missing "selector" in 1.19.2
                 return vibrationlistener.selectionStrategy;
             }), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("event_delay").orElse(0).forGetter((vibrationlistener) -> {
                 return vibrationlistener.travelTimeInTicks;
