@@ -34,7 +34,7 @@ public class ShulkerBoxDispenseBehavior extends OptionalDispenseItemBehavior {
 
             // CraftBukkit start
             org.bukkit.block.Block bukkitBlock = pointer.getLevel().getWorld().getBlockAt(pointer.getPos().getX(), pointer.getPos().getY(), pointer.getPos().getZ());
-            CraftItemStack craftItem = CraftItemStack.asCraftMirror(stack);
+            CraftItemStack craftItem = CraftItemStack.asCraftMirror(stack.copyWithCount(1)); // Paper - single item in event
 
             BlockDispenseEvent event = new BlockDispenseEvent(bukkitBlock, craftItem.clone(), new org.bukkit.util.Vector(blockposition.getX(), blockposition.getY(), blockposition.getZ()));
             if (!DispenserBlock.eventFired) {

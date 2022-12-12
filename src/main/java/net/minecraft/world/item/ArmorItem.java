@@ -61,7 +61,7 @@ public class ArmorItem extends Item implements Equipable {
         } else {
             LivingEntity entityliving = (LivingEntity) list.get(0);
             EquipmentSlot enumitemslot = Mob.getEquipmentSlotForItem(armor);
-            ItemStack itemstack1 = armor.split(1);
+            ItemStack itemstack1 = armor.copyWithCount(1); // Paper - shrink below and single item in event
             // CraftBukkit start
             Level world = pointer.getLevel();
             org.bukkit.block.Block block = world.getWorld().getBlockAt(pointer.getPos().getX(), pointer.getPos().getY(), pointer.getPos().getZ());
@@ -73,12 +73,13 @@ public class ArmorItem extends Item implements Equipable {
             }
 
             if (event.isCancelled()) {
-                armor.grow(1);
+                // armor.grow(1); // Paper - shrink below
                 return false;
             }
 
+            boolean shrink = true; // Paper
             if (!event.getItem().equals(craftItem)) {
-                armor.grow(1);
+                shrink = false; // Paper - shrink below
                 // Chain to handler for new item
                 ItemStack eventStack = CraftItemStack.asNMSCopy(event.getItem());
                 DispenseItemBehavior idispensebehavior = (DispenseItemBehavior) DispenserBlock.DISPENSER_REGISTRY.get(eventStack.getItem());
@@ -95,6 +96,7 @@ public class ArmorItem extends Item implements Equipable {
                 ((Mob) entityliving).setPersistenceRequired();
             }
 
+            if (shrink) armor.shrink(1); // Paper
             return true;
         }
     }

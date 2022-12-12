@@ -28,7 +28,7 @@ public abstract class AbstractProjectileDispenseBehavior extends DefaultDispense
 
         // CraftBukkit start
         // iprojectile.shoot((double) enumdirection.getStepX(), (double) ((float) enumdirection.getStepY() + 0.1F), (double) enumdirection.getStepZ(), this.getPower(), this.getUncertainty());
-        ItemStack itemstack1 = stack.split(1);
+        ItemStack itemstack1 = stack.copyWithCount(1); // Paper - shrink below and single item in event
         org.bukkit.block.Block block = worldserver.getWorld().getBlockAt(pointer.getPos().getX(), pointer.getPos().getY(), pointer.getPos().getZ());
         CraftItemStack craftItem = CraftItemStack.asCraftMirror(itemstack1);
 
@@ -38,12 +38,13 @@ public abstract class AbstractProjectileDispenseBehavior extends DefaultDispense
         }
 
         if (event.isCancelled()) {
-            stack.grow(1);
+            // stack.grow(1); // Paper - shrink below
             return stack;
         }
 
+        boolean shrink = true; // Paper
         if (!event.getItem().equals(craftItem)) {
-            stack.grow(1);
+            shrink = false; // Paper - shrink below
             // Chain to handler for new item
             ItemStack eventStack = CraftItemStack.asNMSCopy(event.getItem());
             DispenseItemBehavior idispensebehavior = (DispenseItemBehavior) DispenserBlock.DISPENSER_REGISTRY.get(eventStack.getItem());
@@ -57,7 +58,7 @@ public abstract class AbstractProjectileDispenseBehavior extends DefaultDispense
         ((Entity) iprojectile).projectileSource = new org.bukkit.craftbukkit.projectiles.CraftBlockProjectileSource((DispenserBlockEntity) pointer.getEntity());
         // CraftBukkit end
         worldserver.addFreshEntity(iprojectile);
-        // itemstack.shrink(1); // CraftBukkit - Handled during event processing
+        if (shrink) stack.shrink(1); // Paper - actually handle here
         return stack;
     }
 

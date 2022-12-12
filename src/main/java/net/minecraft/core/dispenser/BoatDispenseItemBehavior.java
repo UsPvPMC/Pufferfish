@@ -53,7 +53,7 @@ public class BoatDispenseItemBehavior extends DefaultDispenseItemBehavior {
 
         // EntityBoat entityboat = new EntityBoat(worldserver, d0, d1 + d3, d2);
         // CraftBukkit start
-        ItemStack itemstack1 = stack.split(1);
+        ItemStack itemstack1 = stack.copyWithCount(1); // Paper - shrink at end and single item in event
         org.bukkit.block.Block block = worldserver.getWorld().getBlockAt(pointer.getPos().getX(), pointer.getPos().getY(), pointer.getPos().getZ());
         CraftItemStack craftItem = CraftItemStack.asCraftMirror(itemstack1);
 
@@ -63,12 +63,13 @@ public class BoatDispenseItemBehavior extends DefaultDispenseItemBehavior {
         }
 
         if (event.isCancelled()) {
-            stack.grow(1);
+            // stack.grow(1); // Paper - shrink below
             return stack;
         }
 
+        boolean shrink = true; // Paper
         if (!event.getItem().equals(craftItem)) {
-            stack.grow(1);
+            shrink = false; // Paper - shrink below
             // Chain to handler for new item
             ItemStack eventStack = CraftItemStack.asNMSCopy(event.getItem());
             DispenseItemBehavior idispensebehavior = (DispenseItemBehavior) DispenserBlock.DISPENSER_REGISTRY.get(eventStack.getItem());
@@ -83,8 +84,7 @@ public class BoatDispenseItemBehavior extends DefaultDispenseItemBehavior {
 
         ((Boat) object).setVariant(this.type);
         ((Boat) object).setYRot(enumdirection.toYRot());
-        if (!worldserver.addFreshEntity((Entity) object)) stack.grow(1); // CraftBukkit
-        // itemstack.shrink(1); // CraftBukkit - handled during event processing
+        if (worldserver.addFreshEntity((Entity) object) && shrink) stack.shrink(1); // Paper - if entity add was successful and supposed to shrink
         return stack;
     }
 
