@@ -105,6 +105,12 @@ public class PathPackResources extends AbstractPackResources {
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path)) {
             for(Path path2 : directoryStream) {
                 String string = path2.getFileName().toString();
+                // Paper start
+                if (!Files.isDirectory(path2)) {
+                    LOGGER.error("Invalid directory entry: {} in {}.", string, this.root, new java.nio.file.NotDirectoryException(string));
+                    continue;
+                }
+                // Paper end
                 if (string.equals(string.toLowerCase(Locale.ROOT))) {
                     set.add(string);
                 } else {
