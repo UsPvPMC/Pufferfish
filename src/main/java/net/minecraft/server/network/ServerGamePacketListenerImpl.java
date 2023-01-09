@@ -3626,7 +3626,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
         this.signedMessageDecoder = session.createMessageDecoder(this.player.getUUID());
         this.chatMessageChain.append((executor) -> {
             this.player.setChatSession(session);
-            this.server.getPlayerList().broadcastAll(new ClientboundPlayerInfoUpdatePacket(EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.INITIALIZE_CHAT), List.of(this.player)));
+            this.server.getPlayerList().broadcastAll(new ClientboundPlayerInfoUpdatePacket(EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.INITIALIZE_CHAT), List.of(this.player)), this.player); // Paper
             return CompletableFuture.completedFuture((Object) null);
         });
     }
