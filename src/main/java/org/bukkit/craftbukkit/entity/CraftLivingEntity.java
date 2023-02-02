@@ -1035,6 +1035,16 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         this.damageItemStack0(this.getHandle().getItemBySlot(nmsSlot), amount, nmsSlot);
     }
 
+    @Override
+    public float getBodyYaw() {
+        return this.getHandle().getVisualRotationYInDegrees();
+    }
+
+    @Override
+    public void setBodyYaw(float bodyYaw) {
+        this.getHandle().setYBodyRot(bodyYaw);
+    }
+
     private void damageItemStack0(net.minecraft.world.item.ItemStack nmsStack, int amount, net.minecraft.world.entity.EquipmentSlot slot) {
         nmsStack.hurtAndBreak(amount, this.getHandle(), livingEntity -> {
             if (slot != null) {
