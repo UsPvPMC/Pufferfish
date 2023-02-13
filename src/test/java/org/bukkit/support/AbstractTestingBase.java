@@ -53,6 +53,7 @@ public abstract class AbstractTestingBase {
         LayeredRegistryAccess<RegistryLayer> layers = RegistryLayer.createRegistryAccess();
         layers = WorldLoader.loadAndReplaceLayer(resourceManager, layers, RegistryLayer.WORLDGEN, RegistryDataLoader.WORLDGEN_REGISTRIES);
         REGISTRY_CUSTOM = layers.compositeAccess().freeze();
+        io.papermc.paper.testing.DummyServer.setup(); // Paper
         // Register vanilla pack
         DATA_PACK = ReloadableServerResources.loadResources(resourceManager, REGISTRY_CUSTOM, FeatureFlags.REGISTRY.allFlags(), Commands.CommandSelection.DEDICATED, 0, MoreExecutors.directExecutor(), MoreExecutors.directExecutor()).join();
         // Bind tags
@@ -60,7 +61,6 @@ public abstract class AbstractTestingBase {
         // Biome shortcut
         BIOMES = REGISTRY_CUSTOM.registryOrThrow(Registries.BIOME);
 
-        DummyServer.setup();
         DummyEnchantments.setup();
 
         ImmutableList.Builder<Material> builder = ImmutableList.builder();
