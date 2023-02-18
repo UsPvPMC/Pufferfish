@@ -532,6 +532,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
                 blockstate = CapturedBlockState.getTreeBlockState(this, pos, flags);
                 this.capturedBlockStates.put(pos.immutable(), blockstate);
             }
+            blockstate.setFlag(flags); // Paper - update the flag also
             blockstate.setData(state);
             return true;
         }
