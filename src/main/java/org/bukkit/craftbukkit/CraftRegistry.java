@@ -36,6 +36,7 @@ public class CraftRegistry<B extends Keyed, M> implements Registry<B> {
         if (bukkitClass == TrimPattern.class) {
             return new CraftRegistry<>(registryHolder.registryOrThrow(Registries.TRIM_PATTERN), CraftTrimPattern::new);
         }
+        // TODO registry modification API
 
         return null;
     }
