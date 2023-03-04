@@ -1,8 +1,8 @@
-pufferfish-api
-pufferfish-server
+pufferfish-api/
+pufferfish-server/
 
 build/
 .gradle/
 
 .idea/
-
+run/
