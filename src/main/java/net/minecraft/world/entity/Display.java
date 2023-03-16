@@ -827,7 +827,7 @@ public abstract class Display extends Entity {
             byte b = loadFlag((byte)0, nbt, "shadow", (byte)1);
             b = loadFlag(b, nbt, "see_through", (byte)2);
             b = loadFlag(b, nbt, "default_background", (byte)4);
-            Optional<Display.TextDisplay.Align> optional = Display.TextDisplay.Align.CODEC.decode(NbtOps.INSTANCE, nbt.get("alignment")).resultOrPartial(Util.prefix("Display entity", Display.LOGGER::error)).map(Pair::getFirst);
+            Optional<Display.TextDisplay.Align> optional = Display.TextDisplay.Align.CODEC.decode(NbtOps.INSTANCE, nbt.get("alignment")).result().map(Pair::getFirst); // Paper
             if (optional.isPresent()) {
                 byte var10000;
                 switch ((Display.TextDisplay.Align)optional.get()) {
