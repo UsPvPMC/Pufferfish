@@ -155,7 +155,7 @@ public class Interaction extends Entity implements Attackable, Targeting {
             if (entityhuman instanceof ServerPlayer) {
                 ServerPlayer entityplayer = (ServerPlayer) entityhuman;
 
-                CriteriaTriggers.PLAYER_HURT_ENTITY.trigger(entityplayer, this, source, (float) event.getFinalDamage(), 1.0F, false); // CraftBukkit
+                CriteriaTriggers.PLAYER_HURT_ENTITY.trigger(entityplayer, this, entityhuman.damageSources().generic(), 1.0F, (float) event.getFinalDamage(), false); // CraftBukkit // Paper - use correct source and fix taken/dealt param order
             }
 
             return !this.getResponse();
