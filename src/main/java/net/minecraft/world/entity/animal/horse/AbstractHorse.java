@@ -346,7 +346,15 @@ public abstract class AbstractHorse extends Animal implements ContainerListener,
     public void createInventory() {
         SimpleContainer inventorysubcontainer = this.inventory;
 
-        this.inventory = new SimpleContainer(this.getInventorySize(), (org.bukkit.entity.AbstractHorse) this.getBukkitEntity()); // CraftBukkit
+        // Paper start
+        this.inventory = new SimpleContainer(this.getInventorySize(), (org.bukkit.entity.AbstractHorse) this.getBukkitEntity()) // CraftBukkit
+        {
+            @Override
+            public org.bukkit.Location getLocation() {
+                return AbstractHorse.this.getBukkitEntity().getLocation();
+            }
+        };
+        // Paper end
         if (inventorysubcontainer != null) {
             inventorysubcontainer.removeListener(this);
             int i = Math.min(inventorysubcontainer.getContainerSize(), this.inventory.getContainerSize());
