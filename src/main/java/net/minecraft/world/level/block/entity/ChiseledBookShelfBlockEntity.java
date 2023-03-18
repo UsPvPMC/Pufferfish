@@ -146,7 +146,7 @@ public class ChiseledBookShelfBlockEntity extends BlockEntity implements Contain
 
     @Override
     public void setItem(int slot, ItemStack stack) {
-        if (stack.is(ItemTags.BOOKSHELF_BOOKS)) {
+        if (stack.isEmpty() || stack.is(ItemTags.BOOKSHELF_BOOKS)) { // Paper
             this.items.set(slot, stack);
             this.updateState(slot);
         }

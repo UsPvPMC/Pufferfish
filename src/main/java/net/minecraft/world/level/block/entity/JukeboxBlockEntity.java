@@ -183,6 +183,12 @@ public class JukeboxBlockEntity extends BlockEntity implements Clearable, Contai
 
     @Override
     public void setItem(int slot, ItemStack stack) {
+        // Paper start
+        if (stack.isEmpty()) {
+            this.removeItem(slot, 0);
+            return;
+        }
+        // Paper end
         if (stack.is(ItemTags.MUSIC_DISCS) && this.level != null) {
             this.items.set(slot, stack);
             this.setHasRecordBlockState((Entity) null, true);
