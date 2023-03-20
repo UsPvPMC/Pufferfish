@@ -632,6 +632,7 @@ public abstract class AbstractFurnaceBlockEntity extends BaseContainerBlockEntit
             Entry<ResourceLocation> entry = (Entry) objectiterator.next();
 
             worldserver.getRecipeManager().byKey((ResourceLocation) entry.getKey()).ifPresent((irecipe) -> {
+                if (!(irecipe instanceof AbstractCookingRecipe)) return; // Paper - don't process non-cooking recipes
                 list.add(irecipe);
                 AbstractFurnaceBlockEntity.createExperience(worldserver, vec3d, entry.getIntValue(), ((AbstractCookingRecipe) irecipe).getExperience(), blockposition, entityplayer, itemstack, amount); // CraftBukkit
             });
