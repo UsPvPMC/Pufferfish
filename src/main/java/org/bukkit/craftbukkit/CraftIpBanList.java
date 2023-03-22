@@ -64,7 +64,7 @@ public class CraftIpBanList implements org.bukkit.BanList {
     public boolean isBanned(String target) {
         Validate.notNull(target, "Target cannot be null");
 
-        return this.list.isBanned(InetSocketAddress.createUnresolved(target, 0));
+        return this.list.isBanned(target); // Paper - fix checking banned ips
     }
 
     @Override
