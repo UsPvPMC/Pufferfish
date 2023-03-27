@@ -388,6 +388,7 @@ public final class ItemStack {
                     }
                     for (CraftBlockState blockstate : blocks) {
                         world.setBlock(blockstate.getPosition(),blockstate.getHandle(), blockstate.getFlag()); // SPIGOT-7248 - manual update to avoid physics where appropriate
+                        if (blockstate instanceof org.bukkit.craftbukkit.block.CapturedBlockState capturedBlockState) capturedBlockState.checkTreeBlockHack(); // Paper
                     }
                     entityhuman.awardStat(Stats.ITEM_USED.get(item)); // SPIGOT-7236 - award stat
                 }

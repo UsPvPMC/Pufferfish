@@ -25,6 +25,12 @@ public final class CapturedBlockState extends CraftBlockState {
     public boolean update(boolean force, boolean applyPhysics) {
         boolean result = super.update(force, applyPhysics);
 
+        // Paper start
+        this.checkTreeBlockHack();
+        return result;
+    }
+    public void checkTreeBlockHack() {
+        // Paper end
         // SPIGOT-5537: Horrible hack to manually add bees given World.captureTreeGeneration does not support tiles
         if (this.treeBlock && getType() == Material.BEE_NEST) {
             WorldGenLevel generatoraccessseed = this.world.getHandle();
@@ -47,7 +53,7 @@ public final class CapturedBlockState extends CraftBlockState {
             // End copied block
         }
 
-        return result;
+        // Paper
     }
 
     public static CapturedBlockState getBlockState(Level world, BlockPos pos, int flag) {
