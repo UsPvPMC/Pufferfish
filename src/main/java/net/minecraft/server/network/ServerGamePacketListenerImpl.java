@@ -2125,6 +2125,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
     public void ackBlockChangesUpTo(int sequence) {
         if (sequence < 0) {
+            this.disconnect("Expected packet sequence nr >= 0", org.bukkit.event.player.PlayerKickEvent.Cause.ILLEGAL_ACTION); // Paper
             throw new IllegalArgumentException("Expected packet sequence nr >= 0");
         } else {
             this.ackBlockChangesUpTo = Math.max(sequence, this.ackBlockChangesUpTo);
