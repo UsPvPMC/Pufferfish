@@ -295,6 +295,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
     private final AtomicReference<Instant> lastChatTimeStamp;
     @Nullable
     private RemoteChatSession chatSession;
+    private boolean hasLoggedExpiry = false; // Paper
     private SignedMessageChain.Decoder signedMessageDecoder;
     private final LastSeenMessagesValidator lastSeenMessages;
     private final MessageSignatureCache messageSignatureCache;
@@ -434,6 +435,13 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
             this.player.resetLastActionTime(); // CraftBukkit - SPIGOT-854
             this.disconnect(Component.translatable("multiplayer.disconnect.idling"), org.bukkit.event.player.PlayerKickEvent.Cause.IDLING); // Paper - kick event cause
         }
+
+        // Paper start
+        if (!hasLoggedExpiry && this.chatSession != null && this.chatSession.profilePublicKey().data().hasExpired()) {
+            LOGGER.info("Player profile key for {} has expired!", this.player.getName().getString());
+            hasLoggedExpiry = true;
+        }
+        // Paper end
 
     }
 
@@ -3624,6 +3632,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
     private void resetPlayerChatState(RemoteChatSession session) {
         this.chatSession = session;
+        this.hasLoggedExpiry = false; // Paper
         this.signedMessageDecoder = session.createMessageDecoder(this.player.getUUID());
         this.chatMessageChain.append((executor) -> {
             this.player.setChatSession(session);
