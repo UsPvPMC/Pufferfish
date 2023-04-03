@@ -458,13 +458,7 @@ public final class ItemStack {
                         if (tileentity instanceof JukeboxBlockEntity) {
                             JukeboxBlockEntity tileentityjukebox = (JukeboxBlockEntity) tileentity;
 
-                            // There can only be one
-                            ItemStack record = this.copy();
-                            if (!record.isEmpty()) {
-                                record.setCount(1);
-                            }
-
-                            tileentityjukebox.setFirstItem(record);
+                            tileentityjukebox.setFirstItem(this.copy()); // Paper - sync this with record item, jukebox has now an inventory
                             world.gameEvent(GameEvent.BLOCK_CHANGE, blockposition, GameEvent.Context.of(entityhuman, world.getBlockState(blockposition)));
                         }
 
@@ -490,7 +484,7 @@ public final class ItemStack {
                     }
 
                     // SPIGOT-4678
-                    if (this.item instanceof SignItem && SignItem.openSign != null) {
+                    if ((this.item instanceof SignItem || this.item instanceof HangingSignItem) && SignItem.openSign != null) { // Paper - trigger the hanging sign text editor now
                         try {
                             entityhuman.openTextEdit((SignBlockEntity) world.getBlockEntity(SignItem.openSign));
                         } finally {

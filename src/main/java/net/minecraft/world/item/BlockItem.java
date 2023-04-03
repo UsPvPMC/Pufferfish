@@ -131,7 +131,7 @@ public class BlockItem extends Item {
 
                     SoundType soundeffecttype = iblockdata1.getSoundType();
 
-                    // world.playSound(entityhuman, blockposition, this.getPlaceSound(iblockdata1), SoundCategory.BLOCKS, (soundeffecttype.getVolume() + 1.0F) / 2.0F, soundeffecttype.getPitch() * 0.8F);
+                    if (entityhuman == null) world.playSound(entityhuman, blockposition, this.getPlaceSound(iblockdata1), net.minecraft.sounds.SoundSource.BLOCKS, (soundeffecttype.getVolume() + 1.0F) / 2.0F, soundeffecttype.getPitch() * 0.8F); // Paper - reintroduce this for the dispenser (i.e the shulker)
                     world.gameEvent(GameEvent.BLOCK_PLACE, blockposition, GameEvent.Context.of(entityhuman, iblockdata1));
                     if ((entityhuman == null || !entityhuman.getAbilities().instabuild) && itemstack != ItemStack.EMPTY) { // CraftBukkit
                         itemstack.shrink(1);
