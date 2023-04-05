@@ -1640,6 +1640,11 @@ public class ServerLevel extends Level implements WorldGenLevel {
 
     @Override
     public void gameEvent(GameEvent event, Vec3 emitterPos, GameEvent.Context emitter) {
+        // Paper start
+        if (this.getChunkIfLoadedImmediately((Mth.floor(emitterPos.x) >> 4), (Mth.floor(emitterPos.z) >> 4)) == null) {
+            return;
+        }
+        // Paper end
         this.gameEventDispatcher.post(event, emitterPos, emitter);
     }
 
