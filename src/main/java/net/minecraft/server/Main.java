@@ -301,7 +301,7 @@ public class Main {
                 /*
                 dedicatedserver1.setSingleplayerProfile(optionset.has(optionspec8) ? new GameProfile((UUID) null, (String) optionset.valueOf(optionspec8)) : null);
                 dedicatedserver1.setPort((Integer) optionset.valueOf(optionspec11));
-                dedicatedserver1.setDemo(optionset.has(optionspec2));
+                */dedicatedserver1.setDemo(optionset.has("demo"));/* // Paper - Restore setting the demo mode
                 dedicatedserver1.setId((String) optionset.valueOf(optionspec12));
                 */
                 boolean flag1 = !optionset.has("nogui") && !optionset.nonOptionArguments().contains("nogui");
