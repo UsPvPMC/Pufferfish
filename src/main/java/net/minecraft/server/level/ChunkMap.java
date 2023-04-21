@@ -612,7 +612,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 
     // Paper start - rewrite chunk system
     protected void saveIncrementally() {
-        this.level.chunkTaskScheduler.chunkHolderManager.autoSave(); // Paper - rewrite chunk system
+        // this.level.chunkTaskScheduler.chunkHolderManager.autoSave(); // Paper - rewrite chunk system
     }
     // Paper end - - rewrite chunk system
 

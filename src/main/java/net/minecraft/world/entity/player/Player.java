@@ -315,7 +315,7 @@ public abstract class Player extends LivingEntity {
             this.lastItemInMainHand = itemstack.copy();
         }
 
-        this.turtleHelmetTick();
+        // this.turtleHelmetTick();
         this.cooldowns.tick();
         this.updatePlayerPose();
     }

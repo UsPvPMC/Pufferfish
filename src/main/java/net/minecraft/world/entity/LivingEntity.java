@@ -410,7 +410,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
                     }
                 }
             }
-
+            /*
             if (this.isEyeInFluid(FluidTags.WATER) && !this.level.getBlockState(BlockPos.containing(this.getX(), this.getEyeY(), this.getZ())).is(Blocks.BUBBLE_COLUMN)) {
                 boolean flag1 = !this.canBreatheUnderwater() && !MobEffectUtil.hasWaterBreathing(this) && (!flag || !((net.minecraft.world.entity.player.Player) this).getAbilities().invulnerable);
 
@@ -447,6 +447,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
                     this.onChangedBlock(blockposition);
                 }
             }
+             */
         }
 
         if (this.isAlive() && (this.isInWaterRainOrBubble() || this.isInPowderSnow)) {
@@ -939,7 +940,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
 
             this.effectsDirty = false;
         }
-
+        /*
         int i = (Integer) this.entityData.get(LivingEntity.DATA_EFFECT_COLOR_ID);
         boolean flag = (Boolean) this.entityData.get(LivingEntity.DATA_EFFECT_AMBIENCE_ID);
 
@@ -964,7 +965,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
                 this.level.addParticle(flag ? ParticleTypes.AMBIENT_ENTITY_EFFECT : ParticleTypes.ENTITY_EFFECT, this.getRandomX(0.5D), this.getRandomY(), this.getRandomZ(0.5D), d0, d1, d2);
             }
         }
-
+         */
     }
 
     protected void updateInvisibilityStatus() {

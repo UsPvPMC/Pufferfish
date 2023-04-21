@@ -608,10 +608,12 @@ public class ServerChunkCache extends ChunkSource {
 
     // Paper start - duplicate save, but call incremental
     public void saveIncrementally() {
+        /*
         this.runDistanceManagerUpdates();
         try (co.aikar.timings.Timing timed = level.timings.chunkSaveData.startTiming()) { // Paper - Timings
             this.chunkMap.saveIncrementally();
         } // Paper - Timings
+         */
     }
     // Paper end
 

@@ -1308,6 +1308,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
 
     // Paper start - derived from below
     public void saveIncrementally(boolean doFull) {
+        /*
         ServerChunkCache chunkproviderserver = this.getChunkSource();
 
         if (doFull) {
@@ -1334,6 +1335,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
             }
             // CraftBukkit end
         }
+         */
     }
     // Paper end
 

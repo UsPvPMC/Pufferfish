@@ -845,6 +845,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         return this.saveAllChunks(suppressLogs, flush, force, false);
     }
     public boolean saveAllChunks(boolean suppressLogs, boolean flush, boolean force, boolean close) {
+        /*
         // Paper end - rewrite chunk system - add close param
         boolean flag3 = false;
 
@@ -872,6 +873,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         this.storageSource.saveDataTag(this.registryAccess(), this.worldData, this.getPlayerList().getSingleplayerData());
         */
         // CraftBukkit end
+        /*
         if (flush) {
             Iterator iterator1 = this.getAllLevels().iterator();
 
@@ -885,6 +887,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         }
 
         return flag3;
+        */
+        return false;
     }
 
     public boolean saveEverything(boolean suppressLogs, boolean flush, boolean force) {

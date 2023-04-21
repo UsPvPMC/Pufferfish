@@ -668,7 +668,7 @@ public class ServerPlayer extends Player {
         }
         // CraftBukkit end
         this.gameMode.tick();
-        this.wardenSpawnTracker.tick();
+        // this.wardenSpawnTracker.tick();
         --this.spawnInvulnerableTime;
         if (this.invulnerableTime > 0) {
             --this.invulnerableTime;
