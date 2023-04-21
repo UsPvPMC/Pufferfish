@@ -860,10 +860,11 @@ public abstract class LivingEntity extends Entity implements Attackable {
                 this.setPosToBed(blockposition);
             }
         }
-
+        /*
         if (nbt.contains("Brain", 10)) {
             this.brain = this.makeBrain(new Dynamic(NbtOps.INSTANCE, nbt.get("Brain")));
         }
+         */
 
     }
 

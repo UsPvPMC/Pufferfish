@@ -639,6 +639,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
         gameprofilerfiller.push("world border");
         this.getWorldBorder().tick();
         gameprofilerfiller.popPush("weather");
+        /*
         this.advanceWeatherCycle();
         int i = this.getGameRules().getInt(GameRules.RULE_PLAYERS_SLEEPING_PERCENTAGE);
         long j;
@@ -664,11 +665,12 @@ public class ServerLevel extends Level implements WorldGenLevel {
         }
 
         this.updateSkyBrightness();
+         */
         this.tickTime();
         gameprofilerfiller.popPush("tickPending");
         timings.scheduledBlocks.startTiming(); // Paper
         if (!this.isDebug()) {
-            j = this.getGameTime();
+            long j = this.getGameTime();
             gameprofilerfiller.push("blockTicks");
             this.blockTicks.tick(j, 65536, this::tickBlock);
             gameprofilerfiller.popPush("fluidTicks");
@@ -679,7 +681,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
 
         gameprofilerfiller.popPush("raid");
         this.timings.raids.startTiming(); // Paper - timings
-        this.raids.tick();
+        // this.raids.tick();
         this.timings.raids.stopTiming(); // Paper - timings
         gameprofilerfiller.popPush("chunkSource");
         this.timings.chunkProviderTick.startTiming(); // Paper - timings
@@ -700,11 +702,13 @@ public class ServerLevel extends Level implements WorldGenLevel {
         if (flag || this.emptyTime++ < 300) {
             gameprofilerfiller.push("entities");
             timings.tickEntities.startTiming(); // Spigot
+            /*
             if (this.dragonFight != null) {
                 gameprofilerfiller.push("dragonFight");
                 this.dragonFight.tick();
                 gameprofilerfiller.pop();
             }
+             */
 
             org.spigotmc.ActivationRange.activateEntities(this); // Spigot
             timings.entityTick.startTiming(); // Spigot
@@ -820,9 +824,10 @@ public class ServerLevel extends Level implements WorldGenLevel {
         ProfilerFiller gameprofilerfiller = this.getProfiler();
 
         gameprofilerfiller.push("thunder");
+        /*
         final BlockPos.MutableBlockPos blockposition = this.chunkTickMutablePosition; // Paper - use mutable to reduce allocation rate, final to force compile fail on change
 
-        if (!this.paperConfig().environment.disableThunder && flag && this.isThundering() && this.spigotConfig.thunderChance > 0 && /*this.random.nextInt(this.spigotConfig.thunderChance) == 0 &&*/ chunk.shouldDoLightning(this.random)) { // Spigot // Paper - disable thunder // Pufferfish - replace random with shouldDoLightning
+        if (!this.paperConfig().environment.disableThunder && flag && this.isThundering() && this.spigotConfig.thunderChance > 0 && /*this.random.nextInt(this.spigotConfig.thunderChance) == 0 &&*//* chunk.shouldDoLightning(this.random)) { // Spigot // Paper - disable thunder // Pufferfish - replace random with shouldDoLightning
             blockposition.set(this.findLightningTargetAround(this.getBlockRandomPos(j, 0, k, 15))); // Paper
             if (this.isRainingAt(blockposition)) {
                 DifficultyInstance difficultydamagescaler = this.getCurrentDifficultyAt(blockposition);
@@ -848,8 +853,10 @@ public class ServerLevel extends Level implements WorldGenLevel {
                 }
             }
         }
+        */
 
         gameprofilerfiller.popPush("iceandsnow");
+        /*
         int l;
 
         if (!this.paperConfig().environment.disableIceAndSnow && (this.currentIceAndSnowTick++ & 15) == 0) { // Paper - Disable ice and snow // Paper - optimise random ticking  // Pufferfish - optimize further random ticking
@@ -898,10 +905,12 @@ public class ServerLevel extends Level implements WorldGenLevel {
                 }
             }
         }
+         */
 
         // Paper start - optimise random block ticking
         gameprofilerfiller.popPush("randomTick");
         timings.chunkTicksBlocks.startTiming(); // Paper
+        /*
         if (randomTickSpeed > 0) {
             LevelChunkSection[] sections = chunk.getSections();
             int minSection = io.papermc.paper.util.WorldUtil.getMinSection(this);
@@ -934,6 +943,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
                 }
             }
         }
+         */
         // Paper end - optimise random block ticking
         timings.chunkTicksBlocks.stopTiming(); // Paper
         gameprofilerfiller.pop();
@@ -990,6 +1000,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
     }
 
     private void announceSleepStatus() {
+        /*
         if (this.canSleepThroughNights()) {
             if (!this.getServer().isSingleplayer() || this.getServer().isPublished()) {
                 int i = this.getGameRules().getInt(GameRules.RULE_PLAYERS_SLEEPING_PERCENTAGE);
@@ -1011,13 +1022,15 @@ public class ServerLevel extends Level implements WorldGenLevel {
 
             }
         }
+         */
     }
 
     public void updateSleepingPlayerList() {
+        /*
         if (!this.players.isEmpty() && this.sleepStatus.update(this.players)) {
             this.announceSleepStatus();
         }
-
+         */
     }
 
     @Override

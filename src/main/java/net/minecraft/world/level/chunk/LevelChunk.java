@@ -955,7 +955,7 @@ public class LevelChunk extends ChunkAccess {
         org.bukkit.Server server = this.level.getCraftServer();
         this.chunkHolder.getEntityChunk().callEntitiesUnloadEvent(); // Paper - rewrite chunk system
         org.bukkit.Chunk bukkitChunk = new org.bukkit.craftbukkit.CraftChunk(this);
-        org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(bukkitChunk, true); // Paper - rewrite chunk system - force save to true so that mustNotSave is correctly set below
+        org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(bukkitChunk, false); // Paper - rewrite chunk system - force save to true so that mustNotSave is correctly set below
         server.getPluginManager().callEvent(unloadEvent);
         // note: saving can be prevented, but not forced if no saving is actually required
         this.mustNotSave = !unloadEvent.isSaveChunk();

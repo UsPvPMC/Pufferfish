@@ -313,6 +313,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
 
     @Override
     public void spawnOriginalMobs(WorldGenRegion region) {
+        /*
         WorldgenRandom random = CustomChunkGenerator.getSeededRandom();
         int x = region.getCenter().x;
         int z = region.getCenter().z;
@@ -321,6 +322,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
         if (this.generator.shouldGenerateMobs(this.world.getWorld(), new RandomSourceWrapper.RandomWrapper(random), x, z)) {
             this.delegate.spawnOriginalMobs(region);
         }
+         */
     }
 
     @Override

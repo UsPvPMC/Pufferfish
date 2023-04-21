@@ -132,6 +132,7 @@ public final class NaturalSpawner {
     }
 
     public static void spawnForChunk(ServerLevel world, LevelChunk chunk, NaturalSpawner.SpawnState info, boolean spawnAnimals, boolean spawnMonsters, boolean rareSpawn) {
+        /*
         world.getProfiler().push("spawner");
         world.timings.mobSpawn.startTiming(); // Spigot
         MobCategory[] aenumcreaturetype = NaturalSpawner.SPAWNING_CATEGORIES;
@@ -190,6 +191,7 @@ public final class NaturalSpawner {
 
         world.timings.mobSpawn.stopTiming(); // Spigot
         world.getProfiler().pop();
+         */
     }
 
     // Paper start
@@ -204,32 +206,37 @@ public final class NaturalSpawner {
 
     public static void spawnCategoryForChunk(MobCategory group, ServerLevel world, LevelChunk chunk, NaturalSpawner.SpawnPredicate checker, NaturalSpawner.AfterSpawnCallback runner) {
         // Paper start - add parameters and int ret type
-        spawnCategoryForChunk(group, world, chunk, checker, runner, Integer.MAX_VALUE, null);
+        // spawnCategoryForChunk(group, world, chunk, checker, runner, Integer.MAX_VALUE, null);
     }
     public static int spawnCategoryForChunk(MobCategory group, ServerLevel world, LevelChunk chunk, NaturalSpawner.SpawnPredicate checker, NaturalSpawner.AfterSpawnCallback runner, int maxSpawns, Consumer<Entity> trackEntity) {
         // Paper end - add parameters and int ret type
+        /*
         BlockPos blockposition = NaturalSpawner.getRandomPosWithin(world, chunk);
 
         if (blockposition.getY() >= world.getMinBuildHeight() + 1) {
             return NaturalSpawner.spawnCategoryForPosition(group, world, chunk, blockposition, checker, runner, maxSpawns, trackEntity); // Paper
         }
+         */
         return 0; // Paper
     }
 
     @VisibleForDebug
     public static void spawnCategoryForPosition(MobCategory group, ServerLevel world, BlockPos pos) {
+        /*
         NaturalSpawner.spawnCategoryForPosition(group, world, world.getChunk(pos), pos, (entitytypes, blockposition1, ichunkaccess) -> {
             return true;
         }, (entityinsentient, ichunkaccess) -> {
         });
+         */
     }
 
     // Paper start - add maxSpawns parameter and return spawned mobs
     public static void spawnCategoryForPosition(MobCategory group, ServerLevel world, ChunkAccess chunk, BlockPos pos, NaturalSpawner.SpawnPredicate checker, NaturalSpawner.AfterSpawnCallback runner) {
-        spawnCategoryForPosition(group, world,chunk, pos, checker, runner, Integer.MAX_VALUE, null);
+        // spawnCategoryForPosition(group, world,chunk, pos, checker, runner, Integer.MAX_VALUE, null);
     }
     public static int spawnCategoryForPosition(MobCategory group, ServerLevel world, ChunkAccess chunk, BlockPos pos, NaturalSpawner.SpawnPredicate checker, NaturalSpawner.AfterSpawnCallback runner, int maxSpawns, Consumer<Entity> trackEntity) {
     // Paper end - add maxSpawns parameter and return spawned mobs
+        /*
         StructureManager structuremanager = world.structureManager();
         ChunkGenerator chunkgenerator = world.getChunkSource().getGenerator();
         int i = pos.getY();
@@ -331,6 +338,8 @@ public final class NaturalSpawner {
 
         }
         return j; // Paper
+         */
+        return 0;
     }
 
     private static boolean isRightDistanceToPlayerAndSpawnPoint(ServerLevel world, ChunkAccess chunk, BlockPos.MutableBlockPos pos, double squaredDistance) {
@@ -457,6 +466,7 @@ public final class NaturalSpawner {
     }
 
     public static void spawnMobsForChunkGeneration(ServerLevelAccessor world, Holder<Biome> biomeEntry, ChunkPos chunkPos, RandomSource random) {
+        /*
         MobSpawnSettings biomesettingsmobs = ((Biome) biomeEntry.value()).getMobSettings();
         WeightedRandomList<MobSpawnSettings.SpawnerData> weightedrandomlist = biomesettingsmobs.getMobs(MobCategory.CREATURE);
 
@@ -528,6 +538,7 @@ public final class NaturalSpawner {
             }
 
         }
+         */
     }
 
     private static BlockPos getTopNonCollidingPos(LevelReader world, EntityType<?> entityType, int x, int z) {

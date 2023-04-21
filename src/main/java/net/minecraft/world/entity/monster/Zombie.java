@@ -315,11 +315,12 @@ public class Zombie extends Monster {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+
         if (!super.hurt(source, amount)) {
             return false;
-        } else if (!(this.level instanceof ServerLevel)) {
-            return false;
         } else {
+            return this.level instanceof ServerLevel;
+        } /*else {
             ServerLevel worldserver = (ServerLevel) this.level;
             LivingEntity entityliving = this.getTarget();
 
@@ -357,6 +358,7 @@ public class Zombie extends Monster {
 
             return true;
         }
+        */
     }
 
     @Override

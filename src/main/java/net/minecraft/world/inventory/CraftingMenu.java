@@ -72,6 +72,7 @@ public class CraftingMenu extends RecipeBookMenu<CraftingContainer> {
     }
 
     protected static void slotChangedCraftingGrid(AbstractContainerMenu handler, Level world, Player player, CraftingContainer craftingInventory, ResultContainer resultInventory) {
+        /*
         if (!world.isClientSide) {
             ServerPlayer entityplayer = (ServerPlayer) player;
             ItemStack itemstack = ItemStack.EMPTY;
@@ -94,13 +95,16 @@ public class CraftingMenu extends RecipeBookMenu<CraftingContainer> {
             handler.setRemoteSlot(0, itemstack);
             entityplayer.connection.send(new ClientboundContainerSetSlotPacket(handler.containerId, handler.incrementStateId(), 0, itemstack));
         }
+         */
     }
 
     @Override
     public void slotsChanged(Container inventory) {
+        /*
         this.access.execute((world, blockposition) -> {
             CraftingMenu.slotChangedCraftingGrid(this, world, this.player, this.craftSlots, this.resultSlots);
         });
+         */
     }
 
     @Override

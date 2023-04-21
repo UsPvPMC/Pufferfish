@@ -407,6 +407,7 @@ public final class NoiseBasedChunkGenerator extends ChunkGenerator {
 
     @Override
     public void spawnOriginalMobs(WorldGenRegion region) {
+        /*
         if (!((NoiseGeneratorSettings) this.settings.value()).disableMobGeneration()) {
             ChunkPos chunkcoordintpair = region.getCenter();
             Holder<Biome> holder = region.getBiome(chunkcoordintpair.getWorldPosition().atY(region.getMaxBuildHeight() - 1));
@@ -415,5 +416,6 @@ public final class NoiseBasedChunkGenerator extends ChunkGenerator {
             seededrandom.setDecorationSeed(region.getSeed(), chunkcoordintpair.getMinBlockX(), chunkcoordintpair.getMinBlockZ());
             NaturalSpawner.spawnMobsForChunkGeneration(region, holder, chunkcoordintpair, seededrandom);
         }
+         */
     }
 }

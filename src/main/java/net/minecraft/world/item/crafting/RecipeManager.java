@@ -50,6 +50,7 @@ public class RecipeManager extends SimpleJsonResourceReloadListener {
 
     protected void apply(Map<ResourceLocation, JsonElement> prepared, ResourceManager manager, ProfilerFiller profiler) {
         this.hasErrors = false;
+        /*
         // CraftBukkit start - SPIGOT-5667 make sure all types are populated and mutable
         Map<RecipeType<?>, Object2ObjectLinkedOpenHashMap<ResourceLocation, Recipe<?>>> map1 = Maps.newHashMap();
         for (RecipeType<?> recipeType : BuiltInRegistries.RECIPE_TYPE) {
@@ -82,6 +83,7 @@ public class RecipeManager extends SimpleJsonResourceReloadListener {
         }));
         this.byName = Maps.newHashMap(builder.build()); // CraftBukkit
         RecipeManager.LOGGER.info("Loaded {} recipes", map1.size());
+         */
     }
 
     // CraftBukkit start

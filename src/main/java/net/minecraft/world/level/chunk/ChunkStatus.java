@@ -183,10 +183,11 @@ public class ChunkStatus {
         return ChunkStatus.lightChunk(chunkstatus, lightenginethreaded, ichunkaccess);
     });
     public static final ChunkStatus SPAWN = ChunkStatus.registerSimple("spawn", ChunkStatus.LIGHT, 0, ChunkStatus.POST_FEATURES, ChunkStatus.ChunkType.PROTOCHUNK, (chunkstatus, worldserver, chunkgenerator, list, ichunkaccess) -> {
+        /*
         if (!ichunkaccess.isUpgrading()) {
             chunkgenerator.spawnOriginalMobs(new WorldGenRegion(worldserver, list, chunkstatus, -1));
         }
-
+         */
     });
     public static final ChunkStatus HEIGHTMAPS = ChunkStatus.registerSimple("heightmaps", ChunkStatus.SPAWN, 0, ChunkStatus.POST_FEATURES, ChunkStatus.ChunkType.PROTOCHUNK, (chunkstatus, worldserver, chunkgenerator, list, ichunkaccess) -> {
     });

@@ -767,6 +767,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         // WorldServer worldserver = this.overworld();
         this.forceTicks = true;
         // CraftBukkit end
+        /*
         if (worldserver.getWorld().getKeepSpawnInMemory()) { // Paper
 
         MinecraftServer.LOGGER.info("Preparing start region for dimension {}", worldserver.dimension().location());
@@ -791,6 +792,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         this.executeModerately();
         // Iterator iterator = this.levels.values().iterator();
         }
+         */
 
         if (true) {
             ServerLevel worldserver1 = worldserver;
@@ -813,7 +815,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         // this.nextTickTime = SystemUtils.getMillis() + 10L;
         this.executeModerately();
         // CraftBukkit end
-        if (worldserver.getWorld().getKeepSpawnInMemory()) worldloadlistener.stop(); // Paper
+        // if (worldserver.getWorld().getKeepSpawnInMemory()) worldloadlistener.stop(); // Paper
         chunkproviderserver.getLightEngine().setTaskPerBatch(worldserver.paperConfig().misc.lightQueueSize); // Paper - increase light queue size
         // CraftBukkit start
         // this.updateMobSpawningFlags();
@@ -853,7 +855,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                 MinecraftServer.LOGGER.info("Saving chunks for level '{}'/{}", worldserver, worldserver.dimension().location());
             }
             // Paper start - rewrite chunk system
-            worldserver.save((ProgressListener) null, flush, worldserver.noSave && !force, close);
+            // worldserver.save((ProgressListener) null, flush, worldserver.noSave && !force, close);
             if (flush) {
                 MinecraftServer.LOGGER.info("ThreadedAnvilChunkStorage ({}): All chunks are saved", worldserver.getChunkSource().chunkMap.getStorageName());
             }
@@ -961,7 +963,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             this.playerList.removeAll(this.isRestarting); // Paper
             try { Thread.sleep(100); } catch (InterruptedException ex) {} // CraftBukkit - SPIGOT-625 - give server at least a chance to send packets
         }
-
+        /*
         MinecraftServer.LOGGER.info("Saving worlds");
         Iterator iterator = this.getAllLevels().iterator();
 
@@ -975,7 +977,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         }
 
         this.saveAllChunks(false, true, false, true); // Paper - rewrite chunk system - move closing into here
-
+         */
         this.isSaving = false;
         this.resources.close();
 
@@ -1408,6 +1410,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
             playerSaveInterval = autosavePeriod;
         }
         this.profiler.push("save");
+        /*
         final boolean fullSave = autosavePeriod > 0 && this.tickCount % autosavePeriod == 0;
         try {
             this.isSaving = true;
@@ -1422,6 +1425,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
         } finally {
             this.isSaving = false;
         }
+         */
         this.profiler.pop();
         // Paper end
         io.papermc.paper.util.CachedLists.reset(); // Paper

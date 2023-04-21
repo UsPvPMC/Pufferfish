@@ -68,6 +68,7 @@ public class ThrownEnderpearl extends ThrowableItemProjectile {
                     Bukkit.getPluginManager().callEvent(teleEvent);
 
                     if (!teleEvent.isCancelled() && entityplayer.connection.isAcceptingMessages()) {
+                        /*
                         if (this.random.nextFloat() < 0.05F && this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)) {
                             Endermite entityendermite = (Endermite) EntityType.ENDERMITE.create(this.level);
 
@@ -76,6 +77,7 @@ public class ThrownEnderpearl extends ThrowableItemProjectile {
                                 this.level.addFreshEntity(entityendermite, CreatureSpawnEvent.SpawnReason.ENDER_PEARL);
                             }
                         }
+                         */
 
                         if (entity.isPassenger()) {
                             entity.stopRiding();

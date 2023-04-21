@@ -712,6 +712,7 @@ public class ServerChunkCache extends ChunkSource {
 
             gameprofilerfiller.push("naturalSpawnCount");
             this.level.timings.countNaturalMobs.startTiming(); // Paper - timings
+            /*
             int l = this.distanceManager.getNaturalSpawnChunkCount();
             // Paper start - per player mob spawning
             NaturalSpawner.SpawnState spawnercreature_d; // moved down
@@ -731,6 +732,7 @@ public class ServerChunkCache extends ChunkSource {
                 _pufferfish_spawnCountsReady.set(true);
                 // Pufferfish end
             }
+             */
             // Paper end
             this.level.timings.countNaturalMobs.stopTiming(); // Paper - timings
 
@@ -742,6 +744,7 @@ public class ServerChunkCache extends ChunkSource {
             // Paper - moved down
 
             gameprofilerfiller.popPush("spawnAndTick");
+            /*
             boolean flag2 = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING) && !this.level.players().isEmpty(); // CraftBukkit
 
             // Paper - only shuffle if per-player mob spawning is disabled
@@ -790,14 +793,17 @@ public class ServerChunkCache extends ChunkSource {
                     safeIterator.finishedIterating();
                 }
             }
+             */
             // Paper end - optimise chunk tick iteration
             this.level.timings.chunkTicks.stopTiming(); // Paper
             gameprofilerfiller.popPush("customSpawners");
+            /*
             if (flag2) {
                 try (co.aikar.timings.Timing ignored = this.level.timings.miscMobSpawning.startTiming()) { // Paper - timings
                 this.level.tickCustomSpawners(this.spawnEnemies, this.spawnFriendlies);
                 } // Paper - timings
             }
+             */
             gameprofilerfiller.pop();
             // Paper start - use set of chunks requiring updates, rather than iterating every single one loaded
             gameprofilerfiller.popPush("broadcast");
@@ -837,6 +843,7 @@ public class ServerChunkCache extends ChunkSource {
         }
     
         // Pufferfish start - optimize mob spawning
+        /*
         if (gg.pufferfish.pufferfish.PufferfishConfig.enableAsyncMobSpawning) {
             for (ServerPlayer player : this.level.players) {
                 Arrays.fill(player.mobCounts, 0);
@@ -858,6 +865,7 @@ public class ServerChunkCache extends ChunkSource {
                 });
             }
         }
+         */
         // Pufferfish end
     }
 

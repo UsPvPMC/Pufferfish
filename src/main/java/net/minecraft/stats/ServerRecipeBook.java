@@ -114,6 +114,7 @@ public class ServerRecipeBook extends RecipeBook {
     }
 
     private void loadRecipes(ListTag list, Consumer<Recipe<?>> handler, RecipeManager recipeManager) {
+        /*
         for (int i = 0; i < list.size(); ++i) {
             String s = list.getString(i);
 
@@ -130,7 +131,7 @@ public class ServerRecipeBook extends RecipeBook {
                 ServerRecipeBook.LOGGER.error("Tried to load improperly formatted recipe: {} removed now.", s);
             }
         }
-
+         */
     }
 
     public void sendInitialRecipeBook(ServerPlayer player) {

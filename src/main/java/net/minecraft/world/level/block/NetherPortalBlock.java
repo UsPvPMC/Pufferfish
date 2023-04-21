@@ -52,6 +52,7 @@ public class NetherPortalBlock extends Block {
 
     @Override
     public void randomTick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+        /*
         if (world.spigotConfig.enableZombiePigmenPortalSpawns && world.dimensionType().natural() && world.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING) && random.nextInt(2000) < world.getDifficulty().getId()) { // Spigot
             while (world.getBlockState(pos).is((Block) this)) {
                 pos = pos.below();
@@ -68,7 +69,7 @@ public class NetherPortalBlock extends Block {
                 }
             }
         }
-
+         */
     }
 
     @Override

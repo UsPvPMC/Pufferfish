@@ -516,7 +516,7 @@ public final class RegionFileIOThread extends PrioritisedQueueExecutorThread {
      */
     public static void scheduleSave(final ServerLevel world, final int chunkX, final int chunkZ, final CompoundTag data,
                                     final RegionFileType type) {
-        RegionFileIOThread.scheduleSave(world, chunkX, chunkZ, data, type, PrioritisedExecutor.Priority.NORMAL);
+        // RegionFileIOThread.scheduleSave(world, chunkX, chunkZ, data, type, PrioritisedExecutor.Priority.NORMAL);
     }
 
     /**
@@ -543,8 +543,8 @@ public final class RegionFileIOThread extends PrioritisedQueueExecutorThread {
      */
     public static void scheduleSave(final ServerLevel world, final int chunkX, final int chunkZ, final CompoundTag data,
                                     final RegionFileType type, final PrioritisedExecutor.Priority priority) {
-        final RegionFileIOThread thread = RegionFileIOThread.selectThread(world, chunkX, chunkZ, type);
-        thread.scheduleSaveInternal(world, chunkX, chunkZ, data, type, priority);
+        // final RegionFileIOThread thread = RegionFileIOThread.selectThread(world, chunkX, chunkZ, type);
+        // thread.scheduleSaveInternal(world, chunkX, chunkZ, data, type, priority);
     }
 
     void scheduleSaveInternal(final ServerLevel world, final int chunkX, final int chunkZ, final CompoundTag data,
