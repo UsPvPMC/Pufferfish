@@ -1,0 +1,150 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Pyrbu <pyrmcserver@gmail.com>
+Date: Fri, 21 Apr 2023 23:47:41 +0100
+Subject: [PATCH] optimize more
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index fe5f2d0f7fd8270c1a78dfeba6a982d42338d5e5..158657783079207f8ba47ec889374d1df1b6632c 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -845,6 +845,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         return this.saveAllChunks(suppressLogs, flush, force, false);
+     }
+     public boolean saveAllChunks(boolean suppressLogs, boolean flush, boolean force, boolean close) {
++        /*
+         // Paper end - rewrite chunk system - add close param
+         boolean flag3 = false;
+ 
+@@ -872,6 +873,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         this.storageSource.saveDataTag(this.registryAccess(), this.worldData, this.getPlayerList().getSingleplayerData());
+         */
+         // CraftBukkit end
++        /*
+         if (flush) {
+             Iterator iterator1 = this.getAllLevels().iterator();
+ 
+@@ -885,6 +887,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         }
+ 
+         return flag3;
++        */
++        return false;
+     }
+ 
+     public boolean saveEverything(boolean suppressLogs, boolean flush, boolean force) {
+diff --git a/src/main/java/net/minecraft/server/level/ChunkMap.java b/src/main/java/net/minecraft/server/level/ChunkMap.java
+index 3ce4dbf4eed442d89d6bbc8e4c6a000172041da5..98d3637d4fa6430e0aa1bee14d5093aa7fdac6de 100644
+--- a/src/main/java/net/minecraft/server/level/ChunkMap.java
++++ b/src/main/java/net/minecraft/server/level/ChunkMap.java
+@@ -612,7 +612,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
+ 
+     // Paper start - rewrite chunk system
+     protected void saveIncrementally() {
+-        this.level.chunkTaskScheduler.chunkHolderManager.autoSave(); // Paper - rewrite chunk system
++        // this.level.chunkTaskScheduler.chunkHolderManager.autoSave(); // Paper - rewrite chunk system
+     }
+     // Paper end - - rewrite chunk system
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerChunkCache.java b/src/main/java/net/minecraft/server/level/ServerChunkCache.java
+index 2ffe61fe1c724d5926d0f6f6815ca76d97d7ccdb..222225c913fb0841c673de8c25dad34948a0ff66 100644
+--- a/src/main/java/net/minecraft/server/level/ServerChunkCache.java
++++ b/src/main/java/net/minecraft/server/level/ServerChunkCache.java
+@@ -608,10 +608,12 @@ public class ServerChunkCache extends ChunkSource {
+ 
+     // Paper start - duplicate save, but call incremental
+     public void saveIncrementally() {
++        /*
+         this.runDistanceManagerUpdates();
+         try (co.aikar.timings.Timing timed = level.timings.chunkSaveData.startTiming()) { // Paper - Timings
+             this.chunkMap.saveIncrementally();
+         } // Paper - Timings
++         */
+     }
+     // Paper end
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
+index fd17b94ece5c1344eb6d30c952912300920fad72..7994a8c10d6b3c4ca7c75a964874af0a3eea8149 100644
+--- a/src/main/java/net/minecraft/server/level/ServerLevel.java
++++ b/src/main/java/net/minecraft/server/level/ServerLevel.java
+@@ -1308,6 +1308,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
+ 
+     // Paper start - derived from below
+     public void saveIncrementally(boolean doFull) {
++        /*
+         ServerChunkCache chunkproviderserver = this.getChunkSource();
+ 
+         if (doFull) {
+@@ -1334,6 +1335,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
+             }
+             // CraftBukkit end
+         }
++         */
+     }
+     // Paper end
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index 1d4d02f26391ac55c7631817f09d05e2769b0d29..b84aaa5d1bebce80e1f872c910376066ac439d97 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -668,7 +668,7 @@ public class ServerPlayer extends Player {
+         }
+         // CraftBukkit end
+         this.gameMode.tick();
+-        this.wardenSpawnTracker.tick();
++        // this.wardenSpawnTracker.tick();
+         --this.spawnInvulnerableTime;
+         if (this.invulnerableTime > 0) {
+             --this.invulnerableTime;
+diff --git a/src/main/java/net/minecraft/world/entity/LivingEntity.java b/src/main/java/net/minecraft/world/entity/LivingEntity.java
+index 560534dc8950ba151c4f87bcba56cf6fabb6556f..65f36bed5ace97460fef1ad78778222875c24aa4 100644
+--- a/src/main/java/net/minecraft/world/entity/LivingEntity.java
++++ b/src/main/java/net/minecraft/world/entity/LivingEntity.java
+@@ -410,7 +410,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
+                     }
+                 }
+             }
+-
++            /*
+             if (this.isEyeInFluid(FluidTags.WATER) && !this.level.getBlockState(BlockPos.containing(this.getX(), this.getEyeY(), this.getZ())).is(Blocks.BUBBLE_COLUMN)) {
+                 boolean flag1 = !this.canBreatheUnderwater() && !MobEffectUtil.hasWaterBreathing(this) && (!flag || !((net.minecraft.world.entity.player.Player) this).getAbilities().invulnerable);
+ 
+@@ -447,6 +447,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
+                     this.onChangedBlock(blockposition);
+                 }
+             }
++             */
+         }
+ 
+         if (this.isAlive() && (this.isInWaterRainOrBubble() || this.isInPowderSnow)) {
+@@ -939,7 +940,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
+ 
+             this.effectsDirty = false;
+         }
+-
++        /*
+         int i = (Integer) this.entityData.get(LivingEntity.DATA_EFFECT_COLOR_ID);
+         boolean flag = (Boolean) this.entityData.get(LivingEntity.DATA_EFFECT_AMBIENCE_ID);
+ 
+@@ -964,7 +965,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
+                 this.level.addParticle(flag ? ParticleTypes.AMBIENT_ENTITY_EFFECT : ParticleTypes.ENTITY_EFFECT, this.getRandomX(0.5D), this.getRandomY(), this.getRandomZ(0.5D), d0, d1, d2);
+             }
+         }
+-
++         */
+     }
+ 
+     protected void updateInvisibilityStatus() {
+diff --git a/src/main/java/net/minecraft/world/entity/player/Player.java b/src/main/java/net/minecraft/world/entity/player/Player.java
+index 0629c471d38a77c44fc1c86ccdfcb0690f61ca17..73e068825a94ae5842a281727edd657a224ce6ab 100644
+--- a/src/main/java/net/minecraft/world/entity/player/Player.java
++++ b/src/main/java/net/minecraft/world/entity/player/Player.java
+@@ -315,7 +315,7 @@ public abstract class Player extends LivingEntity {
+             this.lastItemInMainHand = itemstack.copy();
+         }
+ 
+-        this.turtleHelmetTick();
++        // this.turtleHelmetTick();
+         this.cooldowns.tick();
+         this.updatePlayerPose();
+     }
