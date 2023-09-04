@@ -757,7 +757,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
 
     public void setupCompression(int compressionThreshold, boolean rejectsBadPackets) {
         if (compressionThreshold >= 0) {
-            com.velocitypowered.natives.compression.VelocityCompressor compressor = com.velocitypowered.natives.util.Natives.compress.get().create(-1); // Paper
+            com.velocitypowered.natives.compression.VelocityCompressor compressor = com.velocitypowered.natives.util.Natives.compress.get().create(1); // Paper
             if (this.channel.pipeline().get("decompress") instanceof CompressionDecoder) {
                 ((CompressionDecoder) this.channel.pipeline().get("decompress")).setThreshold(compressionThreshold, rejectsBadPackets);
             } else {
