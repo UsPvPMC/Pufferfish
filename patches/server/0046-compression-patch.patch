@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Pyrbu <pyrmcserver@gmail.com>
+Date: Tue, 5 Sep 2023 01:27:53 +0200
+Subject: [PATCH] compression patch
+
+
+diff --git a/src/main/java/net/minecraft/network/Connection.java b/src/main/java/net/minecraft/network/Connection.java
+index fa1d325034dafdb9f1da546a6f9c5e88d2b67749..653fa063bb37bac6ea187fe7e06b60d065b24add 100644
+--- a/src/main/java/net/minecraft/network/Connection.java
++++ b/src/main/java/net/minecraft/network/Connection.java
+@@ -757,7 +757,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+ 
+     public void setupCompression(int compressionThreshold, boolean rejectsBadPackets) {
+         if (compressionThreshold >= 0) {
+-            com.velocitypowered.natives.compression.VelocityCompressor compressor = com.velocitypowered.natives.util.Natives.compress.get().create(-1); // Paper
++            com.velocitypowered.natives.compression.VelocityCompressor compressor = com.velocitypowered.natives.util.Natives.compress.get().create(1); // Paper
+             if (this.channel.pipeline().get("decompress") instanceof CompressionDecoder) {
+                 ((CompressionDecoder) this.channel.pipeline().get("decompress")).setThreshold(compressionThreshold, rejectsBadPackets);
+             } else {
