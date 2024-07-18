@@ -2384,8 +2384,14 @@ public class CraftWorld extends CraftRegionAccessor implements World {
         io.papermc.paper.chunk.system.ChunkSystem.scheduleChunkLoad(this.getHandle(), x, z, gen, ChunkStatus.FULL, true, priority, (c) -> {
             net.minecraft.server.MinecraftServer.getServer().scheduleOnMain(() -> {
                 net.minecraft.world.level.chunk.LevelChunk chunk = (net.minecraft.world.level.chunk.LevelChunk)c;
-                if (chunk != null) this.addTicket(x, z); // Paper
+                if (chunk != null) this.addTicket(x, z); // Paper.
+                if(chunk != null) {
+                    getHandle().chunkSource.addLoadedChunk(chunk);
+                }
                 ret.complete(chunk == null ? null : new CraftChunk(chunk));
+                if(chunk != null) {
+                    getHandle().chunkSource.removeLoadedChunk(chunk);
+                }
             });
         });
 

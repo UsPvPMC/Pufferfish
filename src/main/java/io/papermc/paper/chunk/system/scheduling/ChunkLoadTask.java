@@ -8,9 +8,11 @@ import ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry;
 import com.mojang.logging.LogUtils;
 import io.papermc.paper.chunk.system.io.RegionFileIOThread;
 import io.papermc.paper.chunk.system.poi.PoiChunk;
+import io.papermc.paper.util.TickThread;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -24,6 +26,8 @@ import net.minecraft.world.level.levelgen.blending.BlendingData;
 import org.slf4j.Logger;
 import java.lang.invoke.VarHandle;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -60,8 +64,14 @@ public final class ChunkLoadTask extends ChunkProgressionTask {
         return this.scheduled;
     }
 
+    private static final ExecutorService service = Executors.newSingleThreadExecutor();
+
     @Override
     public void schedule() {
+        if(TickThread.isTickThread()) {
+            service.execute(this::schedule); // schedule properly.
+            return;
+        }
         final NewChunkHolder.GenericDataLoadTaskCallback entityLoadTask;
         final NewChunkHolder.GenericDataLoadTaskCallback poiLoadTask;
 
