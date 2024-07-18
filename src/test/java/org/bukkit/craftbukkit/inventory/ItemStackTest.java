@@ -41,11 +41,11 @@ public class ItemStackTest extends AbstractTestingBase {
         }
 
         ItemStack bukkit() {
-            return operate(cleanStack(material, false));
+            return this.operate(StackProvider.cleanStack(this.material, false));
         }
 
         ItemStack craft() {
-            return operate(cleanStack(material, true));
+            return this.operate(StackProvider.cleanStack(this.material, true));
         }
 
         abstract ItemStack operate(ItemStack cleanStack);
@@ -57,7 +57,7 @@ public class ItemStackTest extends AbstractTestingBase {
 
         @Override
         public String toString() {
-            return material.toString();
+            return this.material.toString();
         }
 
         /**
@@ -126,7 +126,7 @@ public class ItemStackTest extends AbstractTestingBase {
 
         @Override
         public ItemStack operate(ItemStack cleanStack) {
-            for (Operator operator : operators) {
+            for (Operator operator : this.operators) {
                 operator.operate(cleanStack);
             }
             return cleanStack;
@@ -198,7 +198,7 @@ public class ItemStackTest extends AbstractTestingBase {
 
             final RecursiveContainer methodParams = new RecursiveContainer(joiner, new Object[lists.length], nameParameter, new ArrayList<Object[]>(lists.length), new ArrayList<Object[]>(), lists);
 
-            recursivelyCompound(methodParams, 0);
+            CompoundOperator.recursivelyCompound(methodParams, 0);
             methodParams.out.addAll(out);
 
             return methodParams.out;
@@ -241,7 +241,7 @@ public class ItemStackTest extends AbstractTestingBase {
 
                 for (final Object[] params : methodParams.lists[level]) {
                     stack.add(params);
-                    recursivelyCompound(methodParams, level + 1);
+                    CompoundOperator.recursivelyCompound(methodParams, level + 1);
                     stack.remove(marker);
                 }
             }
@@ -261,12 +261,12 @@ public class ItemStackTest extends AbstractTestingBase {
 
         @Override
         public ItemStack stack() {
-            return provider.craft();
+            return this.provider.craft();
         }
 
         @Override
         public String toString() {
-            return "Craft " + provider;
+            return "Craft " + this.provider;
         }
     }
 
@@ -279,12 +279,12 @@ public class ItemStackTest extends AbstractTestingBase {
 
         @Override
         public ItemStack stack() {
-            return provider.bukkit();
+            return this.provider.bukkit();
         }
 
         @Override
         public String toString() {
-            return "Bukkit " + provider;
+            return "Bukkit " + this.provider;
         }
     }
 
@@ -305,7 +305,7 @@ public class ItemStackTest extends AbstractTestingBase {
         }
     }
 
-    @Parameters(name = "[{index}]:{" + NAME_PARAMETER + "}")
+    @Parameters(name = "[{index}]:{" + ItemStackTest.NAME_PARAMETER + "}")
     public static List<Object[]> data() {
         return ImmutableList.of(); // TODO, test basic durability issues
     }
@@ -332,31 +332,31 @@ public class ItemStackTest extends AbstractTestingBase {
 
     @Parameter(0) public StackProvider provider;
     @Parameter(1) public StackProvider unequalProvider;
-    @Parameter(NAME_PARAMETER) public String name;
+    @Parameter(ItemStackTest.NAME_PARAMETER) public String name;
 
     @Test
     public void testBukkitInequality() {
-        final StackWrapper bukkitWrapper = new CraftWrapper(provider);
-        testInequality(bukkitWrapper, new BukkitWrapper(unequalProvider));
-        testInequality(bukkitWrapper, new BukkitWrapper(new NoOpProvider(provider.material)));
+        final StackWrapper bukkitWrapper = new CraftWrapper(this.provider);
+        ItemStackTest.testInequality(bukkitWrapper, new BukkitWrapper(this.unequalProvider));
+        ItemStackTest.testInequality(bukkitWrapper, new BukkitWrapper(new NoOpProvider(provider.material)));
     }
 
     @Test
     public void testCraftInequality() {
-        final StackWrapper craftWrapper = new CraftWrapper(provider);
-        testInequality(craftWrapper, new CraftWrapper(unequalProvider));
-        testInequality(craftWrapper, new CraftWrapper(new NoOpProvider(provider.material)));
+        final StackWrapper craftWrapper = new CraftWrapper(this.provider);
+        ItemStackTest.testInequality(craftWrapper, new CraftWrapper(this.unequalProvider));
+        ItemStackTest.testInequality(craftWrapper, new CraftWrapper(new NoOpProvider(provider.material)));
     }
 
     @Test
     public void testMixedInequality() {
-        final StackWrapper craftWrapper = new CraftWrapper(provider);
-        testInequality(craftWrapper, new BukkitWrapper(unequalProvider));
-        testInequality(craftWrapper, new BukkitWrapper(new NoOpProvider(provider.material)));
+        final StackWrapper craftWrapper = new CraftWrapper(this.provider);
+        ItemStackTest.testInequality(craftWrapper, new BukkitWrapper(this.unequalProvider));
+        ItemStackTest.testInequality(craftWrapper, new BukkitWrapper(new NoOpProvider(provider.material)));
 
-        final StackWrapper bukkitWrapper = new CraftWrapper(provider);
-        testInequality(bukkitWrapper, new CraftWrapper(unequalProvider));
-        testInequality(bukkitWrapper, new CraftWrapper(new NoOpProvider(provider.material)));
+        final StackWrapper bukkitWrapper = new CraftWrapper(this.provider);
+        ItemStackTest.testInequality(bukkitWrapper, new CraftWrapper(this.unequalProvider));
+        ItemStackTest.testInequality(bukkitWrapper, new CraftWrapper(new NoOpProvider(provider.material)));
     }
 
     static void testInequality(StackWrapper provider, StackWrapper unequalProvider) {
@@ -402,22 +402,22 @@ public class ItemStackTest extends AbstractTestingBase {
 
     @Test
     public void testBukkitYamlDeserialize() throws Throwable {
-        testYamlDeserialize(new BukkitWrapper(provider), new BukkitWrapper(unequalProvider));
+        ItemStackTest.testYamlDeserialize(new BukkitWrapper(this.provider), new BukkitWrapper(this.unequalProvider));
     }
 
     @Test
     public void testCraftYamlDeserialize() throws Throwable {
-        testYamlDeserialize(new CraftWrapper(provider), new CraftWrapper(unequalProvider));
+        ItemStackTest.testYamlDeserialize(new CraftWrapper(this.provider), new CraftWrapper(this.unequalProvider));
     }
 
     @Test
     public void testBukkitStreamDeserialize() throws Throwable {
-        testStreamDeserialize(new BukkitWrapper(provider), new BukkitWrapper(unequalProvider));
+        ItemStackTest.testStreamDeserialize(new BukkitWrapper(this.provider), new BukkitWrapper(this.unequalProvider));
     }
 
     @Test
     public void testCraftStreamDeserialize() throws Throwable {
-        testStreamDeserialize(new CraftWrapper(provider), new CraftWrapper(unequalProvider));
+        ItemStackTest.testStreamDeserialize(new CraftWrapper(this.provider), new CraftWrapper(this.unequalProvider));
     }
 
     static void testStreamDeserialize(StackWrapper provider, StackWrapper unequalProvider) throws Throwable {
@@ -462,7 +462,7 @@ public class ItemStackTest extends AbstractTestingBase {
             }
         }
 
-        testEqualities(data, readFirst, readSecond, stack, unequalStack);
+        ItemStackTest.testEqualities(data, readFirst, readSecond, stack, unequalStack);
     }
 
     static void testYamlDeserialize(StackWrapper provider, StackWrapper unequalProvider) {
@@ -482,7 +482,7 @@ public class ItemStackTest extends AbstractTestingBase {
             throw new RuntimeException(out, ex);
         }
 
-        testEqualities(out, configIn.getItemStack("provider"), configIn.getItemStack("unequal"), stack, unequalStack);
+        ItemStackTest.testEqualities(out, configIn.getItemStack("provider"), configIn.getItemStack("unequal"), stack, unequalStack);
     }
 
     static void testEqualities(String information, ItemStack primaryRead, ItemStack unequalRead, ItemStack primaryOriginal, ItemStack unequalOriginal) {

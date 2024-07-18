@@ -17,10 +17,10 @@ public class CraftTrimMaterial implements TrimMaterial {
     @Override
     @NotNull
     public NamespacedKey getKey() {
-        return key;
+        return this.key;
     }
 
     public net.minecraft.world.item.armortrim.TrimMaterial getHandle() {
-        return handle;
+        return this.handle;
     }
 }

@@ -3,18 +3,18 @@ package net.minecraft.world.level.block.entity;
 import com.mojang.logging.LogUtils;
 import java.util.Objects;
 import java.util.function.Predicate;
-import net.minecraft.core.BlockPosition;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tags.TagsItem;
-import net.minecraft.world.ContainerUtil;
-import net.minecraft.world.IInventory;
-import net.minecraft.world.entity.player.EntityHuman;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.World;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ChiseledBookShelfBlock;
-import net.minecraft.world.level.block.state.IBlockData;
-import net.minecraft.world.level.block.state.properties.BlockStateBoolean;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import org.slf4j.Logger;
 
 // CraftBukkit start
@@ -24,7 +24,7 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 // CraftBukkit end
 
-public class ChiseledBookShelfBlockEntity extends TileEntity implements IInventory {
+public class ChiseledBookShelfBlockEntity extends BlockEntity implements Container {
 
     public static final int MAX_BOOKS_IN_STORAGE = 6;
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -41,22 +41,22 @@ public class ChiseledBookShelfBlockEntity extends TileEntity implements IInvento
 
     @Override
     public void onOpen(CraftHumanEntity who) {
-        transaction.add(who);
+        this.transaction.add(who);
     }
 
     @Override
     public void onClose(CraftHumanEntity who) {
-        transaction.remove(who);
+        this.transaction.remove(who);
     }
 
     @Override
     public List<HumanEntity> getViewers() {
-        return transaction;
+        return this.transaction;
     }
 
     @Override
     public void setMaxStackSize(int size) {
-        maxStack = size;
+        this.maxStack = size;
     }
 
     @Override
@@ -66,41 +66,41 @@ public class ChiseledBookShelfBlockEntity extends TileEntity implements IInvento
     }
     // CraftBukkit end
 
-    public ChiseledBookShelfBlockEntity(BlockPosition blockposition, IBlockData iblockdata) {
-        super(TileEntityTypes.CHISELED_BOOKSHELF, blockposition, iblockdata);
+    public ChiseledBookShelfBlockEntity(BlockPos pos, BlockState state) {
+        super(BlockEntityType.CHISELED_BOOKSHELF, pos, state);
         this.items = NonNullList.withSize(6, ItemStack.EMPTY);
         this.lastInteractedSlot = -1;
     }
 
-    private void updateState(int i) {
-        if (i >= 0 && i < 6) {
-            this.lastInteractedSlot = i;
-            IBlockData iblockdata = this.getBlockState();
+    private void updateState(int interactedSlot) {
+        if (interactedSlot >= 0 && interactedSlot < 6) {
+            this.lastInteractedSlot = interactedSlot;
+            BlockState iblockdata = this.getBlockState();
 
             for (int j = 0; j < ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES.size(); ++j) {
                 boolean flag = !this.getItem(j).isEmpty();
-                BlockStateBoolean blockstateboolean = (BlockStateBoolean) ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES.get(j);
+                BooleanProperty blockstateboolean = (BooleanProperty) ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES.get(j);
 
-                iblockdata = (IBlockData) iblockdata.setValue(blockstateboolean, flag);
+                iblockdata = (BlockState) iblockdata.setValue(blockstateboolean, flag);
             }
 
-            ((World) Objects.requireNonNull(this.level)).setBlock(this.worldPosition, iblockdata, 3);
+            ((Level) Objects.requireNonNull(this.level)).setBlock(this.worldPosition, iblockdata, 3);
         } else {
-            ChiseledBookShelfBlockEntity.LOGGER.error("Expected slot 0-5, got {}", i);
+            ChiseledBookShelfBlockEntity.LOGGER.error("Expected slot 0-5, got {}", interactedSlot);
         }
     }
 
     @Override
-    public void load(NBTTagCompound nbttagcompound) {
+    public void load(CompoundTag nbt) {
         this.items.clear();
-        ContainerUtil.loadAllItems(nbttagcompound, this.items);
-        this.lastInteractedSlot = nbttagcompound.getInt("last_interacted_slot");
+        ContainerHelper.loadAllItems(nbt, this.items);
+        this.lastInteractedSlot = nbt.getInt("last_interacted_slot");
     }
 
     @Override
-    protected void saveAdditional(NBTTagCompound nbttagcompound) {
-        ContainerUtil.saveAllItems(nbttagcompound, this.items, true);
-        nbttagcompound.putInt("last_interacted_slot", this.lastInteractedSlot);
+    protected void saveAdditional(CompoundTag nbt) {
+        ContainerHelper.saveAllItems(nbt, this.items, true);
+        nbt.putInt("last_interacted_slot", this.lastInteractedSlot);
     }
 
     public int count() {
@@ -123,49 +123,49 @@ public class ChiseledBookShelfBlockEntity extends TileEntity implements IInvento
     }
 
     @Override
-    public ItemStack getItem(int i) {
-        return (ItemStack) this.items.get(i);
+    public ItemStack getItem(int slot) {
+        return (ItemStack) this.items.get(slot);
     }
 
     @Override
-    public ItemStack removeItem(int i, int j) {
-        ItemStack itemstack = (ItemStack) Objects.requireNonNullElse((ItemStack) this.items.get(i), ItemStack.EMPTY);
+    public ItemStack removeItem(int slot, int amount) {
+        ItemStack itemstack = (ItemStack) Objects.requireNonNullElse((ItemStack) this.items.get(slot), ItemStack.EMPTY);
 
-        this.items.set(i, ItemStack.EMPTY);
+        this.items.set(slot, ItemStack.EMPTY);
         if (!itemstack.isEmpty()) {
-            this.updateState(i);
+            this.updateState(slot);
         }
 
         return itemstack;
     }
 
     @Override
-    public ItemStack removeItemNoUpdate(int i) {
-        return this.removeItem(i, 1);
+    public ItemStack removeItemNoUpdate(int slot) {
+        return this.removeItem(slot, 1);
     }
 
     @Override
-    public void setItem(int i, ItemStack itemstack) {
-        if (itemstack.is(TagsItem.BOOKSHELF_BOOKS)) {
-            this.items.set(i, itemstack);
-            this.updateState(i);
+    public void setItem(int slot, ItemStack stack) {
+        if (stack.is(ItemTags.BOOKSHELF_BOOKS)) {
+            this.items.set(slot, stack);
+            this.updateState(slot);
         }
 
     }
 
     @Override
     public int getMaxStackSize() {
-        return maxStack; // CraftBukkit
+        return this.maxStack; // CraftBukkit
     }
 
     @Override
-    public boolean stillValid(EntityHuman entityhuman) {
-        return IInventory.stillValidBlockEntity(this, entityhuman);
+    public boolean stillValid(Player player) {
+        return Container.stillValidBlockEntity(this, player);
     }
 
     @Override
-    public boolean canPlaceItem(int i, ItemStack itemstack) {
-        return itemstack.is(TagsItem.BOOKSHELF_BOOKS) && this.getItem(i).isEmpty();
+    public boolean canPlaceItem(int slot, ItemStack stack) {
+        return stack.is(ItemTags.BOOKSHELF_BOOKS) && this.getItem(slot).isEmpty();
     }
 
     public int getLastInteractedSlot() {

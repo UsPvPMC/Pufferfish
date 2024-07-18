@@ -1,34 +1,34 @@
 package net.minecraft.network.protocol.game;
 
-import net.minecraft.network.PacketDataSerializer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.world.level.border.WorldBorder;
 
-public class ClientboundSetBorderCenterPacket implements Packet<PacketListenerPlayOut> {
+public class ClientboundSetBorderCenterPacket implements Packet<ClientGamePacketListener> {
 
     private final double newCenterX;
     private final double newCenterZ;
 
-    public ClientboundSetBorderCenterPacket(WorldBorder worldborder) {
+    public ClientboundSetBorderCenterPacket(WorldBorder worldBorder) {
         // CraftBukkit start - multiply out nether border
-        this.newCenterX = worldborder.getCenterX() * (worldborder.world != null ? worldborder.world.dimensionType().coordinateScale() : 1.0);
-        this.newCenterZ = worldborder.getCenterZ() * (worldborder.world != null ? worldborder.world.dimensionType().coordinateScale() : 1.0);
+        this.newCenterX = worldBorder.getCenterX() * (worldBorder.world != null ? worldBorder.world.dimensionType().coordinateScale() : 1.0);
+        this.newCenterZ = worldBorder.getCenterZ() * (worldBorder.world != null ? worldBorder.world.dimensionType().coordinateScale() : 1.0);
         // CraftBukkit end
     }
 
-    public ClientboundSetBorderCenterPacket(PacketDataSerializer packetdataserializer) {
-        this.newCenterX = packetdataserializer.readDouble();
-        this.newCenterZ = packetdataserializer.readDouble();
+    public ClientboundSetBorderCenterPacket(FriendlyByteBuf buf) {
+        this.newCenterX = buf.readDouble();
+        this.newCenterZ = buf.readDouble();
     }
 
     @Override
-    public void write(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeDouble(this.newCenterX);
-        packetdataserializer.writeDouble(this.newCenterZ);
+    public void write(FriendlyByteBuf buf) {
+        buf.writeDouble(this.newCenterX);
+        buf.writeDouble(this.newCenterZ);
     }
 
-    public void handle(PacketListenerPlayOut packetlistenerplayout) {
-        packetlistenerplayout.handleSetBorderCenter(this);
+    public void handle(ClientGamePacketListener listener) {
+        listener.handleSetBorderCenter(this);
     }
 
     public double getNewCenterZ() {

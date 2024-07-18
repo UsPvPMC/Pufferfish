@@ -2,10 +2,10 @@ package org.bukkit.craftbukkit.inventory;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.commands.arguments.item.ArgumentParserItemStack;
+import net.minecraft.commands.arguments.item.ItemParser;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Color;
@@ -33,7 +33,7 @@ public final class CraftItemFactory implements ItemFactory {
         if (itemstack == null) {
             return false;
         }
-        return isApplicable(meta, itemstack.getType());
+        return this.isApplicable(meta, itemstack.getType());
     }
 
     @Override
@@ -52,7 +52,7 @@ public final class CraftItemFactory implements ItemFactory {
     @Override
     public ItemMeta getItemMeta(Material material) {
         Validate.notNull(material, "Material cannot be null");
-        return getItemMeta(material, null);
+        return this.getItemMeta(material, null);
     }
 
     private ItemMeta getItemMeta(Material material, CraftMetaItem meta) {
@@ -377,7 +377,7 @@ public final class CraftItemFactory implements ItemFactory {
             return ((CraftMetaItem) meta1).isEmpty();
         }
 
-        return equals((CraftMetaItem) meta1, (CraftMetaItem) meta2);
+        return this.equals((CraftMetaItem) meta1, (CraftMetaItem) meta2);
     }
 
     boolean equals(CraftMetaItem meta1, CraftMetaItem meta2) {
@@ -394,13 +394,13 @@ public final class CraftItemFactory implements ItemFactory {
     }
 
     public static CraftItemFactory instance() {
-        return instance;
+        return CraftItemFactory.instance;
     }
 
     @Override
     public ItemMeta asMetaFor(ItemMeta meta, ItemStack stack) {
         Validate.notNull(stack, "Stack cannot be null");
-        return asMetaFor(meta, stack.getType());
+        return this.asMetaFor(meta, stack.getType());
     }
 
     @Override
@@ -409,23 +409,23 @@ public final class CraftItemFactory implements ItemFactory {
         if (!(meta instanceof CraftMetaItem)) {
             throw new IllegalArgumentException("Meta of " + (meta != null ? meta.getClass().toString() : "null") + " not created by " + CraftItemFactory.class.getName());
         }
-        return getItemMeta(material, (CraftMetaItem) meta);
+        return this.getItemMeta(material, (CraftMetaItem) meta);
     }
 
     @Override
     public Color getDefaultLeatherColor() {
-        return DEFAULT_LEATHER_COLOR;
+        return CraftItemFactory.DEFAULT_LEATHER_COLOR;
     }
 
     @Override
     public ItemStack createItemStack(String input) throws IllegalArgumentException {
         try {
-            ArgumentParserItemStack.a arg = ArgumentParserItemStack.parseForItem(BuiltInRegistries.ITEM.asLookup(), new StringReader(input));
+            ItemParser.ItemResult arg = ItemParser.parseForItem(BuiltInRegistries.ITEM.asLookup(), new StringReader(input));
 
             Item item = arg.item().value();
             net.minecraft.world.item.ItemStack nmsItemStack = new net.minecraft.world.item.ItemStack(item);
 
-            NBTTagCompound nbt = arg.nbt();
+            CompoundTag nbt = arg.nbt();
             if (nbt != null) {
                 nmsItemStack.setTag(nbt);
             }

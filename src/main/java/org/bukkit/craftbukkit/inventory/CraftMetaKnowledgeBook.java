@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
@@ -32,16 +32,16 @@ public class CraftMetaKnowledgeBook extends CraftMetaItem implements KnowledgeBo
         }
     }
 
-    CraftMetaKnowledgeBook(NBTTagCompound tag) {
+    CraftMetaKnowledgeBook(CompoundTag tag) {
         super(tag);
 
         if (tag.contains(BOOK_RECIPES.NBT)) {
-            NBTTagList pages = tag.getList(BOOK_RECIPES.NBT, 8);
+            ListTag pages = tag.getList(BOOK_RECIPES.NBT, 8);
 
             for (int i = 0; i < pages.size(); i++) {
                 String recipe = pages.getString(i);
 
-                addRecipe(CraftNamespacedKey.fromString(recipe));
+                this.addRecipe(CraftNamespacedKey.fromString(recipe));
             }
         }
     }
@@ -53,20 +53,20 @@ public class CraftMetaKnowledgeBook extends CraftMetaItem implements KnowledgeBo
         if (pages != null) {
             for (Object page : pages) {
                 if (page instanceof String) {
-                    addRecipe(CraftNamespacedKey.fromString((String) page));
+                    this.addRecipe(CraftNamespacedKey.fromString((String) page));
                 }
             }
         }
     }
 
     @Override
-    void applyToItem(NBTTagCompound itemData) {
+    void applyToItem(CompoundTag itemData) {
         super.applyToItem(itemData);
 
-        if (hasRecipes()) {
-            NBTTagList list = new NBTTagList();
+        if (this.hasRecipes()) {
+            ListTag list = new ListTag();
             for (NamespacedKey recipe : this.recipes) {
-                list.add(NBTTagString.valueOf(recipe.toString()));
+                list.add(StringTag.valueOf(recipe.toString()));
             }
             itemData.put(BOOK_RECIPES.NBT, list);
         }
@@ -74,11 +74,11 @@ public class CraftMetaKnowledgeBook extends CraftMetaItem implements KnowledgeBo
 
     @Override
     boolean isEmpty() {
-        return super.isEmpty() && isBookEmpty();
+        return super.isEmpty() && this.isBookEmpty();
     }
 
     boolean isBookEmpty() {
-        return !(hasRecipes());
+        return !(this.hasRecipes());
     }
 
     @Override
@@ -88,14 +88,14 @@ public class CraftMetaKnowledgeBook extends CraftMetaItem implements KnowledgeBo
 
     @Override
     public boolean hasRecipes() {
-        return !recipes.isEmpty();
+        return !this.recipes.isEmpty();
     }
 
     @Override
     public void addRecipe(NamespacedKey... recipes) {
         for (NamespacedKey recipe : recipes) {
             if (recipe != null) {
-                if (this.recipes.size() >= MAX_RECIPES) {
+                if (this.recipes.size() >= CraftMetaKnowledgeBook.MAX_RECIPES) {
                     return;
                 }
 
@@ -113,14 +113,14 @@ public class CraftMetaKnowledgeBook extends CraftMetaItem implements KnowledgeBo
     public void setRecipes(List<NamespacedKey> recipes) {
         this.recipes.clear();
         for (NamespacedKey recipe : recipes) {
-            addRecipe(recipe);
+            this.addRecipe(recipe);
         }
     }
 
     @Override
     public CraftMetaKnowledgeBook clone() {
         CraftMetaKnowledgeBook meta = (CraftMetaKnowledgeBook) super.clone();
-        meta.recipes = new ArrayList<NamespacedKey>(recipes);
+        meta.recipes = new ArrayList<NamespacedKey>(this.recipes);
         return meta;
     }
 
@@ -128,7 +128,7 @@ public class CraftMetaKnowledgeBook extends CraftMetaItem implements KnowledgeBo
     int applyHash() {
         final int original;
         int hash = original = super.applyHash();
-        if (hasRecipes()) {
+        if (this.hasRecipes()) {
             hash = 61 * hash + 17 * this.recipes.hashCode();
         }
         return original != hash ? CraftMetaKnowledgeBook.class.hashCode() ^ hash : hash;
@@ -142,23 +142,23 @@ public class CraftMetaKnowledgeBook extends CraftMetaItem implements KnowledgeBo
         if (meta instanceof CraftMetaKnowledgeBook) {
             CraftMetaKnowledgeBook that = (CraftMetaKnowledgeBook) meta;
 
-            return (hasRecipes() ? that.hasRecipes() && this.recipes.equals(that.recipes) : !that.hasRecipes());
+            return (this.hasRecipes() ? that.hasRecipes() && this.recipes.equals(that.recipes) : !that.hasRecipes());
         }
         return true;
     }
 
     @Override
     boolean notUncommon(CraftMetaItem meta) {
-        return super.notUncommon(meta) && (meta instanceof CraftMetaKnowledgeBook || isBookEmpty());
+        return super.notUncommon(meta) && (meta instanceof CraftMetaKnowledgeBook || this.isBookEmpty());
     }
 
     @Override
     Builder<String, Object> serialize(Builder<String, Object> builder) {
         super.serialize(builder);
 
-        if (hasRecipes()) {
+        if (this.hasRecipes()) {
             List<String> recipesString = new ArrayList<String>();
-            for (NamespacedKey recipe : recipes) {
+            for (NamespacedKey recipe : this.recipes) {
                 recipesString.add(recipe.toString());
             }
             builder.put(BOOK_RECIPES.BUKKIT, recipesString);

@@ -28,8 +28,8 @@ public class DedicatedServerSettings {
         this.properties.store(this.source);
     }
 
-    public DedicatedServerSettings update(UnaryOperator<DedicatedServerProperties> unaryoperator) {
-        (this.properties = (DedicatedServerProperties) unaryoperator.apply(this.properties)).store(this.source);
+    public DedicatedServerSettings update(UnaryOperator<DedicatedServerProperties> applier) {
+        (this.properties = (DedicatedServerProperties) applier.apply(this.properties)).store(this.source);
         return this;
     }
 }

@@ -1,7 +1,7 @@
 package org.bukkit;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.MinecraftKey;
+import net.minecraft.resources.ResourceLocation;
 import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.support.AbstractTestingBase;
@@ -12,7 +12,7 @@ public class EnchantmentTest extends AbstractTestingBase {
 
     @Test
     public void verifyMapping() {
-        for (MinecraftKey key : BuiltInRegistries.ENCHANTMENT.keySet()) {
+        for (ResourceLocation key : BuiltInRegistries.ENCHANTMENT.keySet()) {
             net.minecraft.world.item.enchantment.Enchantment nms = BuiltInRegistries.ENCHANTMENT.get(key);
 
             Enchantment bukkitById = Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(key));

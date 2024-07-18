@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.craftbukkit.inventory.CraftMetaItem.SerializableMeta;
@@ -31,27 +31,27 @@ class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorage
         }
     }
 
-    CraftMetaEnchantedBook(NBTTagCompound tag) {
+    CraftMetaEnchantedBook(CompoundTag tag) {
         super(tag);
 
         if (!tag.contains(STORED_ENCHANTMENTS.NBT)) {
             return;
         }
 
-        enchantments = buildEnchantments(tag, STORED_ENCHANTMENTS);
+        this.enchantments = buildEnchantments(tag, CraftMetaEnchantedBook.STORED_ENCHANTMENTS);
     }
 
     CraftMetaEnchantedBook(Map<String, Object> map) {
         super(map);
 
-        enchantments = buildEnchantments(map, STORED_ENCHANTMENTS);
+        this.enchantments = buildEnchantments(map, CraftMetaEnchantedBook.STORED_ENCHANTMENTS);
     }
 
     @Override
-    void applyToItem(NBTTagCompound itemTag) {
+    void applyToItem(CompoundTag itemTag) {
         super.applyToItem(itemTag);
 
-        applyEnchantments(enchantments, itemTag, STORED_ENCHANTMENTS);
+        applyEnchantments(this.enchantments, itemTag, CraftMetaEnchantedBook.STORED_ENCHANTMENTS);
     }
 
     @Override
@@ -61,7 +61,7 @@ class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorage
 
     @Override
     boolean isEmpty() {
-        return super.isEmpty() && isEnchantedEmpty();
+        return super.isEmpty() && this.isEnchantedEmpty();
     }
 
     @Override
@@ -72,14 +72,14 @@ class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorage
         if (meta instanceof CraftMetaEnchantedBook) {
             CraftMetaEnchantedBook that = (CraftMetaEnchantedBook) meta;
 
-            return (hasStoredEnchants() ? that.hasStoredEnchants() && this.enchantments.equals(that.enchantments) : !that.hasStoredEnchants());
+            return (this.hasStoredEnchants() ? that.hasStoredEnchants() && this.enchantments.equals(that.enchantments) : !that.hasStoredEnchants());
         }
         return true;
     }
 
     @Override
     boolean notUncommon(CraftMetaItem meta) {
-        return super.notUncommon(meta) && (meta instanceof CraftMetaEnchantedBook || isEnchantedEmpty());
+        return super.notUncommon(meta) && (meta instanceof CraftMetaEnchantedBook || this.isEnchantedEmpty());
     }
 
     @Override
@@ -87,8 +87,8 @@ class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorage
         final int original;
         int hash = original = super.applyHash();
 
-        if (hasStoredEnchants()) {
-            hash = 61 * hash + enchantments.hashCode();
+        if (this.hasStoredEnchants()) {
+            hash = 61 * hash + this.enchantments.hashCode();
         }
 
         return original != hash ? CraftMetaEnchantedBook.class.hashCode() ^ hash : hash;
@@ -109,23 +109,23 @@ class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorage
     Builder<String, Object> serialize(Builder<String, Object> builder) {
         super.serialize(builder);
 
-        serializeEnchantments(enchantments, builder, STORED_ENCHANTMENTS);
+        serializeEnchantments(this.enchantments, builder, CraftMetaEnchantedBook.STORED_ENCHANTMENTS);
 
         return builder;
     }
 
     boolean isEnchantedEmpty() {
-        return !hasStoredEnchants();
+        return !this.hasStoredEnchants();
     }
 
     @Override
     public boolean hasStoredEnchant(Enchantment ench) {
-        return hasStoredEnchants() && enchantments.containsKey(ench);
+        return this.hasStoredEnchants() && this.enchantments.containsKey(ench);
     }
 
     @Override
     public int getStoredEnchantLevel(Enchantment ench) {
-        Integer level = hasStoredEnchants() ? enchantments.get(ench) : null;
+        Integer level = this.hasStoredEnchants() ? this.enchantments.get(ench) : null;
         if (level == null) {
             return 0;
         }
@@ -134,17 +134,17 @@ class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorage
 
     @Override
     public Map<Enchantment, Integer> getStoredEnchants() {
-        return hasStoredEnchants() ? ImmutableMap.copyOf(enchantments) : ImmutableMap.<Enchantment, Integer>of();
+        return this.hasStoredEnchants() ? ImmutableMap.copyOf(enchantments) : ImmutableMap.<Enchantment, Integer>of();
     }
 
     @Override
     public boolean addStoredEnchant(Enchantment ench, int level, boolean ignoreRestrictions) {
-        if (enchantments == null) {
-            enchantments = new LinkedHashMap<Enchantment, Integer>(4);
+        if (this.enchantments == null) {
+            this.enchantments = new LinkedHashMap<Enchantment, Integer>(4);
         }
 
         if (ignoreRestrictions || level >= ench.getStartLevel() && level <= ench.getMaxLevel()) {
-            Integer old = enchantments.put(ench, level);
+            Integer old = this.enchantments.put(ench, level);
             return old == null || old != level;
         }
         return false;
@@ -152,16 +152,16 @@ class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorage
 
     @Override
     public boolean removeStoredEnchant(Enchantment ench) {
-        return hasStoredEnchants() && enchantments.remove(ench) != null;
+        return this.hasStoredEnchants() && this.enchantments.remove(ench) != null;
     }
 
     @Override
     public boolean hasStoredEnchants() {
-        return !(enchantments == null || enchantments.isEmpty());
+        return !(this.enchantments == null || this.enchantments.isEmpty());
     }
 
     @Override
     public boolean hasConflictingStoredEnchant(Enchantment ench) {
-        return checkConflictingEnchants(enchantments, ench);
+        return checkConflictingEnchants(this.enchantments, ench);
     }
 }

@@ -3,7 +3,7 @@ package org.bukkit.craftbukkit.entity;
 import com.google.common.base.Preconditions;
 import java.util.Collection;
 import java.util.stream.Collectors;
-import net.minecraft.core.BlockPosition;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.CraftServer;
@@ -43,7 +43,7 @@ public class CraftSniffer extends CraftAnimals implements Sniffer {
             return;
         }
 
-        BlockPosition blockPosition = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        BlockPos blockPosition = new BlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ());
         this.getHandle().getBrain().setMemory(MemoryModuleType.SNIFFER_EXPLORED_POSITIONS, this.getHandle().getExploredPositions().filter(blockPositionExplored -> !blockPositionExplored.equals(blockPosition)).collect(Collectors.toList()));
     }
 
@@ -54,7 +54,7 @@ public class CraftSniffer extends CraftAnimals implements Sniffer {
             return;
         }
 
-        this.getHandle().storeExploredPosition(new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+        this.getHandle().storeExploredPosition(new BlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
     }
 
     @Override
@@ -78,19 +78,19 @@ public class CraftSniffer extends CraftAnimals implements Sniffer {
         return this.getHandle().canDig();
     }
 
-    private net.minecraft.world.entity.animal.sniffer.Sniffer.a stateToNMS(Sniffer.State state) {
+    private net.minecraft.world.entity.animal.sniffer.Sniffer.State stateToNMS(Sniffer.State state) {
         return switch (state) {
-            case IDLING -> net.minecraft.world.entity.animal.sniffer.Sniffer.a.IDLING;
-            case FEELING_HAPPY -> net.minecraft.world.entity.animal.sniffer.Sniffer.a.FEELING_HAPPY;
-            case SCENTING -> net.minecraft.world.entity.animal.sniffer.Sniffer.a.SCENTING;
-            case SNIFFING -> net.minecraft.world.entity.animal.sniffer.Sniffer.a.SNIFFING;
-            case SEARCHING -> net.minecraft.world.entity.animal.sniffer.Sniffer.a.SEARCHING;
-            case DIGGING -> net.minecraft.world.entity.animal.sniffer.Sniffer.a.DIGGING;
-            case RISING -> net.minecraft.world.entity.animal.sniffer.Sniffer.a.RISING;
+            case IDLING -> net.minecraft.world.entity.animal.sniffer.Sniffer.State.IDLING;
+            case FEELING_HAPPY -> net.minecraft.world.entity.animal.sniffer.Sniffer.State.FEELING_HAPPY;
+            case SCENTING -> net.minecraft.world.entity.animal.sniffer.Sniffer.State.SCENTING;
+            case SNIFFING -> net.minecraft.world.entity.animal.sniffer.Sniffer.State.SNIFFING;
+            case SEARCHING -> net.minecraft.world.entity.animal.sniffer.Sniffer.State.SEARCHING;
+            case DIGGING -> net.minecraft.world.entity.animal.sniffer.Sniffer.State.DIGGING;
+            case RISING -> net.minecraft.world.entity.animal.sniffer.Sniffer.State.RISING;
         };
     }
 
-    private Sniffer.State stateToBukkit(net.minecraft.world.entity.animal.sniffer.Sniffer.a state) {
+    private Sniffer.State stateToBukkit(net.minecraft.world.entity.animal.sniffer.Sniffer.State state) {
         return switch (state) {
             case IDLING -> Sniffer.State.IDLING;
             case FEELING_HAPPY -> Sniffer.State.FEELING_HAPPY;

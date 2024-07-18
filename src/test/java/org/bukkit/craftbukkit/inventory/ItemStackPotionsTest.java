@@ -19,7 +19,7 @@ public class ItemStackPotionsTest extends ItemStackTest {
 
     @Parameters(name = "[{index}]:{" + NAME_PARAMETER + "}")
     public static List<Object[]> data() {
-        return StackProvider.compound(operators(), "%s %s", NAME_PARAMETER, Material.POTION);
+        return StackProvider.compound(ItemStackPotionsTest.operators(), "%s %s", NAME_PARAMETER, Material.POTION);
     }
 
     @SuppressWarnings("unchecked")

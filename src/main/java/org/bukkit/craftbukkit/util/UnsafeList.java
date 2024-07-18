@@ -29,10 +29,10 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
         super();
         if (capacity < 0) capacity = 32;
         int rounded = Integer.highestOneBit(capacity - 1) << 1;
-        data = new Object[rounded];
-        initialCapacity = rounded;
-        maxPool = maxIterPool;
-        iterPool[0] = new Itr();
+        this.data = new Object[rounded];
+        this.initialCapacity = rounded;
+        this.maxPool = maxIterPool;
+        this.iterPool[0] = new Itr();
     }
 
     public UnsafeList(int capacity) {
@@ -45,58 +45,58 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
 
     @Override
     public E get(int index) {
-        rangeCheck(index);
+        this.rangeCheck(index);
 
-        return (E) data[index];
+        return (E) this.data[index];
     }
 
     public E unsafeGet(int index) {
-        return (E) data[index];
+        return (E) this.data[index];
     }
 
     @Override
     public E set(int index, E element) {
-        rangeCheck(index);
+        this.rangeCheck(index);
 
-        E old = (E) data[index];
-        data[index] = element;
+        E old = (E) this.data[index];
+        this.data[index] = element;
         return old;
     }
 
     @Override
     public boolean add(E element) {
-        growIfNeeded();
-        data[size++] = element;
+        this.growIfNeeded();
+        this.data[this.size++] = element;
         return true;
     }
 
     @Override
     public void add(int index, E element) {
-        growIfNeeded();
-        System.arraycopy(data, index, data, index + 1, size - index);
-        data[index] = element;
-        size++;
+        this.growIfNeeded();
+        System.arraycopy(data, index, data, index + 1, this.size - index);
+        this.data[index] = element;
+        this.size++;
     }
 
     @Override
     public E remove(int index) {
-        rangeCheck(index);
+        this.rangeCheck(index);
 
-        E old = (E) data[index];
-        int movedCount = size - index - 1;
+        E old = (E) this.data[index];
+        int movedCount = this.size - index - 1;
         if (movedCount > 0) {
             System.arraycopy(data, index + 1, data, index, movedCount);
         }
-        data[--size] = null;
+        this.data[--this.size] = null;
 
         return old;
     }
 
     @Override
     public boolean remove(Object o) {
-        int index = indexOf(o);
+        int index = this.indexOf(o);
         if (index >= 0) {
-            remove(index);
+            this.remove(index);
             return true;
         }
 
@@ -105,8 +105,8 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
 
     @Override
     public int indexOf(Object o) {
-        for (int i = 0; i < size; i++) {
-            if (o == data[i] || o.equals(data[i])) {
+        for (int i = 0; i < this.size; i++) {
+            if (o == this.data[i] || o.equals(this.data[i])) {
                 return i;
             }
         }
@@ -116,20 +116,20 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
 
     @Override
     public boolean contains(Object o) {
-        return indexOf(o) >= 0;
+        return this.indexOf(o) >= 0;
     }
 
     @Override
     public void clear() {
         // Create new array to reset memory usage to initial capacity
-        size = 0;
+        this.size = 0;
 
         // If array has grown too large create new one, otherwise just clear it
-        if (data.length > initialCapacity << 3) {
-            data = new Object[initialCapacity];
+        if (data.length > this.initialCapacity << 3) {
+            this.data = new Object[this.initialCapacity];
         } else {
             for (int i = 0; i < data.length; i++) {
-                data[i] = null;
+                this.data[i] = null;
             }
         }
     }
@@ -137,31 +137,31 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
     // actually rounds up to nearest power of two
     public void trimToSize() {
         int old = data.length;
-        int rounded = Integer.highestOneBit(size - 1) << 1;
+        int rounded = Integer.highestOneBit(this.size - 1) << 1;
         if (rounded < old) {
-            data = Arrays.copyOf(data, rounded);
+            this.data = Arrays.copyOf(data, rounded);
         }
     }
 
     @Override
     public int size() {
-        return size;
+        return this.size;
     }
 
     @Override
     public boolean isEmpty() {
-        return size == 0;
+        return this.size == 0;
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
         UnsafeList<E> copy = (UnsafeList<E>) super.clone();
         copy.data = Arrays.copyOf(data, size);
-        copy.size = size;
-        copy.initialCapacity = initialCapacity;
+        copy.size = this.size;
+        copy.initialCapacity = this.initialCapacity;
         copy.iterPool = new Iterator[1];
         copy.iterPool[0] = new Itr();
-        copy.maxPool = maxPool;
+        copy.maxPool = this.maxPool;
         copy.poolCounter = 0;
         return copy;
     }
@@ -169,7 +169,7 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
     @Override
     public Iterator<E> iterator() {
         // Try to find an iterator that isn't in use
-        for (Iterator iter : iterPool) {
+        for (Iterator iter : this.iterPool) {
             if (!((Itr) iter).valid) {
                 Itr iterator = (Itr) iter;
                 iterator.reset();
@@ -178,33 +178,33 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
         }
 
         // Couldn't find one, see if we can grow our pool size
-        if (iterPool.length < maxPool) {
+        if (iterPool.length < this.maxPool) {
             Iterator[] newPool = new Iterator[iterPool.length + 1];
             System.arraycopy(iterPool, 0, newPool, 0, iterPool.length);
-            iterPool = newPool;
+            this.iterPool = newPool;
 
-            iterPool[iterPool.length - 1] = new Itr();
-            return iterPool[iterPool.length - 1];
+            this.iterPool[iterPool.length - 1] = new Itr();
+            return this.iterPool[iterPool.length - 1];
         }
 
         // Still couldn't find a free one, round robin replace one with a new iterator
         // This is done in the hope that the new one finishes so can be reused
-        poolCounter = ++poolCounter % iterPool.length;
-        iterPool[poolCounter] = new Itr();
-        return iterPool[poolCounter];
+        this.poolCounter = ++this.poolCounter % iterPool.length;
+        this.iterPool[this.poolCounter] = new Itr();
+        return this.iterPool[this.poolCounter];
     }
 
     private void rangeCheck(int index) {
-        if (index >= size || index < 0) {
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+        if (index >= this.size || index < 0) {
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + this.size);
         }
     }
 
     private void growIfNeeded() {
-        if (size == data.length) {
+        if (this.size == data.length) {
             Object[] newData = new Object[data.length << 1];
             System.arraycopy(data, 0, newData, 0, size);
-            data = newData;
+            this.data = newData;
         }
     }
 
@@ -213,8 +213,8 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
 
         os.writeInt(size);
         os.writeInt(initialCapacity);
-        for (int i = 0; i < size; i++) {
-            os.writeObject(data[i]);
+        for (int i = 0; i < this.size; i++) {
+            os.writeObject(this.data[i]);
         }
         os.writeInt(maxPool);
     }
@@ -222,15 +222,15 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
     private void readObject(ObjectInputStream is) throws IOException, ClassNotFoundException {
         is.defaultReadObject();
 
-        size = is.readInt();
-        initialCapacity = is.readInt();
-        data = new Object[Integer.highestOneBit(size - 1) << 1];
-        for (int i = 0; i < size; i++) {
-            data[i] = is.readObject();
+        this.size = is.readInt();
+        this.initialCapacity = is.readInt();
+        this.data = new Object[Integer.highestOneBit(this.size - 1) << 1];
+        for (int i = 0; i < this.size; i++) {
+            this.data[i] = is.readObject();
         }
-        maxPool = is.readInt();
-        iterPool = new Iterator[1];
-        iterPool[0] = new Itr();
+        this.maxPool = is.readInt();
+        this.iterPool = new Iterator[1];
+        this.iterPool[0] = new Itr();
     }
 
     public class Itr implements Iterator<E> {
@@ -240,26 +240,26 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
         public boolean valid = true;
 
         public void reset() {
-            index = 0;
-            lastRet = -1;
-            expectedModCount = modCount;
-            valid = true;
+            this.index = 0;
+            this.lastRet = -1;
+            this.expectedModCount = modCount;
+            this.valid = true;
         }
 
         @Override
         public boolean hasNext() {
-            valid = index != size;
-            return valid;
+            this.valid = this.index != UnsafeList.this.size;
+            return this.valid;
         }
 
         @Override
         public E next() {
-            if (modCount != expectedModCount) {
+            if (modCount != this.expectedModCount) {
                 throw new ConcurrentModificationException();
             }
 
-            int i = index;
-            if (i >= size) {
+            int i = this.index;
+            if (i >= UnsafeList.this.size) {
                 throw new NoSuchElementException();
             }
 
@@ -267,25 +267,25 @@ public class UnsafeList<E> extends AbstractList<E> implements List<E>, RandomAcc
                 throw new ConcurrentModificationException();
             }
 
-            index = i + 1;
-            return (E) data[lastRet = i];
+            this.index = i + 1;
+            return (E) UnsafeList.this.data[this.lastRet = i];
         }
 
         @Override
         public void remove() {
-            if (lastRet < 0) {
+            if (this.lastRet < 0) {
                 throw new IllegalStateException();
             }
 
-            if (modCount != expectedModCount) {
+            if (modCount != this.expectedModCount) {
                 throw new ConcurrentModificationException();
             }
 
             try {
                 UnsafeList.this.remove(lastRet);
-                index = lastRet;
-                lastRet = -1;
-                expectedModCount = modCount;
+                this.index = this.lastRet;
+                this.lastRet = -1;
+                this.expectedModCount = modCount;
             } catch (IndexOutOfBoundsException ex) {
                 throw new ConcurrentModificationException();
             }

@@ -1,15 +1,15 @@
 package org.bukkit.craftbukkit.potion;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.effect.MobEffectList;
+import net.minecraft.world.effect.MobEffect;
 import org.bukkit.Color;
 import org.bukkit.potion.PotionEffectType;
 
 public class CraftPotionEffectType extends PotionEffectType {
-    private final MobEffectList handle;
+    private final MobEffect handle;
 
-    public CraftPotionEffectType(MobEffectList handle) {
-        super(MobEffectList.getId(handle), org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(BuiltInRegistries.MOB_EFFECT.getKey(handle)));
+    public CraftPotionEffectType(MobEffect handle) {
+        super(MobEffect.getId(handle), org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(BuiltInRegistries.MOB_EFFECT.getKey(handle)));
         this.handle = handle;
     }
 
@@ -18,8 +18,8 @@ public class CraftPotionEffectType extends PotionEffectType {
         return 1.0D;
     }
 
-    public MobEffectList getHandle() {
-        return handle;
+    public MobEffect getHandle() {
+        return this.handle;
     }
 
     @Override
@@ -98,11 +98,11 @@ public class CraftPotionEffectType extends PotionEffectType {
 
     @Override
     public boolean isInstant() {
-        return handle.isInstantenous();
+        return this.handle.isInstantenous();
     }
 
     @Override
     public Color getColor() {
-        return Color.fromRGB(handle.getColor());
+        return Color.fromRGB(this.handle.getColor());
     }
 }

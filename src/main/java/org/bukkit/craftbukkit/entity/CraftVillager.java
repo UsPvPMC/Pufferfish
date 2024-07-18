@@ -2,14 +2,12 @@ package org.bukkit.craftbukkit.entity;
 
 import com.google.common.base.Preconditions;
 import java.util.Locale;
-import net.minecraft.core.BlockPosition;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.entity.monster.EntityZombie;
-import net.minecraft.world.entity.monster.EntityZombieVillager;
-import net.minecraft.world.entity.npc.EntityVillager;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.npc.VillagerProfession;
-import net.minecraft.world.level.block.BlockBed;
-import net.minecraft.world.level.block.state.IBlockData;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.CraftServer;
@@ -21,13 +19,13 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 
 public class CraftVillager extends CraftAbstractVillager implements Villager {
 
-    public CraftVillager(CraftServer server, EntityVillager entity) {
+    public CraftVillager(CraftServer server, net.minecraft.world.entity.npc.Villager entity) {
         super(server, entity);
     }
 
     @Override
-    public EntityVillager getHandle() {
-        return (EntityVillager) entity;
+    public net.minecraft.world.entity.npc.Villager getHandle() {
+        return (net.minecraft.world.entity.npc.Villager) entity;
     }
 
     @Override
@@ -42,55 +40,55 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
 
     @Override
     public void remove() {
-        getHandle().releaseAllPois();
+        this.getHandle().releaseAllPois();
 
         super.remove();
     }
 
     @Override
     public Profession getProfession() {
-        return CraftVillager.nmsToBukkitProfession(getHandle().getVillagerData().getProfession());
+        return CraftVillager.nmsToBukkitProfession(this.getHandle().getVillagerData().getProfession());
     }
 
     @Override
     public void setProfession(Profession profession) {
         Validate.notNull(profession);
-        getHandle().setVillagerData(getHandle().getVillagerData().setProfession(CraftVillager.bukkitToNmsProfession(profession)));
+        this.getHandle().setVillagerData(this.getHandle().getVillagerData().setProfession(CraftVillager.bukkitToNmsProfession(profession)));
     }
 
     @Override
     public Type getVillagerType() {
-        return Type.valueOf(BuiltInRegistries.VILLAGER_TYPE.getKey(getHandle().getVillagerData().getType()).getPath().toUpperCase(Locale.ROOT));
+        return Type.valueOf(BuiltInRegistries.VILLAGER_TYPE.getKey(this.getHandle().getVillagerData().getType()).getPath().toUpperCase(Locale.ROOT));
     }
 
     @Override
     public void setVillagerType(Type type) {
         Validate.notNull(type);
-        getHandle().setVillagerData(getHandle().getVillagerData().setType(BuiltInRegistries.VILLAGER_TYPE.get(CraftNamespacedKey.toMinecraft(type.getKey()))));
+        this.getHandle().setVillagerData(this.getHandle().getVillagerData().setType(BuiltInRegistries.VILLAGER_TYPE.get(CraftNamespacedKey.toMinecraft(type.getKey()))));
     }
 
     @Override
     public int getVillagerLevel() {
-        return getHandle().getVillagerData().getLevel();
+        return this.getHandle().getVillagerData().getLevel();
     }
 
     @Override
     public void setVillagerLevel(int level) {
         Preconditions.checkArgument(1 <= level && level <= 5, "level must be between [1, 5]");
 
-        getHandle().setVillagerData(getHandle().getVillagerData().setLevel(level));
+        this.getHandle().setVillagerData(this.getHandle().getVillagerData().setLevel(level));
     }
 
     @Override
     public int getVillagerExperience() {
-        return getHandle().getVillagerXp();
+        return this.getHandle().getVillagerXp();
     }
 
     @Override
     public void setVillagerExperience(int experience) {
         Preconditions.checkArgument(experience >= 0, "Experience must be positive");
 
-        getHandle().setVillagerXp(experience);
+        this.getHandle().setVillagerXp(experience);
     }
 
     @Override
@@ -98,34 +96,34 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
         Preconditions.checkArgument(location != null, "Location cannot be null");
         Preconditions.checkArgument(location.getWorld() != null, "Location needs to be in a world");
         Preconditions.checkArgument(location.getWorld().equals(getWorld()), "Cannot sleep across worlds");
-        Preconditions.checkState(!getHandle().generation, "Cannot sleep during world generation");
+        Preconditions.checkState(!this.getHandle().generation, "Cannot sleep during world generation");
 
-        BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-        IBlockData iblockdata = getHandle().level.getBlockState(position);
-        if (!(iblockdata.getBlock() instanceof BlockBed)) {
+        BlockPos position = new BlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        BlockState iblockdata = this.getHandle().level.getBlockState(position);
+        if (!(iblockdata.getBlock() instanceof BedBlock)) {
             return false;
         }
 
-        getHandle().startSleeping(position);
+        this.getHandle().startSleeping(position);
         return true;
     }
 
     @Override
     public void wakeup() {
         Preconditions.checkState(isSleeping(), "Cannot wakeup if not sleeping");
-        Preconditions.checkState(!getHandle().generation, "Cannot wakeup during world generation");
+        Preconditions.checkState(!this.getHandle().generation, "Cannot wakeup during world generation");
 
-        getHandle().stopSleeping();
+        this.getHandle().stopSleeping();
     }
 
     @Override
     public void shakeHead() {
-        getHandle().setUnhappy();
+        this.getHandle().setUnhappy();
     }
 
     @Override
     public ZombieVillager zombify() {
-        EntityZombieVillager entityzombievillager = EntityZombie.zombifyVillager(getHandle().level.getMinecraftWorld(), getHandle(), getHandle().blockPosition(), isSilent(), CreatureSpawnEvent.SpawnReason.CUSTOM);
+        net.minecraft.world.entity.monster.ZombieVillager entityzombievillager = Zombie.zombifyVillager(this.getHandle().level.getMinecraftWorld(), this.getHandle(), this.getHandle().blockPosition(), isSilent(), CreatureSpawnEvent.SpawnReason.CUSTOM);
         return (entityzombievillager != null) ? (ZombieVillager) entityzombievillager.getBukkitEntity() : null;
     }
 

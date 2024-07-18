@@ -32,7 +32,7 @@ public class CraftDecoratedPot extends CraftBlockEntityState<DecoratedPotBlockEn
         getSnapshot().getShards().clear();
 
         for (Material material : shard) {
-            addShard(material);
+            this.addShard(material);
         }
     }
 }

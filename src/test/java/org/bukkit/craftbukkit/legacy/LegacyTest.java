@@ -117,15 +117,15 @@ public class LegacyTest extends AbstractTestingBase {
     @Test
     public void toLegacyMaterial() {
         for (Material material : Material.values()) {
-            if (!INVALIDATED_MATERIALS.contains(material) && !material.isLegacy()) {
+            if (!this.INVALIDATED_MATERIALS.contains(material) && !material.isLegacy()) {
                 MaterialData converted = CraftLegacy.toLegacyData(material);
 
                 Assert.assertNotEquals("Could not toLegacy " + material, Material.LEGACY_AIR, converted.getItemType());
 
-                if (!INVALIDATED_MATERIALS.contains(converted.getItemType())) {
+                if (!this.INVALIDATED_MATERIALS.contains(converted.getItemType())) {
                     Assert.assertNotEquals("Could not fromLegacy(toLegacy) " + converted + "(" + material + ")", Material.AIR, CraftLegacy.fromLegacy(converted));
                 }
-                if (!INVERSION_FAILS.contains(material)) {
+                if (!this.INVERSION_FAILS.contains(material)) {
                     Assert.assertEquals("Could not fromLegacy(toLegacy) " + converted + "(" + material + ")", material, CraftLegacy.fromLegacy(converted));
                 }
             }
@@ -137,12 +137,12 @@ public class LegacyTest extends AbstractTestingBase {
     @Test
     public void fromLegacyMaterial() {
         for (Material material : Material.values()) {
-            if (!INVALIDATED_MATERIALS.contains(material) && material.isLegacy()) {
+            if (!this.INVALIDATED_MATERIALS.contains(material) && material.isLegacy()) {
                 Material converted = CraftLegacy.fromLegacy(material);
                 Assert.assertNotEquals("Could not fromLegacy " + material, Material.AIR, converted);
 
                 Assert.assertNotEquals("Could not toLegacy(fromLegacy) " + converted + "(" + material + ")", Material.AIR, CraftLegacy.toLegacy(converted));
-                if (!INVERSION_FAILS.contains(material)) {
+                if (!this.INVERSION_FAILS.contains(material)) {
                     Assert.assertEquals("Could not toLegacy(fromLegacy) " + converted + "(" + material + ")", material, CraftLegacy.toLegacy(converted));
                 }
             }

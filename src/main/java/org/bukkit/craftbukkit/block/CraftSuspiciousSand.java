@@ -1,6 +1,6 @@
 package org.bukkit.craftbukkit.block;
 
-import net.minecraft.resources.MinecraftKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.SuspiciousSandBlockEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -31,7 +31,7 @@ public class CraftSuspiciousSand extends CraftBlockEntityState<SuspiciousSandBlo
         super.applyTo(lootable);
 
         if (this.getSnapshot().lootTable == null) {
-            lootable.setLootTable((MinecraftKey) null, 0L);
+            lootable.setLootTable((ResourceLocation) null, 0L);
         }
     }
 
@@ -41,13 +41,13 @@ public class CraftSuspiciousSand extends CraftBlockEntityState<SuspiciousSandBlo
             return null;
         }
 
-        MinecraftKey key = getSnapshot().lootTable;
+        ResourceLocation key = getSnapshot().lootTable;
         return Bukkit.getLootTable(CraftNamespacedKey.fromMinecraft(key));
     }
 
     @Override
     public void setLootTable(LootTable table) {
-        setLootTable(table, getSeed());
+        this.setLootTable(table, this.getSeed());
     }
 
     @Override
@@ -57,11 +57,11 @@ public class CraftSuspiciousSand extends CraftBlockEntityState<SuspiciousSandBlo
 
     @Override
     public void setSeed(long seed) {
-        setLootTable(getLootTable(), seed);
+        this.setLootTable(this.getLootTable(), seed);
     }
 
     private void setLootTable(LootTable table, long seed) {
-        MinecraftKey key = (table == null) ? null : CraftNamespacedKey.toMinecraft(table.getKey());
+        ResourceLocation key = (table == null) ? null : CraftNamespacedKey.toMinecraft(table.getKey());
         getSnapshot().setLootTable(key, seed);
     }
 }

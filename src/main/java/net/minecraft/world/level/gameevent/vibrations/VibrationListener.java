@@ -8,29 +8,28 @@ import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import net.minecraft.SystemUtils;
-import net.minecraft.advancements.CriterionTriggers;
-import net.minecraft.core.BlockPosition;
-import net.minecraft.core.EnumDirection;
+import net.minecraft.Util;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.VibrationParticleOption;
-import net.minecraft.server.level.EntityPlayer;
-import net.minecraft.server.level.WorldServer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.GameEventTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.tags.TagsBlock;
 import net.minecraft.util.ExtraCodecs;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ClipBlockStateContext;
-import net.minecraft.world.level.World;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.GameEventListener;
 import net.minecraft.world.level.gameevent.PositionSource;
-import net.minecraft.world.phys.MovingObjectPosition;
-import net.minecraft.world.phys.Vec3D;
-
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 // CraftBukkit start
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.event.block.BlockReceiveGameEvent;
@@ -39,7 +38,7 @@ import org.bukkit.event.block.BlockReceiveGameEvent;
 public class VibrationListener implements GameEventListener {
 
     @VisibleForTesting
-    public static final Object2IntMap<GameEvent> VIBRATION_FREQUENCY_FOR_EVENT = Object2IntMaps.unmodifiable((Object2IntMap) SystemUtils.make(new Object2IntOpenHashMap(), (object2intopenhashmap) -> {
+    public static final Object2IntMap<GameEvent> VIBRATION_FREQUENCY_FOR_EVENT = Object2IntMaps.unmodifiable((Object2IntMap) Util.make(new Object2IntOpenHashMap(), (object2intopenhashmap) -> {
         object2intopenhashmap.put(GameEvent.STEP, 1);
         object2intopenhashmap.put(GameEvent.ITEM_INTERACT_FINISH, 2);
         object2intopenhashmap.put(GameEvent.FLAP, 2);
@@ -85,14 +84,14 @@ public class VibrationListener implements GameEventListener {
         object2intopenhashmap.put(GameEvent.INSTRUMENT_PLAY, 15);
     }));
     protected final PositionSource listenerSource;
-    protected final int listenerRange;
-    protected final VibrationListener.a config;
+    public int listenerRange;
+    protected final VibrationListener.VibrationListenerConfig config;
     @Nullable
     protected VibrationInfo currentVibration;
     protected int travelTimeInTicks;
     private final VibrationSelector selectionStrategy;
 
-    public static Codec<VibrationListener> codec(VibrationListener.a vibrationlistener_a) {
+    public static Codec<VibrationListener> codec(VibrationListener.VibrationListenerConfig callback) {
         return RecordCodecBuilder.create((instance) -> {
             return instance.group(PositionSource.CODEC.fieldOf("source").forGetter((vibrationlistener) -> {
                 return vibrationlistener.listenerSource;
@@ -105,38 +104,38 @@ public class VibrationListener implements GameEventListener {
             }), ExtraCodecs.NON_NEGATIVE_INT.fieldOf("event_delay").orElse(0).forGetter((vibrationlistener) -> {
                 return vibrationlistener.travelTimeInTicks;
             })).apply(instance, (positionsource, integer, optional, vibrationselector, integer1) -> {
-                return new VibrationListener(positionsource, integer, vibrationlistener_a, (VibrationInfo) optional.orElse(null), vibrationselector, integer1); // CraftBukkit - decompile error
+                return new VibrationListener(positionsource, integer, callback, (VibrationInfo) optional.orElse(null), vibrationselector, integer1); // CraftBukkit - decompile error
             });
         });
     }
 
-    private VibrationListener(PositionSource positionsource, int i, VibrationListener.a vibrationlistener_a, @Nullable VibrationInfo vibrationinfo, VibrationSelector vibrationselector, int j) {
-        this.listenerSource = positionsource;
-        this.listenerRange = i;
-        this.config = vibrationlistener_a;
-        this.currentVibration = vibrationinfo;
-        this.travelTimeInTicks = j;
-        this.selectionStrategy = vibrationselector;
+    private VibrationListener(PositionSource positionSource, int range, VibrationListener.VibrationListenerConfig callback, @Nullable VibrationInfo vibration, VibrationSelector selector, int delay) {
+        this.listenerSource = positionSource;
+        this.listenerRange = range;
+        this.config = callback;
+        this.currentVibration = vibration;
+        this.travelTimeInTicks = delay;
+        this.selectionStrategy = selector;
     }
 
-    public VibrationListener(PositionSource positionsource, int i, VibrationListener.a vibrationlistener_a) {
-        this(positionsource, i, vibrationlistener_a, (VibrationInfo) null, new VibrationSelector(), 0);
+    public VibrationListener(PositionSource positionSource, int range, VibrationListener.VibrationListenerConfig callback) {
+        this(positionSource, range, callback, (VibrationInfo) null, new VibrationSelector(), 0);
     }
 
-    public static int getGameEventFrequency(GameEvent gameevent) {
-        return VibrationListener.VIBRATION_FREQUENCY_FOR_EVENT.getOrDefault(gameevent, 0);
+    public static int getGameEventFrequency(GameEvent event) {
+        return VibrationListener.VIBRATION_FREQUENCY_FOR_EVENT.getOrDefault(event, 0);
     }
 
-    public void tick(World world) {
-        if (world instanceof WorldServer) {
-            WorldServer worldserver = (WorldServer) world;
+    public void tick(Level world) {
+        if (world instanceof ServerLevel) {
+            ServerLevel worldserver = (ServerLevel) world;
 
             if (this.currentVibration == null) {
                 this.selectionStrategy.chosenCandidate(worldserver.getGameTime()).ifPresent((vibrationinfo) -> {
                     this.currentVibration = vibrationinfo;
-                    Vec3D vec3d = this.currentVibration.pos();
+                    Vec3 vec3d = this.currentVibration.pos();
 
-                    this.travelTimeInTicks = MathHelper.floor(this.currentVibration.distance());
+                    this.travelTimeInTicks = Mth.floor(this.currentVibration.distance());
                     worldserver.sendParticles(new VibrationParticleOption(this.listenerSource, this.travelTimeInTicks), vec3d.x, vec3d.y, vec3d.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
                     this.config.onSignalSchedule();
                     this.selectionStrategy.startOver();
@@ -148,7 +147,7 @@ public class VibrationListener implements GameEventListener {
                 if (this.travelTimeInTicks <= 0) {
                     this.travelTimeInTicks = 0;
                     // CraftBukkit - decompile error
-                    this.config.onSignalReceive(worldserver, this, BlockPosition.containing(this.currentVibration.pos()), this.currentVibration.gameEvent(), (Entity) this.currentVibration.getEntity(worldserver).orElse(null), (Entity) this.currentVibration.getProjectileOwner(worldserver).orElse(null), this.currentVibration.distance());
+                    this.config.onSignalReceive(worldserver, this, BlockPos.containing(this.currentVibration.pos()), this.currentVibration.gameEvent(), (Entity) this.currentVibration.getEntity(worldserver).orElse(null), (Entity) this.currentVibration.getProjectileOwner(worldserver).orElse(null), this.currentVibration.distance());
                     this.currentVibration = null;
                 }
             }
@@ -167,61 +166,61 @@ public class VibrationListener implements GameEventListener {
     }
 
     @Override
-    public boolean handleGameEvent(WorldServer worldserver, GameEvent gameevent, GameEvent.a gameevent_a, Vec3D vec3d) {
+    public boolean handleGameEvent(ServerLevel world, GameEvent event, GameEvent.Context emitter, Vec3 emitterPos) {
         if (this.currentVibration != null) {
             return false;
-        } else if (!this.config.isValidVibration(gameevent, gameevent_a)) {
+        } else if (!this.config.isValidVibration(event, emitter)) {
             return false;
         } else {
-            Optional<Vec3D> optional = this.listenerSource.getPosition(worldserver);
+            Optional<Vec3> optional = this.listenerSource.getPosition(world);
 
             if (optional.isEmpty()) {
                 return false;
             } else {
-                Vec3D vec3d1 = (Vec3D) optional.get();
+                Vec3 vec3d1 = (Vec3) optional.get();
 
                 // CraftBukkit start
-                boolean defaultCancel = !this.config.shouldListen(worldserver, this, BlockPosition.containing(vec3d), gameevent, gameevent_a);
-                Entity entity = gameevent_a.sourceEntity();
-                BlockReceiveGameEvent event = new BlockReceiveGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(gameevent))), CraftBlock.at(worldserver, BlockPosition.containing(vec3d1)), (entity == null) ? null : entity.getBukkitEntity());
-                event.setCancelled(defaultCancel);
-                worldserver.getCraftServer().getPluginManager().callEvent(event);
-                if (event.isCancelled()) {
+                boolean defaultCancel = !this.config.shouldListen(world, this, BlockPos.containing(emitterPos), event, emitter);
+                Entity entity = emitter.sourceEntity();
+                BlockReceiveGameEvent event1 = new BlockReceiveGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(event))), CraftBlock.at(world, BlockPos.containing(vec3d1)), (entity == null) ? null : entity.getBukkitEntity());
+                event1.setCancelled(defaultCancel);
+                world.getCraftServer().getPluginManager().callEvent(event1);
+                if (event1.isCancelled()) {
                     // CraftBukkit end
                     return false;
-                } else if (isOccluded(worldserver, vec3d, vec3d1)) {
+                } else if (VibrationListener.isOccluded(world, emitterPos, vec3d1)) {
                     return false;
                 } else {
-                    this.scheduleVibration(worldserver, gameevent, gameevent_a, vec3d, vec3d1);
+                    this.scheduleVibration(world, event, emitter, emitterPos, vec3d1);
                     return true;
                 }
             }
         }
     }
 
-    public void forceGameEvent(WorldServer worldserver, GameEvent gameevent, GameEvent.a gameevent_a, Vec3D vec3d) {
-        this.listenerSource.getPosition(worldserver).ifPresent((vec3d1) -> {
-            this.scheduleVibration(worldserver, gameevent, gameevent_a, vec3d, vec3d1);
+    public void forceGameEvent(ServerLevel world, GameEvent event, GameEvent.Context emitter, Vec3 emitterPos) {
+        this.listenerSource.getPosition(world).ifPresent((vec3d1) -> {
+            this.scheduleVibration(world, event, emitter, emitterPos, vec3d1);
         });
     }
 
-    public void scheduleVibration(WorldServer worldserver, GameEvent gameevent, GameEvent.a gameevent_a, Vec3D vec3d, Vec3D vec3d1) {
-        this.selectionStrategy.addCandidate(new VibrationInfo(gameevent, (float) vec3d.distanceTo(vec3d1), vec3d, gameevent_a.sourceEntity()), worldserver.getGameTime());
+    public void scheduleVibration(ServerLevel world, GameEvent event, GameEvent.Context emitter, Vec3 emitterPos, Vec3 listenerPos) {
+        this.selectionStrategy.addCandidate(new VibrationInfo(event, (float) emitterPos.distanceTo(listenerPos), emitterPos, emitter.sourceEntity()), world.getGameTime());
     }
 
-    private static boolean isOccluded(World world, Vec3D vec3d, Vec3D vec3d1) {
-        Vec3D vec3d2 = new Vec3D((double) MathHelper.floor(vec3d.x) + 0.5D, (double) MathHelper.floor(vec3d.y) + 0.5D, (double) MathHelper.floor(vec3d.z) + 0.5D);
-        Vec3D vec3d3 = new Vec3D((double) MathHelper.floor(vec3d1.x) + 0.5D, (double) MathHelper.floor(vec3d1.y) + 0.5D, (double) MathHelper.floor(vec3d1.z) + 0.5D);
-        EnumDirection[] aenumdirection = EnumDirection.values();
+    private static boolean isOccluded(Level world, Vec3 start, Vec3 end) {
+        Vec3 vec3d2 = new Vec3((double) Mth.floor(start.x) + 0.5D, (double) Mth.floor(start.y) + 0.5D, (double) Mth.floor(start.z) + 0.5D);
+        Vec3 vec3d3 = new Vec3((double) Mth.floor(end.x) + 0.5D, (double) Mth.floor(end.y) + 0.5D, (double) Mth.floor(end.z) + 0.5D);
+        Direction[] aenumdirection = Direction.values();
         int i = aenumdirection.length;
 
         for (int j = 0; j < i; ++j) {
-            EnumDirection enumdirection = aenumdirection[j];
-            Vec3D vec3d4 = vec3d2.relative(enumdirection, 9.999999747378752E-6D);
+            Direction enumdirection = aenumdirection[j];
+            Vec3 vec3d4 = vec3d2.relative(enumdirection, 9.999999747378752E-6D);
 
             if (world.isBlockInLine(new ClipBlockStateContext(vec3d4, vec3d3, (iblockdata) -> {
-                return iblockdata.is(TagsBlock.OCCLUDES_VIBRATION_SIGNALS);
-            })).getType() != MovingObjectPosition.EnumMovingObjectType.BLOCK) {
+                return iblockdata.is(BlockTags.OCCLUDES_VIBRATION_SIGNALS);
+            })).getType() != HitResult.Type.BLOCK) {
                 return false;
             }
         }
@@ -229,7 +228,7 @@ public class VibrationListener implements GameEventListener {
         return true;
     }
 
-    public interface a {
+    public interface VibrationListenerConfig {
 
         default TagKey<GameEvent> getListenableEvents() {
             return GameEventTags.VIBRATIONS;
@@ -239,22 +238,22 @@ public class VibrationListener implements GameEventListener {
             return false;
         }
 
-        default boolean isValidVibration(GameEvent gameevent, GameEvent.a gameevent_a) {
-            if (!gameevent.is(this.getListenableEvents())) {
+        default boolean isValidVibration(GameEvent gameEvent, GameEvent.Context emitter) {
+            if (!gameEvent.is(this.getListenableEvents())) {
                 return false;
             } else {
-                Entity entity = gameevent_a.sourceEntity();
+                Entity entity = emitter.sourceEntity();
 
                 if (entity != null) {
                     if (entity.isSpectator()) {
                         return false;
                     }
 
-                    if (entity.isSteppingCarefully() && gameevent.is(GameEventTags.IGNORE_VIBRATIONS_SNEAKING)) {
-                        if (this.canTriggerAvoidVibration() && entity instanceof EntityPlayer) {
-                            EntityPlayer entityplayer = (EntityPlayer) entity;
+                    if (entity.isSteppingCarefully() && gameEvent.is(GameEventTags.IGNORE_VIBRATIONS_SNEAKING)) {
+                        if (this.canTriggerAvoidVibration() && entity instanceof ServerPlayer) {
+                            ServerPlayer entityplayer = (ServerPlayer) entity;
 
-                            CriterionTriggers.AVOID_VIBRATION.trigger(entityplayer);
+                            CriteriaTriggers.AVOID_VIBRATION.trigger(entityplayer);
                         }
 
                         return false;
@@ -265,13 +264,13 @@ public class VibrationListener implements GameEventListener {
                     }
                 }
 
-                return gameevent_a.affectedState() != null ? !gameevent_a.affectedState().is(TagsBlock.DAMPENS_VIBRATIONS) : true;
+                return emitter.affectedState() != null ? !emitter.affectedState().is(BlockTags.DAMPENS_VIBRATIONS) : true;
             }
         }
 
-        boolean shouldListen(WorldServer worldserver, GameEventListener gameeventlistener, BlockPosition blockposition, GameEvent gameevent, GameEvent.a gameevent_a);
+        boolean shouldListen(ServerLevel world, GameEventListener listener, BlockPos pos, GameEvent event, GameEvent.Context emitter);
 
-        void onSignalReceive(WorldServer worldserver, GameEventListener gameeventlistener, BlockPosition blockposition, GameEvent gameevent, @Nullable Entity entity, @Nullable Entity entity1, float f);
+        void onSignalReceive(ServerLevel world, GameEventListener listener, BlockPos pos, GameEvent event, @Nullable Entity entity, @Nullable Entity sourceEntity, float distance);
 
         default void onSignalSchedule() {}
     }

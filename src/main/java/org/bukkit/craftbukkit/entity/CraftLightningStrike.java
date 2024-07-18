@@ -1,23 +1,23 @@
 package org.bukkit.craftbukkit.entity;
 
-import net.minecraft.world.entity.EntityLightning;
+import net.minecraft.world.entity.LightningBolt;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LightningStrike;
 
 public class CraftLightningStrike extends CraftEntity implements LightningStrike {
-    public CraftLightningStrike(final CraftServer server, final EntityLightning entity) {
+    public CraftLightningStrike(final CraftServer server, final LightningBolt entity) {
         super(server, entity);
     }
 
     @Override
     public boolean isEffect() {
-        return getHandle().visualOnly;
+        return this.getHandle().visualOnly;
     }
 
     @Override
-    public EntityLightning getHandle() {
-        return (EntityLightning) entity;
+    public LightningBolt getHandle() {
+        return (LightningBolt) entity;
     }
 
     @Override
@@ -36,13 +36,13 @@ public class CraftLightningStrike extends CraftEntity implements LightningStrike
         @Override
         public boolean isSilent()
         {
-            return getHandle().isSilent;
+            return CraftLightningStrike.this.getHandle().isSilent;
         }
     };
 
     @Override
     public LightningStrike.Spigot spigot() {
-        return spigot;
+        return this.spigot;
     }
     // Spigot end
 }

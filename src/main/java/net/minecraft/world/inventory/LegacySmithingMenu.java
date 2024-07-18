@@ -2,22 +2,21 @@ package net.minecraft.world.inventory;
 
 import java.util.List;
 import javax.annotation.Nullable;
-import net.minecraft.world.entity.player.EntityHuman;
-import net.minecraft.world.entity.player.PlayerInventory;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.LegacyUpgradeRecipe;
-import net.minecraft.world.item.crafting.Recipes;
-import net.minecraft.world.level.World;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.IBlockData;
-
+import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.inventory.CraftInventoryView; // CraftBukkit
 
 /** @deprecated */
 @Deprecated(forRemoval = true)
-public class LegacySmithingMenu extends ContainerAnvilAbstract {
+public class LegacySmithingMenu extends ItemCombinerMenu {
 
-    private final World level;
+    private final Level level;
     public static final int INPUT_SLOT = 0;
     public static final int ADDITIONAL_SLOT = 1;
     public static final int RESULT_SLOT = 2;
@@ -32,14 +31,14 @@ public class LegacySmithingMenu extends ContainerAnvilAbstract {
     private CraftInventoryView bukkitEntity;
     // CraftBukkit end
 
-    public LegacySmithingMenu(int i, PlayerInventory playerinventory) {
-        this(i, playerinventory, ContainerAccess.NULL);
+    public LegacySmithingMenu(int syncId, Inventory playerInventory) {
+        this(syncId, playerInventory, ContainerLevelAccess.NULL);
     }
 
-    public LegacySmithingMenu(int i, PlayerInventory playerinventory, ContainerAccess containeraccess) {
-        super(Containers.LEGACY_SMITHING, i, playerinventory, containeraccess);
-        this.level = playerinventory.player.level;
-        this.recipes = this.level.getRecipeManager().getAllRecipesFor(Recipes.SMITHING).stream().filter((smithingrecipe) -> {
+    public LegacySmithingMenu(int syncId, Inventory playerInventory, ContainerLevelAccess context) {
+        super(MenuType.LEGACY_SMITHING, syncId, playerInventory, context);
+        this.level = playerInventory.player.level;
+        this.recipes = this.level.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING).stream().filter((smithingrecipe) -> {
             return smithingrecipe instanceof LegacyUpgradeRecipe;
         }).map((smithingrecipe) -> {
             return (LegacyUpgradeRecipe) smithingrecipe;
@@ -56,19 +55,19 @@ public class LegacySmithingMenu extends ContainerAnvilAbstract {
     }
 
     @Override
-    protected boolean isValidBlock(IBlockData iblockdata) {
-        return iblockdata.is(Blocks.SMITHING_TABLE);
+    protected boolean isValidBlock(BlockState state) {
+        return state.is(Blocks.SMITHING_TABLE);
     }
 
     @Override
-    protected boolean mayPickup(EntityHuman entityhuman, boolean flag) {
+    protected boolean mayPickup(Player player, boolean present) {
         return this.selectedRecipe != null && this.selectedRecipe.matches(this.inputSlots, this.level);
     }
 
     @Override
-    protected void onTake(EntityHuman entityhuman, ItemStack itemstack) {
-        itemstack.onCraftedBy(entityhuman.level, entityhuman, itemstack.getCount());
-        this.resultSlots.awardUsedRecipes(entityhuman);
+    protected void onTake(Player player, ItemStack stack) {
+        stack.onCraftedBy(player.level, player, stack.getCount());
+        this.resultSlots.awardUsedRecipes(player);
         this.shrinkStackInSlot(0);
         this.shrinkStackInSlot(1);
         this.access.execute((world, blockposition) -> {
@@ -76,23 +75,23 @@ public class LegacySmithingMenu extends ContainerAnvilAbstract {
         });
     }
 
-    private void shrinkStackInSlot(int i) {
-        ItemStack itemstack = this.inputSlots.getItem(i);
+    private void shrinkStackInSlot(int slot) {
+        ItemStack itemstack = this.inputSlots.getItem(slot);
 
         itemstack.shrink(1);
-        this.inputSlots.setItem(i, itemstack);
+        this.inputSlots.setItem(slot, itemstack);
     }
 
     @Override
     public void createResult() {
-        List<LegacyUpgradeRecipe> list = this.level.getRecipeManager().getRecipesFor(Recipes.SMITHING, this.inputSlots, this.level).stream().filter((smithingrecipe) -> {
+        List<LegacyUpgradeRecipe> list = this.level.getRecipeManager().getRecipesFor(RecipeType.SMITHING, this.inputSlots, this.level).stream().filter((smithingrecipe) -> {
             return smithingrecipe instanceof LegacyUpgradeRecipe;
         }).map((smithingrecipe) -> {
             return (LegacyUpgradeRecipe) smithingrecipe;
         }).toList();
 
         if (list.isEmpty()) {
-            org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareSmithingEvent(getBukkitView(), ItemStack.EMPTY); // CraftBukkit
+            org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareSmithingEvent(this.getBukkitView(), ItemStack.EMPTY); // CraftBukkit
         } else {
             LegacyUpgradeRecipe legacyupgraderecipe = (LegacyUpgradeRecipe) list.get(0);
             ItemStack itemstack = legacyupgraderecipe.assemble(this.inputSlots, this.level.registryAccess());
@@ -101,7 +100,7 @@ public class LegacySmithingMenu extends ContainerAnvilAbstract {
                 this.selectedRecipe = legacyupgraderecipe;
                 this.resultSlots.setRecipeUsed(legacyupgraderecipe);
                 // CraftBukkit start
-                org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareSmithingEvent(getBukkitView(), itemstack);
+                org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareSmithingEvent(this.getBukkitView(), itemstack);
                 // CraftBukkit end
             }
         }
@@ -109,32 +108,32 @@ public class LegacySmithingMenu extends ContainerAnvilAbstract {
     }
 
     @Override
-    public int getSlotToQuickMoveTo(ItemStack itemstack) {
-        return this.shouldQuickMoveToAdditionalSlot(itemstack) ? 1 : 0;
+    public int getSlotToQuickMoveTo(ItemStack stack) {
+        return this.shouldQuickMoveToAdditionalSlot(stack) ? 1 : 0;
     }
 
-    protected boolean shouldQuickMoveToAdditionalSlot(ItemStack itemstack) {
+    protected boolean shouldQuickMoveToAdditionalSlot(ItemStack stack) {
         return this.recipes.stream().anyMatch((legacyupgraderecipe) -> {
-            return legacyupgraderecipe.isAdditionIngredient(itemstack);
+            return legacyupgraderecipe.isAdditionIngredient(stack);
         });
     }
 
     @Override
-    public boolean canTakeItemForPickAll(ItemStack itemstack, Slot slot) {
-        return slot.container != this.resultSlots && super.canTakeItemForPickAll(itemstack, slot);
+    public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
+        return slot.container != this.resultSlots && super.canTakeItemForPickAll(stack, slot);
     }
 
     // CraftBukkit start
     @Override
     public CraftInventoryView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.bukkitEntity != null) {
+            return this.bukkitEntity;
         }
 
         org.bukkit.craftbukkit.inventory.CraftInventory inventory = new org.bukkit.craftbukkit.inventory.CraftInventorySmithing(
                 access.getLocation(), this.inputSlots, this.resultSlots);
-        bukkitEntity = new CraftInventoryView(this.player.getBukkitEntity(), inventory, this);
-        return bukkitEntity;
+        this.bukkitEntity = new CraftInventoryView(this.player.getBukkitEntity(), inventory, this);
+        return this.bukkitEntity;
     }
     // CraftBukkit end
 }

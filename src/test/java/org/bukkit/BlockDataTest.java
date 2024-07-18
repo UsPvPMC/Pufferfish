@@ -1,10 +1,11 @@
 package org.bukkit;
 
 import static org.hamcrest.Matchers.*;
-import net.minecraft.core.EnumDirection;
-import net.minecraft.world.level.block.BlockCake;
-import net.minecraft.world.level.block.BlockChest;
+
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CakeBlock;
+import net.minecraft.world.level.block.ChestBlock;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Cake;
@@ -18,7 +19,7 @@ public class BlockDataTest extends AbstractTestingBase {
 
     @Test
     public void testParsing() {
-        BlockData cakeTest = CraftBlockData.fromData(Blocks.CAKE.defaultBlockState().setValue(BlockCake.BITES, 3));
+        BlockData cakeTest = CraftBlockData.fromData(Blocks.CAKE.defaultBlockState().setValue(CakeBlock.BITES, 3));
 
         BlockData materialString = CraftBlockData.newData(Material.CAKE, "[bites=3]");
         Assert.assertThat(materialString, is(cakeTest));
@@ -50,7 +51,7 @@ public class BlockDataTest extends AbstractTestingBase {
 
     @Test(expected = IllegalArgumentException.class)
     public void testMistake() {
-        BlockData cakeTest = CraftBlockData.fromData(Blocks.CAKE.defaultBlockState().setValue(BlockCake.BITES, 3));
+        BlockData cakeTest = CraftBlockData.fromData(Blocks.CAKE.defaultBlockState().setValue(CakeBlock.BITES, 3));
 
         CraftBlockData.newData(Material.CAKE, cakeTest.toString());
     }
@@ -67,7 +68,7 @@ public class BlockDataTest extends AbstractTestingBase {
 
     @Test
     public void testClone() {
-        Cake cakeTest = (Cake) CraftBlockData.fromData(Blocks.CAKE.defaultBlockState().setValue(BlockCake.BITES, 3));
+        Cake cakeTest = (Cake) CraftBlockData.fromData(Blocks.CAKE.defaultBlockState().setValue(CakeBlock.BITES, 3));
         Cake clone = (Cake) cakeTest.clone();
 
         Assert.assertFalse("Clone did not return new object", cakeTest == clone);
@@ -146,7 +147,7 @@ public class BlockDataTest extends AbstractTestingBase {
         Assert.assertFalse(CraftBlockData.newData(null, "minecraft:trapped_chest[facing=east,waterlogged=false]").matches(CraftBlockData.newData(null, "minecraft:chest[waterlogged=true]")));
         Assert.assertTrue(CraftBlockData.newData(null, "minecraft:chest[facing=east,waterlogged=true]").matches(CraftBlockData.newData(null, "minecraft:chest[waterlogged=true,facing=east]")));
 
-        Chest one = (Chest) CraftBlockData.fromData(Blocks.CHEST.defaultBlockState().setValue(BlockChest.FACING, EnumDirection.EAST));
+        Chest one = (Chest) CraftBlockData.fromData(Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.EAST));
         Chest two = (Chest) CraftBlockData.newData(null, "minecraft:chest[waterlogged=false]");
 
         Assert.assertTrue(one.matches(two));
@@ -164,7 +165,7 @@ public class BlockDataTest extends AbstractTestingBase {
 
     @Test
     public void testGetAsString2() {
-        Chest data = (Chest) CraftBlockData.fromData(Blocks.CHEST.defaultBlockState().setValue(BlockChest.FACING, EnumDirection.EAST));
+        Chest data = (Chest) CraftBlockData.fromData(Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.EAST));
 
         Assert.assertThat(data.getAsString(true), is("minecraft:chest[facing=east,type=single,waterlogged=false]"));
         Assert.assertThat(data.getAsString(false), is("minecraft:chest[facing=east,type=single,waterlogged=false]"));

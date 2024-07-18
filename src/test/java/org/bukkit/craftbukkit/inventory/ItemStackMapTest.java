@@ -18,7 +18,7 @@ public class ItemStackMapTest extends ItemStackTest {
 
     @Parameters(name = "[{index}]:{" + NAME_PARAMETER + "}")
     public static List<Object[]> data() {
-        return StackProvider.compound(operators(), "%s %s", NAME_PARAMETER, Material.FILLED_MAP);
+        return StackProvider.compound(ItemStackMapTest.operators(), "%s %s", NAME_PARAMETER, Material.FILLED_MAP);
     }
 
     @SuppressWarnings("unchecked")

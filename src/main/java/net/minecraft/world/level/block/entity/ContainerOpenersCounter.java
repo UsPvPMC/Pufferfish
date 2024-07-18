@@ -1,13 +1,13 @@
 package net.minecraft.world.level.block.entity;
 
-import net.minecraft.core.BlockPosition;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.EntityHuman;
-import net.minecraft.world.level.World;
-import net.minecraft.world.level.block.state.IBlockData;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.phys.AxisAlignedBB;
+import net.minecraft.world.phys.AABB;
 
 public abstract class ContainerOpenersCounter {
 
@@ -17,86 +17,86 @@ public abstract class ContainerOpenersCounter {
 
     public ContainerOpenersCounter() {}
 
-    protected abstract void onOpen(World world, BlockPosition blockposition, IBlockData iblockdata);
+    protected abstract void onOpen(Level world, BlockPos pos, BlockState state);
 
-    protected abstract void onClose(World world, BlockPosition blockposition, IBlockData iblockdata);
+    protected abstract void onClose(Level world, BlockPos pos, BlockState state);
 
-    protected abstract void openerCountChanged(World world, BlockPosition blockposition, IBlockData iblockdata, int i, int j);
+    protected abstract void openerCountChanged(Level world, BlockPos pos, BlockState state, int oldViewerCount, int newViewerCount);
 
     // CraftBukkit start
-    public void onAPIOpen(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        onOpen(world, blockposition, iblockdata);
+    public void onAPIOpen(Level world, BlockPos blockposition, BlockState iblockdata) {
+        this.onOpen(world, blockposition, iblockdata);
     }
 
-    public void onAPIClose(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        onClose(world, blockposition, iblockdata);
+    public void onAPIClose(Level world, BlockPos blockposition, BlockState iblockdata) {
+        this.onClose(world, blockposition, iblockdata);
     }
 
-    public void openerAPICountChanged(World world, BlockPosition blockposition, IBlockData iblockdata, int i, int j) {
-        openerCountChanged(world, blockposition, iblockdata, i, j);
+    public void openerAPICountChanged(Level world, BlockPos blockposition, BlockState iblockdata, int i, int j) {
+        this.openerCountChanged(world, blockposition, iblockdata, i, j);
     }
     // CraftBukkit end
 
-    protected abstract boolean isOwnContainer(EntityHuman entityhuman);
+    protected abstract boolean isOwnContainer(Player player);
 
-    public void incrementOpeners(EntityHuman entityhuman, World world, BlockPosition blockposition, IBlockData iblockdata) {
+    public void incrementOpeners(Player player, Level world, BlockPos pos, BlockState state) {
         int oldPower = Math.max(0, Math.min(15, this.openCount)); // CraftBukkit - Get power before new viewer is added
         int i = this.openCount++;
 
         // CraftBukkit start - Call redstone event
-        if (world.getBlockState(blockposition).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
+        if (world.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
             int newPower = Math.max(0, Math.min(15, this.openCount));
 
             if (oldPower != newPower) {
-                org.bukkit.craftbukkit.event.CraftEventFactory.callRedstoneChange(world, blockposition, oldPower, newPower);
+                org.bukkit.craftbukkit.event.CraftEventFactory.callRedstoneChange(world, pos, oldPower, newPower);
             }
         }
         // CraftBukkit end
 
         if (i == 0) {
-            this.onOpen(world, blockposition, iblockdata);
-            world.gameEvent((Entity) entityhuman, GameEvent.CONTAINER_OPEN, blockposition);
-            scheduleRecheck(world, blockposition, iblockdata);
+            this.onOpen(world, pos, state);
+            world.gameEvent((Entity) player, GameEvent.CONTAINER_OPEN, pos);
+            ContainerOpenersCounter.scheduleRecheck(world, pos, state);
         }
 
-        this.openerCountChanged(world, blockposition, iblockdata, i, this.openCount);
+        this.openerCountChanged(world, pos, state, i, this.openCount);
     }
 
-    public void decrementOpeners(EntityHuman entityhuman, World world, BlockPosition blockposition, IBlockData iblockdata) {
+    public void decrementOpeners(Player player, Level world, BlockPos pos, BlockState state) {
         int oldPower = Math.max(0, Math.min(15, this.openCount)); // CraftBukkit - Get power before new viewer is added
         int i = this.openCount--;
 
         // CraftBukkit start - Call redstone event
-        if (world.getBlockState(blockposition).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
+        if (world.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
             int newPower = Math.max(0, Math.min(15, this.openCount));
 
             if (oldPower != newPower) {
-                org.bukkit.craftbukkit.event.CraftEventFactory.callRedstoneChange(world, blockposition, oldPower, newPower);
+                org.bukkit.craftbukkit.event.CraftEventFactory.callRedstoneChange(world, pos, oldPower, newPower);
             }
         }
         // CraftBukkit end
 
         if (this.openCount == 0) {
-            this.onClose(world, blockposition, iblockdata);
-            world.gameEvent((Entity) entityhuman, GameEvent.CONTAINER_CLOSE, blockposition);
+            this.onClose(world, pos, state);
+            world.gameEvent((Entity) player, GameEvent.CONTAINER_CLOSE, pos);
         }
 
-        this.openerCountChanged(world, blockposition, iblockdata, i, this.openCount);
+        this.openerCountChanged(world, pos, state, i, this.openCount);
     }
 
-    private int getOpenCount(World world, BlockPosition blockposition) {
-        int i = blockposition.getX();
-        int j = blockposition.getY();
-        int k = blockposition.getZ();
+    private int getOpenCount(Level world, BlockPos pos) {
+        int i = pos.getX();
+        int j = pos.getY();
+        int k = pos.getZ();
         float f = 5.0F;
-        AxisAlignedBB axisalignedbb = new AxisAlignedBB((double) ((float) i - 5.0F), (double) ((float) j - 5.0F), (double) ((float) k - 5.0F), (double) ((float) (i + 1) + 5.0F), (double) ((float) (j + 1) + 5.0F), (double) ((float) (k + 1) + 5.0F));
+        AABB axisalignedbb = new AABB((double) ((float) i - 5.0F), (double) ((float) j - 5.0F), (double) ((float) k - 5.0F), (double) ((float) (i + 1) + 5.0F), (double) ((float) (j + 1) + 5.0F), (double) ((float) (k + 1) + 5.0F));
 
-        return world.getEntities(EntityTypeTest.forClass(EntityHuman.class), axisalignedbb, this::isOwnContainer).size();
+        return world.getEntities(EntityTypeTest.forClass(Player.class), axisalignedbb, this::isOwnContainer).size();
     }
 
-    public void recheckOpeners(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        int i = this.getOpenCount(world, blockposition);
-        if (opened) i++; // CraftBukkit - add dummy count from API
+    public void recheckOpeners(Level world, BlockPos pos, BlockState state) {
+        int i = this.getOpenCount(world, pos);
+        if (this.opened) i++; // CraftBukkit - add dummy count from API
         int j = this.openCount;
 
         if (j != i) {
@@ -104,19 +104,19 @@ public abstract class ContainerOpenersCounter {
             boolean flag1 = j != 0;
 
             if (flag && !flag1) {
-                this.onOpen(world, blockposition, iblockdata);
-                world.gameEvent((Entity) null, GameEvent.CONTAINER_OPEN, blockposition);
+                this.onOpen(world, pos, state);
+                world.gameEvent((Entity) null, GameEvent.CONTAINER_OPEN, pos);
             } else if (!flag) {
-                this.onClose(world, blockposition, iblockdata);
-                world.gameEvent((Entity) null, GameEvent.CONTAINER_CLOSE, blockposition);
+                this.onClose(world, pos, state);
+                world.gameEvent((Entity) null, GameEvent.CONTAINER_CLOSE, pos);
             }
 
             this.openCount = i;
         }
 
-        this.openerCountChanged(world, blockposition, iblockdata, j, i);
+        this.openerCountChanged(world, pos, state, j, i);
         if (i > 0) {
-            scheduleRecheck(world, blockposition, iblockdata);
+            ContainerOpenersCounter.scheduleRecheck(world, pos, state);
         }
 
     }
@@ -125,7 +125,7 @@ public abstract class ContainerOpenersCounter {
         return this.openCount;
     }
 
-    private static void scheduleRecheck(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        world.scheduleTick(blockposition, iblockdata.getBlock(), 5);
+    private static void scheduleRecheck(Level world, BlockPos pos, BlockState state) {
+        world.scheduleTick(pos, state.getBlock(), 5);
     }
 }

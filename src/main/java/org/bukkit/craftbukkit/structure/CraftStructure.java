@@ -5,15 +5,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
-import net.minecraft.core.BlockPosition;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.EnumBlockMirror;
-import net.minecraft.world.level.block.EnumBlockRotation;
-import net.minecraft.world.level.levelgen.structure.templatesystem.DefinedStructure;
-import net.minecraft.world.level.levelgen.structure.templatesystem.DefinedStructureInfo;
-import net.minecraft.world.level.levelgen.structure.templatesystem.DefinedStructureProcessorRotation;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.levelgen.structure.templatesystem.BlockRotProcessor;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -32,9 +31,9 @@ import org.bukkit.util.BlockVector;
 
 public class CraftStructure implements Structure {
 
-    private final DefinedStructure structure;
+    private final StructureTemplate structure;
 
-    public CraftStructure(DefinedStructure structure) {
+    public CraftStructure(StructureTemplate structure) {
         this.structure = structure;
     }
 
@@ -45,7 +44,7 @@ public class CraftStructure implements Structure {
         Validate.notNull(world, "location#getWorld() cannot be null");
 
         BlockVector blockVector = new BlockVector(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-        place(world, blockVector, includeEntities, structureRotation, mirror, palette, integrity, random);
+        this.place(world, blockVector, includeEntities, structureRotation, mirror, palette, integrity, random);
     }
 
     @Override
@@ -58,16 +57,16 @@ public class CraftStructure implements Structure {
         }
 
         RandomSource randomSource = new RandomSourceWrapper(random);
-        DefinedStructureInfo definedstructureinfo = new DefinedStructureInfo()
-                .setMirror(EnumBlockMirror.valueOf(mirror.name()))
-                .setRotation(EnumBlockRotation.valueOf(structureRotation.name()))
+        StructurePlaceSettings definedstructureinfo = new StructurePlaceSettings()
+                .setMirror(net.minecraft.world.level.block.Mirror.valueOf(mirror.name()))
+                .setRotation(Rotation.valueOf(structureRotation.name()))
                 .setIgnoreEntities(!includeEntities)
-                .addProcessor(new DefinedStructureProcessorRotation(integrity))
+                .addProcessor(new BlockRotProcessor(integrity))
                 .setRandom(randomSource);
         definedstructureinfo.palette = palette;
 
-        BlockPosition blockPosition = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-        structure.placeInWorld(((CraftRegionAccessor) regionAccessor).getHandle(), blockPosition, blockPosition, definedstructureinfo, randomSource, 2);
+        BlockPos blockPosition = new BlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        this.structure.placeInWorld(((CraftRegionAccessor) regionAccessor).getHandle(), blockPosition, blockPosition, definedstructureinfo, randomSource, 2);
     }
 
     @Override
@@ -79,7 +78,7 @@ public class CraftStructure implements Structure {
 
         Location origin = new Location(world, Math.min(corner1.getBlockX(), corner2.getBlockX()), Math.min(corner1.getBlockY(), corner2.getBlockY()), Math.min(corner1.getBlockZ(), corner2.getBlockZ()));
         BlockVector size = new BlockVector(Math.abs(corner1.getBlockX() - corner2.getBlockX()), Math.abs(corner1.getBlockY() - corner2.getBlockY()), Math.abs(corner1.getBlockZ() - corner2.getBlockZ()));
-        fill(origin, size, includeEntities);
+        this.fill(origin, size, includeEntities);
     }
 
     @Override
@@ -92,19 +91,19 @@ public class CraftStructure implements Structure {
             throw new IllegalArgumentException("Size must be at least 1x1x1 but was " + size.getBlockX() + "x" + size.getBlockY() + "x" + size.getBlockZ());
         }
 
-        structure.fillFromWorld(((CraftWorld) world).getHandle(), new BlockPosition(origin.getBlockX(), origin.getBlockY(), origin.getBlockZ()), new BlockPosition(size.getBlockX(), size.getBlockY(), size.getBlockZ()), includeEntities, Blocks.STRUCTURE_VOID);
+        this.structure.fillFromWorld(((CraftWorld) world).getHandle(), new BlockPos(origin.getBlockX(), origin.getBlockY(), origin.getBlockZ()), new BlockPos(size.getBlockX(), size.getBlockY(), size.getBlockZ()), includeEntities, Blocks.STRUCTURE_VOID);
     }
 
     @Override
     public BlockVector getSize() {
-        return new BlockVector(structure.getSize().getX(), structure.getSize().getY(), structure.getSize().getZ());
+        return new BlockVector(this.structure.getSize().getX(), this.structure.getSize().getY(), this.structure.getSize().getZ());
     }
 
     @Override
     public List<Entity> getEntities() {
         List<Entity> entities = new ArrayList<>();
-        for (DefinedStructure.EntityInfo entity : structure.entityInfoList) {
-            EntityTypes.create(entity.nbt, ((CraftWorld) Bukkit.getServer().getWorlds().get(0)).getHandle()).ifPresent(dummyEntity -> {
+        for (StructureTemplate.StructureEntityInfo entity : structure.entityInfoList) {
+            EntityType.create(entity.nbt, ((CraftWorld) Bukkit.getServer().getWorlds().get(0)).getHandle()).ifPresent(dummyEntity -> {
                 dummyEntity.setPos(entity.pos.x, entity.pos.y, entity.pos.z);
                 entities.add(dummyEntity.getBukkitEntity());
             });
@@ -129,10 +128,10 @@ public class CraftStructure implements Structure {
 
     @Override
     public PersistentDataContainer getPersistentDataContainer() {
-        return getHandle().persistentDataContainer;
+        return this.getHandle().persistentDataContainer;
     }
 
-    public DefinedStructure getHandle() {
-        return structure;
+    public StructureTemplate getHandle() {
+        return this.structure;
     }
 }

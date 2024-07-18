@@ -2,15 +2,14 @@ package net.minecraft.world.item.crafting;
 
 import com.google.gson.JsonObject;
 import java.util.stream.Stream;
-import net.minecraft.core.IRegistryCustom;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketDataSerializer;
-import net.minecraft.resources.MinecraftKey;
-import net.minecraft.util.ChatDeserializer;
-import net.minecraft.world.IInventory;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.World;
-
+import net.minecraft.world.level.Level;
 // CraftBukkit start
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.inventory.CraftRecipe;
@@ -23,27 +22,27 @@ import org.bukkit.inventory.Recipe;
 @Deprecated(forRemoval = true)
 public class LegacyUpgradeRecipe implements SmithingRecipe {
 
-    final RecipeItemStack base;
-    final RecipeItemStack addition;
+    final Ingredient base;
+    final Ingredient addition;
     final ItemStack result;
-    private final MinecraftKey id;
+    private final ResourceLocation id;
 
-    public LegacyUpgradeRecipe(MinecraftKey minecraftkey, RecipeItemStack recipeitemstack, RecipeItemStack recipeitemstack1, ItemStack itemstack) {
-        this.id = minecraftkey;
-        this.base = recipeitemstack;
-        this.addition = recipeitemstack1;
-        this.result = itemstack;
+    public LegacyUpgradeRecipe(ResourceLocation id, Ingredient base, Ingredient addition, ItemStack result) {
+        this.id = id;
+        this.base = base;
+        this.addition = addition;
+        this.result = result;
     }
 
     @Override
-    public boolean matches(IInventory iinventory, World world) {
-        return this.base.test(iinventory.getItem(0)) && this.addition.test(iinventory.getItem(1));
+    public boolean matches(Container inventory, Level world) {
+        return this.base.test(inventory.getItem(0)) && this.addition.test(inventory.getItem(1));
     }
 
     @Override
-    public ItemStack assemble(IInventory iinventory, IRegistryCustom iregistrycustom) {
+    public ItemStack assemble(Container inventory, RegistryAccess registryManager) {
         ItemStack itemstack = this.result.copy();
-        NBTTagCompound nbttagcompound = iinventory.getItem(0).getTag();
+        CompoundTag nbttagcompound = inventory.getItem(0).getTag();
 
         if (nbttagcompound != null) {
             itemstack.setTag(nbttagcompound.copy());
@@ -53,32 +52,32 @@ public class LegacyUpgradeRecipe implements SmithingRecipe {
     }
 
     @Override
-    public boolean canCraftInDimensions(int i, int j) {
-        return i * j >= 2;
+    public boolean canCraftInDimensions(int width, int height) {
+        return width * height >= 2;
     }
 
     @Override
-    public ItemStack getResultItem(IRegistryCustom iregistrycustom) {
+    public ItemStack getResultItem(RegistryAccess registryManager) {
         return this.result;
     }
 
     @Override
-    public boolean isTemplateIngredient(ItemStack itemstack) {
+    public boolean isTemplateIngredient(ItemStack stack) {
         return false;
     }
 
     @Override
-    public boolean isBaseIngredient(ItemStack itemstack) {
-        return this.base.test(itemstack);
+    public boolean isBaseIngredient(ItemStack stack) {
+        return this.base.test(stack);
     }
 
     @Override
-    public boolean isAdditionIngredient(ItemStack itemstack) {
-        return this.addition.test(itemstack);
+    public boolean isAdditionIngredient(ItemStack stack) {
+        return this.addition.test(stack);
     }
 
     @Override
-    public MinecraftKey getId() {
+    public ResourceLocation getId() {
         return this.id;
     }
 
@@ -105,32 +104,32 @@ public class LegacyUpgradeRecipe implements SmithingRecipe {
     }
     // CraftBukkit end
 
-    public static class a implements RecipeSerializer<LegacyUpgradeRecipe> {
+    public static class Serializer implements RecipeSerializer<LegacyUpgradeRecipe> {
 
-        public a() {}
+        public Serializer() {}
 
         @Override
-        public LegacyUpgradeRecipe fromJson(MinecraftKey minecraftkey, JsonObject jsonobject) {
-            RecipeItemStack recipeitemstack = RecipeItemStack.fromJson(ChatDeserializer.getAsJsonObject(jsonobject, "base"));
-            RecipeItemStack recipeitemstack1 = RecipeItemStack.fromJson(ChatDeserializer.getAsJsonObject(jsonobject, "addition"));
-            ItemStack itemstack = ShapedRecipes.itemStackFromJson(ChatDeserializer.getAsJsonObject(jsonobject, "result"));
+        public LegacyUpgradeRecipe fromJson(ResourceLocation id, JsonObject json) {
+            Ingredient recipeitemstack = Ingredient.fromJson(GsonHelper.getAsJsonObject(json, "base"));
+            Ingredient recipeitemstack1 = Ingredient.fromJson(GsonHelper.getAsJsonObject(json, "addition"));
+            ItemStack itemstack = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(json, "result"));
 
-            return new LegacyUpgradeRecipe(minecraftkey, recipeitemstack, recipeitemstack1, itemstack);
+            return new LegacyUpgradeRecipe(id, recipeitemstack, recipeitemstack1, itemstack);
         }
 
         @Override
-        public LegacyUpgradeRecipe fromNetwork(MinecraftKey minecraftkey, PacketDataSerializer packetdataserializer) {
-            RecipeItemStack recipeitemstack = RecipeItemStack.fromNetwork(packetdataserializer);
-            RecipeItemStack recipeitemstack1 = RecipeItemStack.fromNetwork(packetdataserializer);
-            ItemStack itemstack = packetdataserializer.readItem();
+        public LegacyUpgradeRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buf) {
+            Ingredient recipeitemstack = Ingredient.fromNetwork(buf);
+            Ingredient recipeitemstack1 = Ingredient.fromNetwork(buf);
+            ItemStack itemstack = buf.readItem();
 
-            return new LegacyUpgradeRecipe(minecraftkey, recipeitemstack, recipeitemstack1, itemstack);
+            return new LegacyUpgradeRecipe(id, recipeitemstack, recipeitemstack1, itemstack);
         }
 
-        public void toNetwork(PacketDataSerializer packetdataserializer, LegacyUpgradeRecipe legacyupgraderecipe) {
-            legacyupgraderecipe.base.toNetwork(packetdataserializer);
-            legacyupgraderecipe.addition.toNetwork(packetdataserializer);
-            packetdataserializer.writeItem(legacyupgraderecipe.result);
+        public void toNetwork(FriendlyByteBuf buf, LegacyUpgradeRecipe recipe) {
+            recipe.base.toNetwork(buf);
+            recipe.addition.toNetwork(buf);
+            buf.writeItem(recipe.result);
         }
     }
 }

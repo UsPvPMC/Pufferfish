@@ -18,7 +18,7 @@ public class ItemStackSkullTest extends ItemStackTest {
 
     @Parameters(name = "[{index}]:{" + NAME_PARAMETER + "}")
     public static List<Object[]> data() {
-        return StackProvider.compound(operators(), "%s %s", NAME_PARAMETER, Material.PLAYER_HEAD);
+        return StackProvider.compound(ItemStackSkullTest.operators(), "%s %s", NAME_PARAMETER, Material.PLAYER_HEAD);
     }
 
     @SuppressWarnings("unchecked")

@@ -9,19 +9,19 @@ public final class CraftIronBars extends org.bukkit.craftbukkit.block.data.Craft
         super();
     }
 
-    public CraftIronBars(net.minecraft.world.level.block.state.IBlockData state) {
+    public CraftIronBars(net.minecraft.world.level.block.state.BlockState state) {
         super(state);
     }
 
     // org.bukkit.craftbukkit.block.data.CraftMultipleFacing
 
-    private static final net.minecraft.world.level.block.state.properties.BlockStateBoolean[] FACES = new net.minecraft.world.level.block.state.properties.BlockStateBoolean[]{
-        getBoolean(net.minecraft.world.level.block.BlockIronBars.class, "north", true), getBoolean(net.minecraft.world.level.block.BlockIronBars.class, "east", true), getBoolean(net.minecraft.world.level.block.BlockIronBars.class, "south", true), getBoolean(net.minecraft.world.level.block.BlockIronBars.class, "west", true), getBoolean(net.minecraft.world.level.block.BlockIronBars.class, "up", true), getBoolean(net.minecraft.world.level.block.BlockIronBars.class, "down", true)
+    private static final net.minecraft.world.level.block.state.properties.BooleanProperty[] FACES = new net.minecraft.world.level.block.state.properties.BooleanProperty[]{
+        getBoolean(net.minecraft.world.level.block.IronBarsBlock.class, "north", true), getBoolean(net.minecraft.world.level.block.IronBarsBlock.class, "east", true), getBoolean(net.minecraft.world.level.block.IronBarsBlock.class, "south", true), getBoolean(net.minecraft.world.level.block.IronBarsBlock.class, "west", true), getBoolean(net.minecraft.world.level.block.IronBarsBlock.class, "up", true), getBoolean(net.minecraft.world.level.block.IronBarsBlock.class, "down", true)
     };
 
     @Override
     public boolean hasFace(org.bukkit.block.BlockFace face) {
-        net.minecraft.world.level.block.state.properties.BlockStateBoolean state = FACES[face.ordinal()];
+        net.minecraft.world.level.block.state.properties.BooleanProperty state = CraftIronBars.FACES[face.ordinal()];
         if (state == null) {
             throw new IllegalArgumentException("Non-allowed face " + face + ". Check MultipleFacing.getAllowedFaces.");
         }
@@ -30,7 +30,7 @@ public final class CraftIronBars extends org.bukkit.craftbukkit.block.data.Craft
 
     @Override
     public void setFace(org.bukkit.block.BlockFace face, boolean has) {
-        net.minecraft.world.level.block.state.properties.BlockStateBoolean state = FACES[face.ordinal()];
+        net.minecraft.world.level.block.state.properties.BooleanProperty state = CraftIronBars.FACES[face.ordinal()];
         if (state == null) {
             throw new IllegalArgumentException("Non-allowed face " + face + ". Check MultipleFacing.getAllowedFaces.");
         }
@@ -42,7 +42,7 @@ public final class CraftIronBars extends org.bukkit.craftbukkit.block.data.Craft
         com.google.common.collect.ImmutableSet.Builder<org.bukkit.block.BlockFace> faces = com.google.common.collect.ImmutableSet.builder();
 
         for (int i = 0; i < FACES.length; i++) {
-            if (FACES[i] != null && get(FACES[i])) {
+            if (CraftIronBars.FACES[i] != null && get(CraftIronBars.FACES[i])) {
                 faces.add(org.bukkit.block.BlockFace.values()[i]);
             }
         }
@@ -55,7 +55,7 @@ public final class CraftIronBars extends org.bukkit.craftbukkit.block.data.Craft
         com.google.common.collect.ImmutableSet.Builder<org.bukkit.block.BlockFace> faces = com.google.common.collect.ImmutableSet.builder();
 
         for (int i = 0; i < FACES.length; i++) {
-            if (FACES[i] != null) {
+            if (CraftIronBars.FACES[i] != null) {
                 faces.add(org.bukkit.block.BlockFace.values()[i]);
             }
         }
@@ -65,15 +65,15 @@ public final class CraftIronBars extends org.bukkit.craftbukkit.block.data.Craft
 
     // org.bukkit.craftbukkit.block.data.CraftWaterlogged
 
-    private static final net.minecraft.world.level.block.state.properties.BlockStateBoolean WATERLOGGED = getBoolean(net.minecraft.world.level.block.BlockIronBars.class, "waterlogged");
+    private static final net.minecraft.world.level.block.state.properties.BooleanProperty WATERLOGGED = getBoolean(net.minecraft.world.level.block.IronBarsBlock.class, "waterlogged");
 
     @Override
     public boolean isWaterlogged() {
-        return get(WATERLOGGED);
+        return get(CraftIronBars.WATERLOGGED);
     }
 
     @Override
     public void setWaterlogged(boolean waterlogged) {
-        set(WATERLOGGED, waterlogged);
+        set(CraftIronBars.WATERLOGGED, waterlogged);
     }
 }

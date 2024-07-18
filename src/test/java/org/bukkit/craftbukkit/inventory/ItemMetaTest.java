@@ -7,12 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemBlock;
-import net.minecraft.world.item.ItemBlockWallable;
+import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ITileEntity;
+import net.minecraft.world.level.block.EntityBlock;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
@@ -69,28 +69,28 @@ public class ItemMetaTest extends AbstractTestingBase {
 
     @Test(expected = IllegalArgumentException.class)
     public void testPowerLimitExact() {
-        newFireworkMeta().setPower(MAX_FIREWORK_POWER + 1);
+        ItemMetaTest.newFireworkMeta().setPower(ItemMetaTest.MAX_FIREWORK_POWER + 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testPowerLimitMax() {
-        newFireworkMeta().setPower(Integer.MAX_VALUE);
+        ItemMetaTest.newFireworkMeta().setPower(Integer.MAX_VALUE);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testPowerLimitMin() {
-        newFireworkMeta().setPower(Integer.MIN_VALUE);
+        ItemMetaTest.newFireworkMeta().setPower(Integer.MIN_VALUE);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testPowerLimitNegative() {
-        newFireworkMeta().setPower(-1);
+        ItemMetaTest.newFireworkMeta().setPower(-1);
     }
 
     @Test
     public void testPowers() {
-        for (int i = 0; i <= MAX_FIREWORK_POWER; i++) {
-            FireworkMeta firework = newFireworkMeta();
+        for (int i = 0; i <= ItemMetaTest.MAX_FIREWORK_POWER; i++) {
+            FireworkMeta firework = ItemMetaTest.newFireworkMeta();
             firework.setPower(i);
             assertThat(String.valueOf(i), firework.getPower(), is(i));
         }
@@ -160,11 +160,11 @@ public class ItemMetaTest extends AbstractTestingBase {
         List<Block> queue = new ArrayList<>();
 
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item instanceof ItemBlock) {
-                queue.add(((ItemBlock) item).getBlock());
+            if (item instanceof BlockItem) {
+                queue.add(((BlockItem) item).getBlock());
             }
-            if (item instanceof ItemBlockWallable) {
-                queue.add(((ItemBlockWallable) item).wallBlock);
+            if (item instanceof StandingAndWallBlockItem) {
+                queue.add(((StandingAndWallBlockItem) item).wallBlock);
             }
         }
 
@@ -178,7 +178,7 @@ public class ItemMetaTest extends AbstractTestingBase {
                 }
 
                 ItemMeta meta = stack.getItemMeta();
-                if (block instanceof ITileEntity) {
+                if (block instanceof EntityBlock) {
                     assertTrue(stack + " has meta of type " + meta + " expected BlockStateMeta", meta instanceof BlockStateMeta);
 
                     BlockStateMeta blockState = (BlockStateMeta) meta;
@@ -195,7 +195,7 @@ public class ItemMetaTest extends AbstractTestingBase {
     @Test
     public void testSpawnEggsHasMeta() {
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item instanceof net.minecraft.world.item.ItemMonsterEgg) {
+            if (item instanceof net.minecraft.world.item.SpawnEggItem) {
                 Material material = CraftMagicNumbers.getMaterial(item);
                 CraftMetaItem baseMeta = (CraftMetaItem) Bukkit.getItemFactory().getItemMeta(material);
                 ItemMeta baseMetaItem = CraftItemStack.getItemMeta(item.getDefaultInstance());
@@ -362,7 +362,7 @@ public class ItemMetaTest extends AbstractTestingBase {
             new StackProvider(Material.ARMOR_STAND) {
                 @Override ItemStack operate(ItemStack cleanStack) {
                     final CraftMetaArmorStand meta = (CraftMetaArmorStand) cleanStack.getItemMeta();
-                    meta.entityTag = new NBTTagCompound();
+                    meta.entityTag = new CompoundTag();
                     meta.entityTag.putBoolean("Small", true);
                     cleanStack.setItemMeta(meta);
                     return cleanStack;
@@ -379,7 +379,7 @@ public class ItemMetaTest extends AbstractTestingBase {
             new StackProvider(Material.ITEM_FRAME) {
                 @Override ItemStack operate(ItemStack cleanStack) {
                     final CraftMetaEntityTag meta = ((CraftMetaEntityTag) cleanStack.getItemMeta());
-                    meta.entityTag = new NBTTagCompound();
+                    meta.entityTag = new CompoundTag();
                     meta.entityTag.putBoolean("Invisible", true);
                     cleanStack.setItemMeta(meta);
                     return cleanStack;
@@ -414,8 +414,8 @@ public class ItemMetaTest extends AbstractTestingBase {
         assertThat("Forgotten test?", providers, hasSize(ItemStackTest.COMPOUND_MATERIALS.length - 4/* Normal item meta, skulls, eggs and tile entities */));
 
         for (final StackProvider provider : providers) {
-            downCastTest(new BukkitWrapper(provider));
-            downCastTest(new CraftWrapper(provider));
+            this.downCastTest(new BukkitWrapper(provider));
+            this.downCastTest(new CraftWrapper(provider));
         }
     }
 
@@ -455,13 +455,13 @@ public class ItemMetaTest extends AbstractTestingBase {
         assertThat(name, provider.stack(), is(provider.stack()));
         assertThat(name, provider.stack().isSimilar(provider.stack()), is(true));
 
-        downCastTest(name, provider.stack(), blank);
+        this.downCastTest(name, provider.stack(), blank);
         blank.setItemMeta(blank.getItemMeta());
-        downCastTest(name, provider.stack(), blank);
+        this.downCastTest(name, provider.stack(), blank);
 
-        downCastTest(name, provider.stack(), craftBlank);
+        this.downCastTest(name, provider.stack(), craftBlank);
         craftBlank.setItemMeta(craftBlank.getItemMeta());
-        downCastTest(name, provider.stack(), craftBlank);
+        this.downCastTest(name, provider.stack(), craftBlank);
     }
 
     private void downCastTest(final String name, final ItemStack stack, final ItemStack blank) {

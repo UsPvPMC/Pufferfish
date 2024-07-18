@@ -3,7 +3,7 @@ package org.spigotmc;
 import java.io.File;
 import java.util.List;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.EntityPlayer;
+import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
@@ -28,7 +28,7 @@ public class RestartCommand extends Command
                 @Override
                 public void run()
                 {
-                    restart();
+                    RestartCommand.restart();
                 }
             } );
         }
@@ -37,7 +37,7 @@ public class RestartCommand extends Command
 
     public static void restart()
     {
-        restart( SpigotConfig.restartScript );
+        RestartCommand.restart( SpigotConfig.restartScript );
     }
 
     private static void restart(final String restartScript)
@@ -54,7 +54,7 @@ public class RestartCommand extends Command
                 WatchdogThread.doStop();
 
                 // Kick all players
-                for ( EntityPlayer p : (List<EntityPlayer>) MinecraftServer.getServer().getPlayerList().players )
+                for ( ServerPlayer p : (List<ServerPlayer>) MinecraftServer.getServer().getPlayerList().players )
                 {
                     p.connection.disconnect(SpigotConfig.restartMessage);
                 }

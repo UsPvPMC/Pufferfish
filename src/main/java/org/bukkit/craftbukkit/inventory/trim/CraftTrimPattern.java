@@ -17,10 +17,10 @@ public class CraftTrimPattern implements TrimPattern {
     @Override
     @NotNull
     public NamespacedKey getKey() {
-        return key;
+        return this.key;
     }
 
     public net.minecraft.world.item.armortrim.TrimPattern getHandle() {
-        return handle;
+        return this.handle;
     }
 }

@@ -2,14 +2,14 @@ package net.minecraft.world.damagesource;
 
 import javax.annotation.Nullable;
 import net.minecraft.core.Holder;
-import net.minecraft.network.chat.IChatBaseComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityLiving;
-import net.minecraft.world.entity.player.EntityHuman;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.Vec3D;
+import net.minecraft.world.phys.Vec3;
 
 public class DamageSource {
 
@@ -19,14 +19,14 @@ public class DamageSource {
     @Nullable
     private final Entity directEntity;
     @Nullable
-    private final Vec3D damageSourcePosition;
+    private final Vec3 damageSourcePosition;
     // CraftBukkit start
     private boolean sweep;
     private boolean melting;
     private boolean poison;
 
     public boolean isSweep() {
-        return sweep;
+        return this.sweep;
     }
 
     public DamageSource sweep() {
@@ -35,7 +35,7 @@ public class DamageSource {
     }
 
     public boolean isMelting() {
-        return melting;
+        return this.melting;
     }
 
     public DamageSource melting() {
@@ -44,7 +44,7 @@ public class DamageSource {
     }
 
     public boolean isPoison() {
-        return poison;
+        return this.poison;
     }
 
     public DamageSource poison() {
@@ -65,27 +65,27 @@ public class DamageSource {
         return this.causingEntity != this.directEntity;
     }
 
-    private DamageSource(Holder<DamageType> holder, @Nullable Entity entity, @Nullable Entity entity1, @Nullable Vec3D vec3d) {
-        this.type = holder;
-        this.causingEntity = entity1;
-        this.directEntity = entity;
-        this.damageSourcePosition = vec3d;
+    private DamageSource(Holder<DamageType> type, @Nullable Entity source, @Nullable Entity attacker, @Nullable Vec3 position) {
+        this.type = type;
+        this.causingEntity = attacker;
+        this.directEntity = source;
+        this.damageSourcePosition = position;
     }
 
-    public DamageSource(Holder<DamageType> holder, @Nullable Entity entity, @Nullable Entity entity1) {
-        this(holder, entity, entity1, (Vec3D) null);
+    public DamageSource(Holder<DamageType> type, @Nullable Entity source, @Nullable Entity attacker) {
+        this(type, source, attacker, (Vec3) null);
     }
 
-    public DamageSource(Holder<DamageType> holder, Vec3D vec3d) {
-        this(holder, (Entity) null, (Entity) null, vec3d);
+    public DamageSource(Holder<DamageType> type, Vec3 position) {
+        this(type, (Entity) null, (Entity) null, position);
     }
 
-    public DamageSource(Holder<DamageType> holder, @Nullable Entity entity) {
-        this(holder, entity, entity);
+    public DamageSource(Holder<DamageType> type, @Nullable Entity attacker) {
+        this(type, attacker, attacker);
     }
 
-    public DamageSource(Holder<DamageType> holder) {
-        this(holder, (Entity) null, (Entity) null, (Vec3D) null);
+    public DamageSource(Holder<DamageType> type) {
+        this(type, (Entity) null, (Entity) null, (Vec3) null);
     }
 
     @Nullable
@@ -98,21 +98,21 @@ public class DamageSource {
         return this.causingEntity;
     }
 
-    public IChatBaseComponent getLocalizedDeathMessage(EntityLiving entityliving) {
+    public Component getLocalizedDeathMessage(LivingEntity killed) {
         String s = "death.attack." + this.type().msgId();
 
         if (this.causingEntity == null && this.directEntity == null) {
-            EntityLiving entityliving1 = entityliving.getKillCredit();
+            LivingEntity entityliving1 = killed.getKillCredit();
             String s1 = s + ".player";
 
-            return entityliving1 != null ? IChatBaseComponent.translatable(s1, entityliving.getDisplayName(), entityliving1.getDisplayName()) : IChatBaseComponent.translatable(s, entityliving.getDisplayName());
+            return entityliving1 != null ? Component.translatable(s1, killed.getDisplayName(), entityliving1.getDisplayName()) : Component.translatable(s, killed.getDisplayName());
         } else {
-            IChatBaseComponent ichatbasecomponent = this.causingEntity == null ? this.directEntity.getDisplayName() : this.causingEntity.getDisplayName();
+            Component ichatbasecomponent = this.causingEntity == null ? this.directEntity.getDisplayName() : this.causingEntity.getDisplayName();
             Entity entity = this.causingEntity;
             ItemStack itemstack;
 
-            if (entity instanceof EntityLiving) {
-                EntityLiving entityliving2 = (EntityLiving) entity;
+            if (entity instanceof LivingEntity) {
+                LivingEntity entityliving2 = (LivingEntity) entity;
 
                 itemstack = entityliving2.getMainHandItem();
             } else {
@@ -121,7 +121,7 @@ public class DamageSource {
 
             ItemStack itemstack1 = itemstack;
 
-            return !itemstack1.isEmpty() && itemstack1.hasCustomHoverName() ? IChatBaseComponent.translatable(s + ".item", entityliving.getDisplayName(), ichatbasecomponent, itemstack1.getDisplayName()) : IChatBaseComponent.translatable(s, entityliving.getDisplayName(), ichatbasecomponent);
+            return !itemstack1.isEmpty() && itemstack1.hasCustomHoverName() ? Component.translatable(s + ".item", killed.getDisplayName(), ichatbasecomponent, itemstack1.getDisplayName()) : Component.translatable(s, killed.getDisplayName(), ichatbasecomponent);
         }
     }
 
@@ -137,7 +137,7 @@ public class DamageSource {
                 flag = false;
                 break;
             case WHEN_CAUSED_BY_LIVING_NON_PLAYER:
-                flag = this.causingEntity instanceof EntityLiving && !(this.causingEntity instanceof EntityHuman);
+                flag = this.causingEntity instanceof LivingEntity && !(this.causingEntity instanceof Player);
                 break;
             case ALWAYS:
                 flag = true;
@@ -153,8 +153,8 @@ public class DamageSource {
         Entity entity = this.getEntity();
         boolean flag;
 
-        if (entity instanceof EntityHuman) {
-            EntityHuman entityhuman = (EntityHuman) entity;
+        if (entity instanceof Player) {
+            Player entityhuman = (Player) entity;
 
             if (entityhuman.getAbilities().instabuild) {
                 flag = true;
@@ -167,21 +167,21 @@ public class DamageSource {
     }
 
     @Nullable
-    public Vec3D getSourcePosition() {
+    public Vec3 getSourcePosition() {
         return this.damageSourcePosition != null ? this.damageSourcePosition : (this.causingEntity != null ? this.causingEntity.position() : null);
     }
 
     @Nullable
-    public Vec3D sourcePositionRaw() {
+    public Vec3 sourcePositionRaw() {
         return this.damageSourcePosition;
     }
 
-    public boolean is(TagKey<DamageType> tagkey) {
-        return this.type.is(tagkey);
+    public boolean is(TagKey<DamageType> tag) {
+        return this.type.is(tag);
     }
 
-    public boolean is(ResourceKey<DamageType> resourcekey) {
-        return this.type.is(resourcekey);
+    public boolean is(ResourceKey<DamageType> typeKey) {
+        return this.type.is(typeKey);
     }
 
     public DamageType type() {

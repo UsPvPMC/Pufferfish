@@ -19,7 +19,7 @@ public class ItemStackEnchantStorageTest extends ItemStackTest {
 
     @Parameters(name = "[{index}]:{" + NAME_PARAMETER + "}")
     public static List<Object[]> data() {
-        return StackProvider.compound(operators(), "%s %s", NAME_PARAMETER, Material.ENCHANTED_BOOK);
+        return StackProvider.compound(ItemStackEnchantStorageTest.operators(), "%s %s", NAME_PARAMETER, Material.ENCHANTED_BOOK);
     }
 
     @SuppressWarnings("unchecked")

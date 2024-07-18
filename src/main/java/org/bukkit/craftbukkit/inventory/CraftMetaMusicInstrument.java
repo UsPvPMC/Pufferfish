@@ -2,7 +2,7 @@ package org.bukkit.craftbukkit.inventory;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import org.bukkit.Material;
 import org.bukkit.MusicInstrument;
 import org.bukkit.NamespacedKey;
@@ -24,7 +24,7 @@ public class CraftMetaMusicInstrument extends CraftMetaItem implements MusicInst
         }
     }
 
-    CraftMetaMusicInstrument(NBTTagCompound tag) {
+    CraftMetaMusicInstrument(CompoundTag tag) {
         super(tag);
 
         if (tag.contains(GOAT_HORN_INSTRUMENT.NBT)) {
@@ -43,11 +43,11 @@ public class CraftMetaMusicInstrument extends CraftMetaItem implements MusicInst
     }
 
     @Override
-    void applyToItem(NBTTagCompound tag) {
+    void applyToItem(CompoundTag tag) {
         super.applyToItem(tag);
 
-        if (instrument != null) {
-            tag.putString(GOAT_HORN_INSTRUMENT.NBT, instrument.getKey().toString());
+        if (this.instrument != null) {
+            tag.putString(GOAT_HORN_INSTRUMENT.NBT, this.instrument.getKey().toString());
         }
     }
 
@@ -70,16 +70,16 @@ public class CraftMetaMusicInstrument extends CraftMetaItem implements MusicInst
 
     @Override
     boolean notUncommon(CraftMetaItem meta) {
-        return super.notUncommon(meta) && (meta instanceof CraftMetaMusicInstrument || isInstrumentEmpty());
+        return super.notUncommon(meta) && (meta instanceof CraftMetaMusicInstrument || this.isInstrumentEmpty());
     }
 
     @Override
     boolean isEmpty() {
-        return super.isEmpty() && isInstrumentEmpty();
+        return super.isEmpty() && this.isInstrumentEmpty();
     }
 
     boolean isInstrumentEmpty() {
-        return instrument == null;
+        return this.instrument == null;
     }
 
     @Override
@@ -87,8 +87,8 @@ public class CraftMetaMusicInstrument extends CraftMetaItem implements MusicInst
         final int orginal;
         int hash = orginal = super.applyHash();
 
-        if (hasInstrument()) {
-            hash = 61 * hash + instrument.hashCode();
+        if (this.hasInstrument()) {
+            hash = 61 * hash + this.instrument.hashCode();
         }
 
         return orginal != hash ? CraftMetaMusicInstrument.class.hashCode() ^ hash : hash;
@@ -105,8 +105,8 @@ public class CraftMetaMusicInstrument extends CraftMetaItem implements MusicInst
     ImmutableMap.Builder<String, Object> serialize(ImmutableMap.Builder<String, Object> builder) {
         super.serialize(builder);
 
-        if (hasInstrument()) {
-            builder.put(GOAT_HORN_INSTRUMENT.BUKKIT, instrument.getKey().toString());
+        if (this.hasInstrument()) {
+            builder.put(GOAT_HORN_INSTRUMENT.BUKKIT, this.instrument.getKey().toString());
         }
 
         return builder;
@@ -114,11 +114,11 @@ public class CraftMetaMusicInstrument extends CraftMetaItem implements MusicInst
 
     @Override
     public MusicInstrument getInstrument() {
-        return instrument;
+        return this.instrument;
     }
 
     public boolean hasInstrument() {
-        return instrument != null;
+        return this.instrument != null;
     }
 
     @Override

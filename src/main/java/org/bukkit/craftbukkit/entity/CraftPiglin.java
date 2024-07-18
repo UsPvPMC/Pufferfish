@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
-import net.minecraft.world.entity.monster.piglin.EntityPiglin;
 import net.minecraft.world.item.Item;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.CraftServer;
@@ -16,18 +15,18 @@ import org.bukkit.inventory.Inventory;
 
 public class CraftPiglin extends CraftPiglinAbstract implements Piglin {
 
-    public CraftPiglin(CraftServer server, EntityPiglin entity) {
+    public CraftPiglin(CraftServer server, net.minecraft.world.entity.monster.piglin.Piglin entity) {
         super(server, entity);
     }
 
     @Override
     public boolean isAbleToHunt() {
-        return getHandle().cannotHunt;
+        return this.getHandle().cannotHunt;
     }
 
     @Override
     public void setIsAbleToHunt(boolean flag) {
-        getHandle().cannotHunt = flag;
+        this.getHandle().cannotHunt = flag;
     }
 
     @Override
@@ -35,7 +34,7 @@ public class CraftPiglin extends CraftPiglinAbstract implements Piglin {
         Preconditions.checkArgument(material != null, "material cannot be null");
 
         Item item = CraftMagicNumbers.getItem(material);
-        return getHandle().allowedBarterItems.add(item);
+        return this.getHandle().allowedBarterItems.add(item);
     }
 
     @Override
@@ -43,7 +42,7 @@ public class CraftPiglin extends CraftPiglinAbstract implements Piglin {
         Preconditions.checkArgument(material != null, "material cannot be null");
 
         Item item = CraftMagicNumbers.getItem(material);
-        return getHandle().allowedBarterItems.remove(item);
+        return this.getHandle().allowedBarterItems.remove(item);
     }
 
     @Override
@@ -51,7 +50,7 @@ public class CraftPiglin extends CraftPiglinAbstract implements Piglin {
         Preconditions.checkArgument(material != null, "material cannot be null");
 
         Item item = CraftMagicNumbers.getItem(material);
-        return getHandle().interestItems.add(item);
+        return this.getHandle().interestItems.add(item);
     }
 
     @Override
@@ -59,27 +58,27 @@ public class CraftPiglin extends CraftPiglinAbstract implements Piglin {
         Preconditions.checkArgument(material != null, "material cannot be null");
 
         Item item = CraftMagicNumbers.getItem(material);
-        return getHandle().interestItems.remove(item);
+        return this.getHandle().interestItems.remove(item);
     }
 
     @Override
     public Set<Material> getInterestList() {
-        return Collections.unmodifiableSet(getHandle().interestItems.stream().map(CraftMagicNumbers::getMaterial).collect(Collectors.toSet()));
+        return Collections.unmodifiableSet(this.getHandle().interestItems.stream().map(CraftMagicNumbers::getMaterial).collect(Collectors.toSet()));
     }
 
     @Override
     public Set<Material> getBarterList() {
-        return Collections.unmodifiableSet(getHandle().allowedBarterItems.stream().map(CraftMagicNumbers::getMaterial).collect(Collectors.toSet()));
+        return Collections.unmodifiableSet(this.getHandle().allowedBarterItems.stream().map(CraftMagicNumbers::getMaterial).collect(Collectors.toSet()));
     }
 
     @Override
     public Inventory getInventory() {
-        return new CraftInventory(getHandle().inventory);
+        return new CraftInventory(this.getHandle().inventory);
     }
 
     @Override
-    public EntityPiglin getHandle() {
-        return (EntityPiglin) super.getHandle();
+    public net.minecraft.world.entity.monster.piglin.Piglin getHandle() {
+        return (net.minecraft.world.entity.monster.piglin.Piglin) super.getHandle();
     }
 
     @Override

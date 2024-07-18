@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.MinecraftKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.support.AbstractTestingBase;
@@ -22,7 +22,7 @@ public class MaterialTest extends AbstractTestingBase {
 
     @Test
     public void verifyMapping() {
-        Map<MinecraftKey, Material> materials = Maps.newHashMap();
+        Map<ResourceLocation, Material> materials = Maps.newHashMap();
         for (Material material : Material.values()) {
             if (INVALIDATED_MATERIALS.contains(material)) {
                 continue;
@@ -37,7 +37,7 @@ public class MaterialTest extends AbstractTestingBase {
             Item item = items.next();
             if (item == null) continue;
 
-            MinecraftKey id = BuiltInRegistries.ITEM.getKey(item);
+            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
             String name = item.getDescriptionId();
 
             Material material = materials.remove(id);

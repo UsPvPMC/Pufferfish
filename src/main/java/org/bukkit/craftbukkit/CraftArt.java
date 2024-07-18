@@ -22,13 +22,13 @@ public class CraftArt {
     }
 
     public static Art NotchToBukkit(Holder<PaintingVariant> art) {
-        Art bukkit = artwork.get(art);
+        Art bukkit = CraftArt.artwork.get(art);
         Preconditions.checkArgument(bukkit != null);
         return bukkit;
     }
 
     public static Holder<PaintingVariant> BukkitToNotch(Art art) {
-        Holder<PaintingVariant> nms = artwork.inverse().get(art);
+        Holder<PaintingVariant> nms = CraftArt.artwork.inverse().get(art);
         Preconditions.checkArgument(nms != null);
         return nms;
     }

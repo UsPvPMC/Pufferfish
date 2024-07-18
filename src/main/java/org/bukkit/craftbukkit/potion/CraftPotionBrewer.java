@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.item.alchemy.PotionRegistry;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.alchemy.Potion;
 import org.bukkit.potion.PotionBrewer;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
@@ -19,19 +19,19 @@ public class CraftPotionBrewer implements PotionBrewer {
 
     @Override
     public Collection<PotionEffect> getEffects(PotionType damage, boolean upgraded, boolean extended) {
-        if (cache.containsKey(damage))
-            return cache.get(damage);
+        if (CraftPotionBrewer.cache.containsKey(damage))
+            return CraftPotionBrewer.cache.get(damage);
 
-        List<MobEffect> mcEffects = PotionRegistry.byName(CraftPotionUtil.fromBukkit(new PotionData(damage, extended, upgraded))).getEffects();
+        List<MobEffectInstance> mcEffects = Potion.byName(CraftPotionUtil.fromBukkit(new PotionData(damage, extended, upgraded))).getEffects();
 
         ImmutableList.Builder<PotionEffect> builder = new ImmutableList.Builder<PotionEffect>();
-        for (MobEffect effect : mcEffects) {
+        for (MobEffectInstance effect : mcEffects) {
             builder.add(CraftPotionUtil.toBukkit(effect));
         }
 
-        cache.put(damage, builder.build());
+        CraftPotionBrewer.cache.put(damage, builder.build());
 
-        return cache.get(damage);
+        return CraftPotionBrewer.cache.get(damage);
     }
 
     @Override

@@ -6,9 +6,9 @@ import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.world.item.ItemArrow;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.item.ArrowItem;
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
@@ -39,21 +39,21 @@ public class CraftMetaCrossbow extends CraftMetaItem implements CrossbowMeta {
         }
     }
 
-    CraftMetaCrossbow(NBTTagCompound tag) {
+    CraftMetaCrossbow(CompoundTag tag) {
         super(tag);
 
-        charged = tag.getBoolean(CHARGED.NBT);
+        this.charged = tag.getBoolean(CHARGED.NBT);
 
         if (tag.contains(CHARGED_PROJECTILES.NBT, CraftMagicNumbers.NBT.TAG_LIST)) {
-            NBTTagList list = tag.getList(CHARGED_PROJECTILES.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND);
+            ListTag list = tag.getList(CHARGED_PROJECTILES.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND);
 
             if (list != null && !list.isEmpty()) {
-                chargedProjectiles = new ArrayList<>();
+                this.chargedProjectiles = new ArrayList<>();
 
                 for (int i = 0; i < list.size(); i++) {
-                    NBTTagCompound nbttagcompound1 = list.getCompound(i);
+                    CompoundTag nbttagcompound1 = list.getCompound(i);
 
-                    chargedProjectiles.add(CraftItemStack.asCraftMirror(net.minecraft.world.item.ItemStack.of(nbttagcompound1)));
+                    this.chargedProjectiles.add(CraftItemStack.asCraftMirror(net.minecraft.world.item.ItemStack.of(nbttagcompound1)));
                 }
             }
         }
@@ -71,22 +71,22 @@ public class CraftMetaCrossbow extends CraftMetaItem implements CrossbowMeta {
         if (projectiles != null) {
             for (Object stack : projectiles) {
                 if (stack instanceof ItemStack) {
-                    addChargedProjectile((ItemStack) stack);
+                    this.addChargedProjectile((ItemStack) stack);
                 }
             }
         }
     }
 
     @Override
-    void applyToItem(NBTTagCompound tag) {
+    void applyToItem(CompoundTag tag) {
         super.applyToItem(tag);
 
         tag.putBoolean(CHARGED.NBT, charged);
-        if (hasChargedProjectiles()) {
-            NBTTagList list = new NBTTagList();
+        if (this.hasChargedProjectiles()) {
+            ListTag list = new ListTag();
 
-            for (ItemStack item : chargedProjectiles) {
-                NBTTagCompound saved = new NBTTagCompound();
+            for (ItemStack item : this.chargedProjectiles) {
+                CompoundTag saved = new CompoundTag();
                 CraftItemStack.asNMSCopy(item).save(saved);
                 list.add(saved);
             }
@@ -102,48 +102,48 @@ public class CraftMetaCrossbow extends CraftMetaItem implements CrossbowMeta {
 
     @Override
     boolean isEmpty() {
-        return super.isEmpty() && isCrossbowEmpty();
+        return super.isEmpty() && this.isCrossbowEmpty();
     }
 
     boolean isCrossbowEmpty() {
-        return !(hasChargedProjectiles());
+        return !(this.hasChargedProjectiles());
     }
 
     @Override
     public boolean hasChargedProjectiles() {
-        return chargedProjectiles != null;
+        return this.chargedProjectiles != null;
     }
 
     @Override
     public List<ItemStack> getChargedProjectiles() {
-        return (chargedProjectiles == null) ? ImmutableList.of() : ImmutableList.copyOf(chargedProjectiles);
+        return (this.chargedProjectiles == null) ? ImmutableList.of() : ImmutableList.copyOf(chargedProjectiles);
     }
 
     @Override
     public void setChargedProjectiles(List<ItemStack> projectiles) {
-        chargedProjectiles = null;
-        charged = false;
+        this.chargedProjectiles = null;
+        this.charged = false;
 
         if (projectiles == null) {
             return;
         }
 
         for (ItemStack i : projectiles) {
-            addChargedProjectile(i);
+            this.addChargedProjectile(i);
         }
     }
 
     @Override
     public void addChargedProjectile(ItemStack item) {
         Preconditions.checkArgument(item != null, "item");
-        Preconditions.checkArgument(item.getType() == Material.FIREWORK_ROCKET || CraftMagicNumbers.getItem(item.getType()) instanceof ItemArrow, "Item %s is not an arrow or firework rocket", item);
+        Preconditions.checkArgument(item.getType() == Material.FIREWORK_ROCKET || CraftMagicNumbers.getItem(item.getType()) instanceof ArrowItem, "Item %s is not an arrow or firework rocket", item);
 
-        if (chargedProjectiles == null) {
-            chargedProjectiles = new ArrayList<>();
+        if (this.chargedProjectiles == null) {
+            this.chargedProjectiles = new ArrayList<>();
         }
 
-        charged = true;
-        chargedProjectiles.add(item);
+        this.charged = true;
+        this.chargedProjectiles.add(item);
     }
 
     @Override
@@ -155,14 +155,14 @@ public class CraftMetaCrossbow extends CraftMetaItem implements CrossbowMeta {
             CraftMetaCrossbow that = (CraftMetaCrossbow) meta;
 
             return this.charged == that.charged
-                    && (hasChargedProjectiles() ? that.hasChargedProjectiles() && this.chargedProjectiles.equals(that.chargedProjectiles) : !that.hasChargedProjectiles());
+                    && (this.hasChargedProjectiles() ? that.hasChargedProjectiles() && this.chargedProjectiles.equals(that.chargedProjectiles) : !that.hasChargedProjectiles());
         }
         return true;
     }
 
     @Override
     boolean notUncommon(CraftMetaItem meta) {
-        return super.notUncommon(meta) && (meta instanceof CraftMetaCrossbow || isCrossbowEmpty());
+        return super.notUncommon(meta) && (meta instanceof CraftMetaCrossbow || this.isCrossbowEmpty());
     }
 
     @Override
@@ -170,9 +170,9 @@ public class CraftMetaCrossbow extends CraftMetaItem implements CrossbowMeta {
         final int original;
         int hash = original = super.applyHash();
 
-        if (hasChargedProjectiles()) {
+        if (this.hasChargedProjectiles()) {
             hash = 61 * hash + (this.charged ? 1 : 0);
-            hash = 61 * hash + chargedProjectiles.hashCode();
+            hash = 61 * hash + this.chargedProjectiles.hashCode();
         }
 
         return original != hash ? CraftMetaCrossbow.class.hashCode() ^ hash : hash;
@@ -188,7 +188,7 @@ public class CraftMetaCrossbow extends CraftMetaItem implements CrossbowMeta {
         super.serialize(builder);
 
         builder.put(CHARGED.BUKKIT, charged);
-        if (hasChargedProjectiles()) {
+        if (this.hasChargedProjectiles()) {
             builder.put(CHARGED_PROJECTILES.BUKKIT, chargedProjectiles);
         }
 

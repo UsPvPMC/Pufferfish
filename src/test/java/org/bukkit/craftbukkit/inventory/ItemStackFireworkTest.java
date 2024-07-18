@@ -21,7 +21,7 @@ public class ItemStackFireworkTest extends ItemStackTest {
 
     @Parameters(name = "[{index}]:{" + NAME_PARAMETER + "}")
     public static List<Object[]> data() {
-        return StackProvider.compound(operators(), "%s %s", NAME_PARAMETER, Material.FIREWORK_ROCKET);
+        return StackProvider.compound(ItemStackFireworkTest.operators(), "%s %s", NAME_PARAMETER, Material.FIREWORK_ROCKET);
     }
 
     @SuppressWarnings("unchecked")

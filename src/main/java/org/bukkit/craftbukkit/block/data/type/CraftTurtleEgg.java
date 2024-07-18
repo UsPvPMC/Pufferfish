@@ -5,41 +5,41 @@ import org.bukkit.craftbukkit.block.data.CraftBlockData;
 
 public abstract class CraftTurtleEgg extends CraftBlockData implements TurtleEgg {
 
-    private static final net.minecraft.world.level.block.state.properties.BlockStateInteger EGGS = getInteger("eggs");
-    private static final net.minecraft.world.level.block.state.properties.BlockStateInteger HATCH = getInteger("hatch");
+    private static final net.minecraft.world.level.block.state.properties.IntegerProperty EGGS = getInteger("eggs");
+    private static final net.minecraft.world.level.block.state.properties.IntegerProperty HATCH = getInteger("hatch");
 
     @Override
     public int getEggs() {
-        return get(EGGS);
+        return get(CraftTurtleEgg.EGGS);
     }
 
     @Override
     public void setEggs(int eggs) {
-        set(EGGS, eggs);
+        set(CraftTurtleEgg.EGGS, eggs);
     }
 
     @Override
     public int getMinimumEggs() {
-        return getMin(EGGS);
+        return getMin(CraftTurtleEgg.EGGS);
     }
 
     @Override
     public int getMaximumEggs() {
-        return getMax(EGGS);
+        return getMax(CraftTurtleEgg.EGGS);
     }
 
     @Override
     public int getHatch() {
-        return get(HATCH);
+        return get(CraftTurtleEgg.HATCH);
     }
 
     @Override
     public void setHatch(int hatch) {
-        set(HATCH, hatch);
+        set(CraftTurtleEgg.HATCH, hatch);
     }
 
     @Override
     public int getMaximumHatch() {
-        return getMax(HATCH);
+        return getMax(CraftTurtleEgg.HATCH);
     }
 }

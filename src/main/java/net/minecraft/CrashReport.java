@@ -25,15 +25,15 @@ public class CrashReport {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT);
     private final String title;
     private final Throwable exception;
-    private final List<CrashReportSystemDetails> details = Lists.newArrayList();
+    private final List<CrashReportCategory> details = Lists.newArrayList();
     private File saveFile;
     private boolean trackingStackTrace = true;
     private StackTraceElement[] uncategorizedStackTrace = new StackTraceElement[0];
     private final SystemReport systemReport = new SystemReport();
 
-    public CrashReport(String s, Throwable throwable) {
-        this.title = s;
-        this.exception = throwable;
+    public CrashReport(String message, Throwable cause) {
+        this.title = message;
+        this.exception = cause;
         this.systemReport.setDetail("CraftBukkit Information", new org.bukkit.craftbukkit.CraftCrashReport()); // CraftBukkit
     }
 
@@ -52,38 +52,38 @@ public class CrashReport {
         return stringbuilder.toString();
     }
 
-    public void getDetails(StringBuilder stringbuilder) {
+    public void getDetails(StringBuilder crashReportBuilder) {
         if ((this.uncategorizedStackTrace == null || this.uncategorizedStackTrace.length <= 0) && !this.details.isEmpty()) {
-            this.uncategorizedStackTrace = (StackTraceElement[]) ArrayUtils.subarray(((CrashReportSystemDetails) this.details.get(0)).getStacktrace(), 0, 1);
+            this.uncategorizedStackTrace = (StackTraceElement[]) ArrayUtils.subarray(((CrashReportCategory) this.details.get(0)).getStacktrace(), 0, 1);
         }
 
         if (this.uncategorizedStackTrace != null && this.uncategorizedStackTrace.length > 0) {
-            stringbuilder.append("-- Head --\n");
-            stringbuilder.append("Thread: ").append(Thread.currentThread().getName()).append("\n");
-            stringbuilder.append("Stacktrace:\n");
+            crashReportBuilder.append("-- Head --\n");
+            crashReportBuilder.append("Thread: ").append(Thread.currentThread().getName()).append("\n");
+            crashReportBuilder.append("Stacktrace:\n");
             StackTraceElement[] astacktraceelement = this.uncategorizedStackTrace;
             int i = astacktraceelement.length;
 
             for (int j = 0; j < i; ++j) {
                 StackTraceElement stacktraceelement = astacktraceelement[j];
 
-                stringbuilder.append("\t").append("at ").append(stacktraceelement);
-                stringbuilder.append("\n");
+                crashReportBuilder.append("\t").append("at ").append(stacktraceelement);
+                crashReportBuilder.append("\n");
             }
 
-            stringbuilder.append("\n");
+            crashReportBuilder.append("\n");
         }
 
         Iterator iterator = this.details.iterator();
 
         while (iterator.hasNext()) {
-            CrashReportSystemDetails crashreportsystemdetails = (CrashReportSystemDetails) iterator.next();
+            CrashReportCategory crashreportsystemdetails = (CrashReportCategory) iterator.next();
 
-            crashreportsystemdetails.getDetails(stringbuilder);
-            stringbuilder.append("\n\n");
+            crashreportsystemdetails.getDetails(crashReportBuilder);
+            crashReportBuilder.append("\n\n");
         }
 
-        this.systemReport.appendToCrashReportString(stringbuilder);
+        this.systemReport.appendToCrashReportString(crashReportBuilder);
     }
 
     public String getExceptionMessage() {
@@ -123,7 +123,7 @@ public class CrashReport {
 
         stringbuilder.append("---- Minecraft Crash Report ----\n");
         stringbuilder.append("// ");
-        stringbuilder.append(getErrorComment());
+        stringbuilder.append(CrashReport.getErrorComment());
         stringbuilder.append("\n\n");
         stringbuilder.append("Time: ");
         stringbuilder.append(CrashReport.DATE_TIME_FORMATTER.format(ZonedDateTime.now()));
@@ -181,15 +181,15 @@ public class CrashReport {
         return this.systemReport;
     }
 
-    public CrashReportSystemDetails addCategory(String s) {
-        return this.addCategory(s, 1);
+    public CrashReportCategory addCategory(String name) {
+        return this.addCategory(name, 1);
     }
 
-    public CrashReportSystemDetails addCategory(String s, int i) {
-        CrashReportSystemDetails crashreportsystemdetails = new CrashReportSystemDetails(s);
+    public CrashReportCategory addCategory(String name, int ignoredStackTraceCallCount) {
+        CrashReportCategory crashreportsystemdetails = new CrashReportCategory(name);
 
         if (this.trackingStackTrace) {
-            int j = crashreportsystemdetails.fillInStackTrace(i);
+            int j = crashreportsystemdetails.fillInStackTrace(ignoredStackTraceCallCount);
             StackTraceElement[] astacktraceelement = this.exception.getStackTrace();
             StackTraceElement stacktraceelement = null;
             StackTraceElement stacktraceelement1 = null;
@@ -223,23 +223,23 @@ public class CrashReport {
         String[] astring = new String[]{"Who set us up the TNT?", "Everything's going to plan. No, really, that was supposed to happen.", "Uh... Did I do that?", "Oops.", "Why did you do that?", "I feel sad now :(", "My bad.", "I'm sorry, Dave.", "I let you down. Sorry :(", "On the bright side, I bought you a teddy bear!", "Daisy, daisy...", "Oh - I know what I did wrong!", "Hey, that tickles! Hehehe!", "I blame Dinnerbone.", "You should try our sister game, Minceraft!", "Don't be sad. I'll do better next time, I promise!", "Don't be sad, have a hug! <3", "I just don't know what went wrong :(", "Shall we play a game?", "Quite honestly, I wouldn't worry myself about that.", "I bet Cylons wouldn't have this problem.", "Sorry :(", "Surprise! Haha. Well, this is awkward.", "Would you like a cupcake?", "Hi. I'm Minecraft, and I'm a crashaholic.", "Ooh. Shiny.", "This doesn't make any sense!", "Why is it breaking :(", "Don't do that.", "Ouch. That hurt :(", "You're mean.", "This is a token for 1 free hug. Redeem at your nearest Mojangsta: [~~HUG~~]", "There are four lights!", "But it works on my machine."};
 
         try {
-            return astring[(int) (SystemUtils.getNanos() % (long) astring.length)];
+            return astring[(int) (Util.getNanos() % (long) astring.length)];
         } catch (Throwable throwable) {
             return "Witty comment unavailable :(";
         }
     }
 
-    public static CrashReport forThrowable(Throwable throwable, String s) {
-        while (throwable instanceof CompletionException && throwable.getCause() != null) {
-            throwable = throwable.getCause();
+    public static CrashReport forThrowable(Throwable cause, String title) {
+        while (cause instanceof CompletionException && cause.getCause() != null) {
+            cause = cause.getCause();
         }
 
         CrashReport crashreport;
 
-        if (throwable instanceof ReportedException) {
-            crashreport = ((ReportedException) throwable).getReport();
+        if (cause instanceof ReportedException) {
+            crashreport = ((ReportedException) cause).getReport();
         } else {
-            crashreport = new CrashReport(s, throwable);
+            crashreport = new CrashReport(title, cause);
         }
 
         return crashreport;

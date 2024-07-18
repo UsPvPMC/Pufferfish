@@ -5,31 +5,31 @@ import org.bukkit.craftbukkit.block.data.CraftBlockData;
 
 public abstract class CraftScaffolding extends CraftBlockData implements Scaffolding {
 
-    private static final net.minecraft.world.level.block.state.properties.BlockStateBoolean BOTTOM = getBoolean("bottom");
-    private static final net.minecraft.world.level.block.state.properties.BlockStateInteger DISTANCE = getInteger("distance");
+    private static final net.minecraft.world.level.block.state.properties.BooleanProperty BOTTOM = getBoolean("bottom");
+    private static final net.minecraft.world.level.block.state.properties.IntegerProperty DISTANCE = getInteger("distance");
 
     @Override
     public boolean isBottom() {
-        return get(BOTTOM);
+        return get(CraftScaffolding.BOTTOM);
     }
 
     @Override
     public void setBottom(boolean bottom) {
-        set(BOTTOM, bottom);
+        set(CraftScaffolding.BOTTOM, bottom);
     }
 
     @Override
     public int getDistance() {
-        return get(DISTANCE);
+        return get(CraftScaffolding.DISTANCE);
     }
 
     @Override
     public void setDistance(int distance) {
-        set(DISTANCE, distance);
+        set(CraftScaffolding.DISTANCE, distance);
     }
 
     @Override
     public int getMaximumDistance() {
-        return getMax(DISTANCE);
+        return getMax(CraftScaffolding.DISTANCE);
     }
 }

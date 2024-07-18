@@ -19,7 +19,7 @@ public class ItemStackLoreEnchantmentTest extends ItemStackTest {
 
     @Parameters(name = "[{index}]:{" + NAME_PARAMETER + "}")
     public static List<Object[]> data() {
-        return StackProvider.compound(operators(), "%s %s", NAME_PARAMETER, ItemStackTest.COMPOUND_MATERIALS);
+        return StackProvider.compound(ItemStackLoreEnchantmentTest.operators(), "%s %s", NAME_PARAMETER, ItemStackTest.COMPOUND_MATERIALS);
     }
 
     @SuppressWarnings("unchecked")

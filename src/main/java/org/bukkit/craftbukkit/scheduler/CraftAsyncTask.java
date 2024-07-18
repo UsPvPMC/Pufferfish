@@ -25,13 +25,13 @@ class CraftAsyncTask extends CraftTask {
     @Override
     public void run() {
         final Thread thread = Thread.currentThread();
-        synchronized (workers) {
+        synchronized (this.workers) {
             if (getPeriod() == CraftTask.CANCEL) {
                 // Never continue running after cancelled.
                 // Checking this with the lock is important!
                 return;
             }
-            workers.add(
+            this.workers.add(
                 new BukkitWorker() {
                     @Override
                     public Thread getThread() {
@@ -63,7 +63,7 @@ class CraftAsyncTask extends CraftTask {
                     thrown);
         } finally {
             // Cleanup is important for any async task, otherwise ghost tasks are everywhere
-            synchronized (workers) {
+            synchronized (this.workers) {
                 try {
                     final Iterator<BukkitWorker> workers = this.workers.iterator();
                     boolean removed = false;
@@ -84,10 +84,10 @@ class CraftAsyncTask extends CraftTask {
                                 thrown); // We don't want to lose the original exception, if any
                     }
                 } finally {
-                    if (getPeriod() < 0 && workers.isEmpty()) {
+                    if (getPeriod() < 0 && this.workers.isEmpty()) {
                         // At this spot, we know we are the final async task being executed!
                         // Because we have the lock, nothing else is running or will run because delay < 0
-                        runners.remove(getTaskId());
+                        this.runners.remove(getTaskId());
                     }
                 }
             }
@@ -95,16 +95,16 @@ class CraftAsyncTask extends CraftTask {
     }
 
     LinkedList<BukkitWorker> getWorkers() {
-        return workers;
+        return this.workers;
     }
 
     @Override
     boolean cancel0() {
-        synchronized (workers) {
+        synchronized (this.workers) {
             // Synchronizing here prevents race condition for a completing task
             setPeriod(CraftTask.CANCEL);
-            if (workers.isEmpty()) {
-                runners.remove(getTaskId());
+            if (this.workers.isEmpty()) {
+                this.runners.remove(getTaskId());
             }
         }
         return true;

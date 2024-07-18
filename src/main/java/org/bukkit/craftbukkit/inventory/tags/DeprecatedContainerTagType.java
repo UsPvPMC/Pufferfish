@@ -23,7 +23,7 @@ public final class DeprecatedContainerTagType<Z> implements PersistentDataType<P
 
     @Override
     public Class<Z> getComplexType() {
-        return deprecated.getComplexType();
+        return this.deprecated.getComplexType();
     }
 
     @Override

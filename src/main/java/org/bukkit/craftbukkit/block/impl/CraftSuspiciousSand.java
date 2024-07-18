@@ -9,26 +9,26 @@ public final class CraftSuspiciousSand extends org.bukkit.craftbukkit.block.data
         super();
     }
 
-    public CraftSuspiciousSand(net.minecraft.world.level.block.state.IBlockData state) {
+    public CraftSuspiciousSand(net.minecraft.world.level.block.state.BlockState state) {
         super(state);
     }
 
     // org.bukkit.craftbukkit.block.data.type.CraftSuspiciousSand
 
-    private static final net.minecraft.world.level.block.state.properties.BlockStateInteger DUSTED = getInteger(net.minecraft.world.level.block.SuspiciousSandBlock.class, "dusted");
+    private static final net.minecraft.world.level.block.state.properties.IntegerProperty DUSTED = getInteger(net.minecraft.world.level.block.SuspiciousSandBlock.class, "dusted");
 
     @Override
     public int getDusted() {
-        return get(DUSTED);
+        return get(CraftSuspiciousSand.DUSTED);
     }
 
     @Override
     public void setDusted(int dusted) {
-        set(DUSTED, dusted);
+        set(CraftSuspiciousSand.DUSTED, dusted);
     }
 
     @Override
     public int getMaximumDusted() {
-        return getMax(DUSTED);
+        return getMax(CraftSuspiciousSand.DUSTED);
     }
 }

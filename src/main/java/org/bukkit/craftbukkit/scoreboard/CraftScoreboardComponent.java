@@ -10,7 +10,7 @@ abstract class CraftScoreboardComponent {
     abstract CraftScoreboard checkState() throws IllegalStateException;
 
     public CraftScoreboard getScoreboard() {
-        return scoreboard;
+        return this.scoreboard;
     }
 
     abstract void unregister() throws IllegalStateException;

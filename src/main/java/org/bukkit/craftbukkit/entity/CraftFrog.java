@@ -32,27 +32,27 @@ public class CraftFrog extends CraftAnimals implements org.bukkit.entity.Frog {
 
     @Override
     public Entity getTongueTarget() {
-        return getHandle().getTongueTarget().map(net.minecraft.world.entity.Entity::getBukkitEntity).orElse(null);
+        return this.getHandle().getTongueTarget().map(net.minecraft.world.entity.Entity::getBukkitEntity).orElse(null);
     }
 
     @Override
     public void setTongueTarget(Entity target) {
         if (target == null) {
-            getHandle().eraseTongueTarget();
+            this.getHandle().eraseTongueTarget();
         } else {
-            getHandle().setTongueTarget(((CraftEntity) target).getHandle());
+            this.getHandle().setTongueTarget(((CraftEntity) target).getHandle());
         }
     }
 
     @Override
     public Variant getVariant() {
-        return Registry.FROG_VARIANT.get(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.FROG_VARIANT.getKey(getHandle().getVariant())));
+        return Registry.FROG_VARIANT.get(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.FROG_VARIANT.getKey(this.getHandle().getVariant())));
     }
 
     @Override
     public void setVariant(Variant variant) {
         Preconditions.checkArgument(variant != null, "variant");
 
-        getHandle().setVariant(BuiltInRegistries.FROG_VARIANT.get(CraftNamespacedKey.toMinecraft(variant.getKey())));
+        this.getHandle().setVariant(BuiltInRegistries.FROG_VARIANT.get(CraftNamespacedKey.toMinecraft(variant.getKey())));
     }
 }

@@ -2,7 +2,7 @@ package org.bukkit.enchantments;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.enchantment.EnchantmentSlotType;
+import net.minecraft.world.item.enchantment.EnchantmentCategory;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.junit.Assert;
@@ -12,7 +12,7 @@ public class EnchantmentTargetTest {
 
     @Test
     public void test() {
-        for (EnchantmentSlotType nmsSlot : EnchantmentSlotType.values()) {
+        for (EnchantmentCategory nmsSlot : EnchantmentCategory.values()) {
             EnchantmentTarget bukkitTarget;
             switch (nmsSlot) {
                 case ARMOR_CHEST:

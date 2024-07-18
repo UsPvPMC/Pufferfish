@@ -17,18 +17,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import net.minecraft.SystemUtils;
-import net.minecraft.resources.MinecraftKey;
-import net.minecraft.util.ChatDeserializer;
-import net.minecraft.util.MathHelper;
+import net.minecraft.Util;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.IInventory;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.functions.FunctionUserBuilder;
 import net.minecraft.world.level.storage.loot.functions.LootItemFunction;
-import net.minecraft.world.level.storage.loot.functions.LootItemFunctionUser;
 import net.minecraft.world.level.storage.loot.functions.LootItemFunctions;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParameterSet;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParameterSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSet;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 
@@ -42,23 +42,23 @@ import org.bukkit.event.world.LootGenerateEvent;
 public class LootTable {
 
     static final Logger LOGGER = LogUtils.getLogger();
-    public static final LootTable EMPTY = new LootTable(LootContextParameterSets.EMPTY, new LootSelector[0], new LootItemFunction[0]);
-    public static final LootContextParameterSet DEFAULT_PARAM_SET = LootContextParameterSets.ALL_PARAMS;
-    final LootContextParameterSet paramSet;
-    final LootSelector[] pools;
+    public static final LootTable EMPTY = new LootTable(LootContextParamSets.EMPTY, new LootPool[0], new LootItemFunction[0]);
+    public static final LootContextParamSet DEFAULT_PARAM_SET = LootContextParamSets.ALL_PARAMS;
+    final LootContextParamSet paramSet;
+    final LootPool[] pools;
     final LootItemFunction[] functions;
-    private final BiFunction<ItemStack, LootTableInfo, ItemStack> compositeFunction;
+    private final BiFunction<ItemStack, LootContext, ItemStack> compositeFunction;
 
-    LootTable(LootContextParameterSet lootcontextparameterset, LootSelector[] alootselector, LootItemFunction[] alootitemfunction) {
-        this.paramSet = lootcontextparameterset;
-        this.pools = alootselector;
-        this.functions = alootitemfunction;
-        this.compositeFunction = LootItemFunctions.compose(alootitemfunction);
+    LootTable(LootContextParamSet type, LootPool[] pools, LootItemFunction[] functions) {
+        this.paramSet = type;
+        this.pools = pools;
+        this.functions = functions;
+        this.compositeFunction = LootItemFunctions.compose(functions);
     }
 
-    public static Consumer<ItemStack> createStackSplitter(LootTableInfo loottableinfo, Consumer<ItemStack> consumer) {
+    public static Consumer<ItemStack> createStackSplitter(LootContext context, Consumer<ItemStack> consumer) {
         return (itemstack) -> {
-            if (itemstack.isItemEnabled(loottableinfo.getLevel().enabledFeatures())) {
+            if (itemstack.isItemEnabled(context.getLevel().enabledFeatures())) {
                 if (itemstack.getCount() < itemstack.getMaxStackSize()) {
                     consumer.accept(itemstack);
                 } else {
@@ -77,60 +77,60 @@ public class LootTable {
         };
     }
 
-    public void getRandomItemsRaw(LootTableInfo loottableinfo, Consumer<ItemStack> consumer) {
-        if (loottableinfo.addVisitedTable(this)) {
-            Consumer<ItemStack> consumer1 = LootItemFunction.decorate(this.compositeFunction, consumer, loottableinfo);
-            LootSelector[] alootselector = this.pools;
+    public void getRandomItemsRaw(LootContext context, Consumer<ItemStack> lootConsumer) {
+        if (context.addVisitedTable(this)) {
+            Consumer<ItemStack> consumer1 = LootItemFunction.decorate(this.compositeFunction, lootConsumer, context);
+            LootPool[] alootselector = this.pools;
             int i = alootselector.length;
 
             for (int j = 0; j < i; ++j) {
-                LootSelector lootselector = alootselector[j];
+                LootPool lootselector = alootselector[j];
 
-                lootselector.addRandomItems(consumer1, loottableinfo);
+                lootselector.addRandomItems(consumer1, context);
             }
 
-            loottableinfo.removeVisitedTable(this);
+            context.removeVisitedTable(this);
         } else {
             LootTable.LOGGER.warn("Detected infinite loop in loot tables");
         }
 
     }
 
-    public void getRandomItems(LootTableInfo loottableinfo, Consumer<ItemStack> consumer) {
-        this.getRandomItemsRaw(loottableinfo, createStackSplitter(loottableinfo, consumer));
+    public void getRandomItems(LootContext context, Consumer<ItemStack> lootConsumer) {
+        this.getRandomItemsRaw(context, LootTable.createStackSplitter(context, lootConsumer));
     }
 
-    public ObjectArrayList<ItemStack> getRandomItems(LootTableInfo loottableinfo) {
+    public ObjectArrayList<ItemStack> getRandomItems(LootContext context) {
         ObjectArrayList<ItemStack> objectarraylist = new ObjectArrayList();
 
         Objects.requireNonNull(objectarraylist);
-        this.getRandomItems(loottableinfo, objectarraylist::add);
+        this.getRandomItems(context, objectarraylist::add);
         return objectarraylist;
     }
 
-    public LootContextParameterSet getParamSet() {
+    public LootContextParamSet getParamSet() {
         return this.paramSet;
     }
 
-    public void validate(LootCollector lootcollector) {
+    public void validate(ValidationContext reporter) {
         int i;
 
         for (i = 0; i < this.pools.length; ++i) {
-            this.pools[i].validate(lootcollector.forChild(".pools[" + i + "]"));
+            this.pools[i].validate(reporter.forChild(".pools[" + i + "]"));
         }
 
         for (i = 0; i < this.functions.length; ++i) {
-            this.functions[i].validate(lootcollector.forChild(".functions[" + i + "]"));
+            this.functions[i].validate(reporter.forChild(".functions[" + i + "]"));
         }
 
     }
 
-    public void fill(IInventory iinventory, LootTableInfo loottableinfo) {
+    public void fill(Container inventory, LootContext context) {
         // CraftBukkit start
-        this.fillInventory(iinventory, loottableinfo, false);
+        this.fillInventory(inventory, context, false);
     }
 
-    public void fillInventory(IInventory iinventory, LootTableInfo loottableinfo, boolean plugin) {
+    public void fillInventory(Container iinventory, LootContext loottableinfo, boolean plugin) {
         // CraftBukkit end
         ObjectArrayList<ItemStack> objectarraylist = this.getRandomItems(loottableinfo);
         RandomSource randomsource = loottableinfo.getRandom();
@@ -163,9 +163,9 @@ public class LootTable {
 
     }
 
-    private void shuffleAndSplitItems(ObjectArrayList<ItemStack> objectarraylist, int i, RandomSource randomsource) {
+    private void shuffleAndSplitItems(ObjectArrayList<ItemStack> drops, int freeSlots, RandomSource random) {
         List<ItemStack> list = Lists.newArrayList();
-        ObjectListIterator objectlistiterator = objectarraylist.iterator();
+        ObjectListIterator objectlistiterator = drops.iterator();
 
         while (objectlistiterator.hasNext()) {
             ItemStack itemstack = (ItemStack) objectlistiterator.next();
@@ -178,106 +178,106 @@ public class LootTable {
             }
         }
 
-        while (i - objectarraylist.size() - list.size() > 0 && !list.isEmpty()) {
-            ItemStack itemstack1 = (ItemStack) list.remove(MathHelper.nextInt(randomsource, 0, list.size() - 1));
-            int j = MathHelper.nextInt(randomsource, 1, itemstack1.getCount() / 2);
+        while (freeSlots - drops.size() - list.size() > 0 && !list.isEmpty()) {
+            ItemStack itemstack1 = (ItemStack) list.remove(Mth.nextInt(random, 0, list.size() - 1));
+            int j = Mth.nextInt(random, 1, itemstack1.getCount() / 2);
             ItemStack itemstack2 = itemstack1.split(j);
 
-            if (itemstack1.getCount() > 1 && randomsource.nextBoolean()) {
+            if (itemstack1.getCount() > 1 && random.nextBoolean()) {
                 list.add(itemstack1);
             } else {
-                objectarraylist.add(itemstack1);
+                drops.add(itemstack1);
             }
 
-            if (itemstack2.getCount() > 1 && randomsource.nextBoolean()) {
+            if (itemstack2.getCount() > 1 && random.nextBoolean()) {
                 list.add(itemstack2);
             } else {
-                objectarraylist.add(itemstack2);
+                drops.add(itemstack2);
             }
         }
 
-        objectarraylist.addAll(list);
-        SystemUtils.shuffle(objectarraylist, randomsource);
+        drops.addAll(list);
+        Util.shuffle(drops, random);
     }
 
-    private List<Integer> getAvailableSlots(IInventory iinventory, RandomSource randomsource) {
+    private List<Integer> getAvailableSlots(Container inventory, RandomSource random) {
         ObjectArrayList<Integer> objectarraylist = new ObjectArrayList();
 
-        for (int i = 0; i < iinventory.getContainerSize(); ++i) {
-            if (iinventory.getItem(i).isEmpty()) {
+        for (int i = 0; i < inventory.getContainerSize(); ++i) {
+            if (inventory.getItem(i).isEmpty()) {
                 objectarraylist.add(i);
             }
         }
 
-        SystemUtils.shuffle(objectarraylist, randomsource);
+        Util.shuffle(objectarraylist, random);
         return objectarraylist;
     }
 
-    public static LootTable.a lootTable() {
-        return new LootTable.a();
+    public static LootTable.Builder lootTable() {
+        return new LootTable.Builder();
     }
 
-    public static class a implements LootItemFunctionUser<LootTable.a> {
+    public static class Builder implements FunctionUserBuilder<LootTable.Builder> {
 
-        private final List<LootSelector> pools = Lists.newArrayList();
+        private final List<LootPool> pools = Lists.newArrayList();
         private final List<LootItemFunction> functions = Lists.newArrayList();
-        private LootContextParameterSet paramSet;
+        private LootContextParamSet paramSet;
 
-        public a() {
+        public Builder() {
             this.paramSet = LootTable.DEFAULT_PARAM_SET;
         }
 
-        public LootTable.a withPool(LootSelector.a lootselector_a) {
-            this.pools.add(lootselector_a.build());
+        public LootTable.Builder withPool(LootPool.Builder poolBuilder) {
+            this.pools.add(poolBuilder.build());
             return this;
         }
 
-        public LootTable.a setParamSet(LootContextParameterSet lootcontextparameterset) {
-            this.paramSet = lootcontextparameterset;
-            return this;
-        }
-
-        @Override
-        public LootTable.a apply(LootItemFunction.a lootitemfunction_a) {
-            this.functions.add(lootitemfunction_a.build());
+        public LootTable.Builder setParamSet(LootContextParamSet context) {
+            this.paramSet = context;
             return this;
         }
 
         @Override
-        public LootTable.a unwrap() {
+        public LootTable.Builder apply(LootItemFunction.Builder function) {
+            this.functions.add(function.build());
+            return this;
+        }
+
+        @Override
+        public LootTable.Builder unwrap() {
             return this;
         }
 
         public LootTable build() {
-            return new LootTable(this.paramSet, (LootSelector[]) this.pools.toArray(new LootSelector[0]), (LootItemFunction[]) this.functions.toArray(new LootItemFunction[0]));
+            return new LootTable(this.paramSet, (LootPool[]) this.pools.toArray(new LootPool[0]), (LootItemFunction[]) this.functions.toArray(new LootItemFunction[0]));
         }
     }
 
-    public static class b implements JsonDeserializer<LootTable>, JsonSerializer<LootTable> {
+    public static class Serializer implements JsonDeserializer<LootTable>, JsonSerializer<LootTable> {
 
-        public b() {}
+        public Serializer() {}
 
         public LootTable deserialize(JsonElement jsonelement, Type type, JsonDeserializationContext jsondeserializationcontext) throws JsonParseException {
-            JsonObject jsonobject = ChatDeserializer.convertToJsonObject(jsonelement, "loot table");
-            LootSelector[] alootselector = (LootSelector[]) ChatDeserializer.getAsObject(jsonobject, "pools", new LootSelector[0], jsondeserializationcontext, LootSelector[].class);
-            LootContextParameterSet lootcontextparameterset = null;
+            JsonObject jsonobject = GsonHelper.convertToJsonObject(jsonelement, "loot table");
+            LootPool[] alootselector = (LootPool[]) GsonHelper.getAsObject(jsonobject, "pools", new LootPool[0], jsondeserializationcontext, LootPool[].class);
+            LootContextParamSet lootcontextparameterset = null;
 
             if (jsonobject.has("type")) {
-                String s = ChatDeserializer.getAsString(jsonobject, "type");
+                String s = GsonHelper.getAsString(jsonobject, "type");
 
-                lootcontextparameterset = LootContextParameterSets.get(new MinecraftKey(s));
+                lootcontextparameterset = LootContextParamSets.get(new ResourceLocation(s));
             }
 
-            LootItemFunction[] alootitemfunction = (LootItemFunction[]) ChatDeserializer.getAsObject(jsonobject, "functions", new LootItemFunction[0], jsondeserializationcontext, LootItemFunction[].class);
+            LootItemFunction[] alootitemfunction = (LootItemFunction[]) GsonHelper.getAsObject(jsonobject, "functions", new LootItemFunction[0], jsondeserializationcontext, LootItemFunction[].class);
 
-            return new LootTable(lootcontextparameterset != null ? lootcontextparameterset : LootContextParameterSets.ALL_PARAMS, alootselector, alootitemfunction);
+            return new LootTable(lootcontextparameterset != null ? lootcontextparameterset : LootContextParamSets.ALL_PARAMS, alootselector, alootitemfunction);
         }
 
         public JsonElement serialize(LootTable loottable, Type type, JsonSerializationContext jsonserializationcontext) {
             JsonObject jsonobject = new JsonObject();
 
             if (loottable.paramSet != LootTable.DEFAULT_PARAM_SET) {
-                MinecraftKey minecraftkey = LootContextParameterSets.getKey(loottable.paramSet);
+                ResourceLocation minecraftkey = LootContextParamSets.getKey(loottable.paramSet);
 
                 if (minecraftkey != null) {
                     jsonobject.addProperty("type", minecraftkey.toString());

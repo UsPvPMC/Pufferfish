@@ -35,20 +35,20 @@ public class TerminalConsoleWriterThread extends Thread {
 
             try {
                 if (Main.useJline) {
-                    reader.print(Ansi.ansi().eraseLine(Erase.ALL).toString() + ConsoleReader.RESET_LINE);
-                    reader.flush();
-                    output.write(message.getBytes());
-                    output.flush();
+                    this.reader.print(Ansi.ansi().eraseLine(Erase.ALL).toString() + ConsoleReader.RESET_LINE);
+                    this.reader.flush();
+                    this.output.write(message.getBytes());
+                    this.output.flush();
 
                     try {
-                        reader.drawLine();
+                        this.reader.drawLine();
                     } catch (Throwable ex) {
-                        reader.getCursorBuffer().clear();
+                        this.reader.getCursorBuffer().clear();
                     }
-                    reader.flush();
+                    this.reader.flush();
                 } else {
-                    output.write(message.getBytes());
-                    output.flush();
+                    this.output.write(message.getBytes());
+                    this.output.flush();
                 }
             } catch (IOException ex) {
                 Logger.getLogger(TerminalConsoleWriterThread.class.getName()).log(Level.SEVERE, null, ex);

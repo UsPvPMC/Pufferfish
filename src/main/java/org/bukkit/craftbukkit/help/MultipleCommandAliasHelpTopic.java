@@ -41,7 +41,7 @@ public class MultipleCommandAliasHelpTopic extends HelpTopic {
                 return true;
             }
 
-            for (Command command : alias.getCommands()) {
+            for (Command command : this.alias.getCommands()) {
                 if (!command.testPermissionSilent(sender)) {
                     return false;
                 }

@@ -33,11 +33,11 @@ public class CraftStructureType extends StructureType {
     }
 
     public net.minecraft.world.level.levelgen.structure.StructureType<?> getHandle() {
-        return structureType;
+        return this.structureType;
     }
 
     @Override
     public NamespacedKey getKey() {
-        return key;
+        return this.key;
     }
 }

@@ -16,48 +16,48 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import net.minecraft.EnumChatFormat;
-import net.minecraft.advancements.CriterionTriggers;
-import net.minecraft.core.BlockPosition;
-import net.minecraft.core.SectionPosition;
-import net.minecraft.nbt.GameProfileSerializer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.chat.IChatBaseComponent;
-import net.minecraft.network.protocol.game.PacketPlayOutNamedSoundEffect;
-import net.minecraft.server.level.BossBattleServer;
-import net.minecraft.server.level.EntityPlayer;
-import net.minecraft.server.level.WorldServer;
-import net.minecraft.sounds.SoundCategory;
-import net.minecraft.sounds.SoundEffects;
-import net.minecraft.stats.StatisticList;
-import net.minecraft.util.MathHelper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.BossBattle;
-import net.minecraft.world.DifficultyDamageScaler;
-import net.minecraft.world.EnumDifficulty;
-import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.Difficulty;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityLiving;
-import net.minecraft.world.entity.EntityPositionTypes;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.entity.EnumItemSlot;
-import net.minecraft.world.entity.EnumMobSpawn;
-import net.minecraft.world.entity.GroupDataEntity;
-import net.minecraft.world.entity.player.EntityHuman;
-import net.minecraft.world.item.EnumColor;
-import net.minecraft.world.item.ItemBlock;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.SpawnerCreature;
-import net.minecraft.world.level.World;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BannerPattern;
 import net.minecraft.world.level.block.entity.BannerPatterns;
-import net.minecraft.world.level.block.entity.EnumBannerPatternType;
-import net.minecraft.world.level.block.entity.TileEntityTypes;
-import net.minecraft.world.level.levelgen.HeightMap;
-import net.minecraft.world.phys.Vec3D;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
 
 public class Raid {
 
@@ -79,72 +79,72 @@ public class Raid {
     public static final int TICKS_PER_DAY = 24000;
     public static final int DEFAULT_MAX_BAD_OMEN_LEVEL = 5;
     private static final int LOW_MOB_THRESHOLD = 2;
-    private static final IChatBaseComponent RAID_NAME_COMPONENT = IChatBaseComponent.translatable("event.minecraft.raid");
-    private static final IChatBaseComponent VICTORY = IChatBaseComponent.translatable("event.minecraft.raid.victory");
-    private static final IChatBaseComponent DEFEAT = IChatBaseComponent.translatable("event.minecraft.raid.defeat");
-    private static final IChatBaseComponent RAID_BAR_VICTORY_COMPONENT = Raid.RAID_NAME_COMPONENT.copy().append(" - ").append(Raid.VICTORY);
-    private static final IChatBaseComponent RAID_BAR_DEFEAT_COMPONENT = Raid.RAID_NAME_COMPONENT.copy().append(" - ").append(Raid.DEFEAT);
+    private static final Component RAID_NAME_COMPONENT = Component.translatable("event.minecraft.raid");
+    private static final Component VICTORY = Component.translatable("event.minecraft.raid.victory");
+    private static final Component DEFEAT = Component.translatable("event.minecraft.raid.defeat");
+    private static final Component RAID_BAR_VICTORY_COMPONENT = Raid.RAID_NAME_COMPONENT.copy().append(" - ").append(Raid.VICTORY);
+    private static final Component RAID_BAR_DEFEAT_COMPONENT = Raid.RAID_NAME_COMPONENT.copy().append(" - ").append(Raid.DEFEAT);
     private static final int HERO_OF_THE_VILLAGE_DURATION = 48000;
     public static final int VALID_RAID_RADIUS_SQR = 9216;
     public static final int RAID_REMOVAL_THRESHOLD_SQR = 12544;
-    private final Map<Integer, EntityRaider> groupToLeaderMap = Maps.newHashMap();
-    private final Map<Integer, Set<EntityRaider>> groupRaiderMap = Maps.newHashMap();
+    private final Map<Integer, Raider> groupToLeaderMap = Maps.newHashMap();
+    private final Map<Integer, Set<Raider>> groupRaiderMap = Maps.newHashMap();
     public final Set<UUID> heroesOfTheVillage = Sets.newHashSet();
     public long ticksActive;
-    private BlockPosition center;
-    private final WorldServer level;
+    private BlockPos center;
+    private final ServerLevel level;
     private boolean started;
     private final int id;
     public float totalHealth;
     public int badOmenLevel;
     private boolean active;
     private int groupsSpawned;
-    private final BossBattleServer raidEvent;
+    private final ServerBossEvent raidEvent;
     private int postRaidTicks;
     private int raidCooldownTicks;
     private final RandomSource random;
     public final int numGroups;
-    private Raid.Status status;
+    private Raid.RaidStatus status;
     private int celebrationTicks;
-    private Optional<BlockPosition> waveSpawnPos;
+    private Optional<BlockPos> waveSpawnPos;
 
-    public Raid(int i, WorldServer worldserver, BlockPosition blockposition) {
-        this.raidEvent = new BossBattleServer(Raid.RAID_NAME_COMPONENT, BossBattle.BarColor.RED, BossBattle.BarStyle.NOTCHED_10);
+    public Raid(int id, ServerLevel world, BlockPos pos) {
+        this.raidEvent = new ServerBossEvent(Raid.RAID_NAME_COMPONENT, BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_10);
         this.random = RandomSource.create();
         this.waveSpawnPos = Optional.empty();
-        this.id = i;
-        this.level = worldserver;
+        this.id = id;
+        this.level = world;
         this.active = true;
         this.raidCooldownTicks = 300;
         this.raidEvent.setProgress(0.0F);
-        this.center = blockposition;
-        this.numGroups = this.getNumGroups(worldserver.getDifficulty());
-        this.status = Raid.Status.ONGOING;
+        this.center = pos;
+        this.numGroups = this.getNumGroups(world.getDifficulty());
+        this.status = Raid.RaidStatus.ONGOING;
     }
 
-    public Raid(WorldServer worldserver, NBTTagCompound nbttagcompound) {
-        this.raidEvent = new BossBattleServer(Raid.RAID_NAME_COMPONENT, BossBattle.BarColor.RED, BossBattle.BarStyle.NOTCHED_10);
+    public Raid(ServerLevel world, CompoundTag nbt) {
+        this.raidEvent = new ServerBossEvent(Raid.RAID_NAME_COMPONENT, BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_10);
         this.random = RandomSource.create();
         this.waveSpawnPos = Optional.empty();
-        this.level = worldserver;
-        this.id = nbttagcompound.getInt("Id");
-        this.started = nbttagcompound.getBoolean("Started");
-        this.active = nbttagcompound.getBoolean("Active");
-        this.ticksActive = nbttagcompound.getLong("TicksActive");
-        this.badOmenLevel = nbttagcompound.getInt("BadOmenLevel");
-        this.groupsSpawned = nbttagcompound.getInt("GroupsSpawned");
-        this.raidCooldownTicks = nbttagcompound.getInt("PreRaidTicks");
-        this.postRaidTicks = nbttagcompound.getInt("PostRaidTicks");
-        this.totalHealth = nbttagcompound.getFloat("TotalHealth");
-        this.center = new BlockPosition(nbttagcompound.getInt("CX"), nbttagcompound.getInt("CY"), nbttagcompound.getInt("CZ"));
-        this.numGroups = nbttagcompound.getInt("NumGroups");
-        this.status = Raid.Status.getByName(nbttagcompound.getString("Status"));
+        this.level = world;
+        this.id = nbt.getInt("Id");
+        this.started = nbt.getBoolean("Started");
+        this.active = nbt.getBoolean("Active");
+        this.ticksActive = nbt.getLong("TicksActive");
+        this.badOmenLevel = nbt.getInt("BadOmenLevel");
+        this.groupsSpawned = nbt.getInt("GroupsSpawned");
+        this.raidCooldownTicks = nbt.getInt("PreRaidTicks");
+        this.postRaidTicks = nbt.getInt("PostRaidTicks");
+        this.totalHealth = nbt.getFloat("TotalHealth");
+        this.center = new BlockPos(nbt.getInt("CX"), nbt.getInt("CY"), nbt.getInt("CZ"));
+        this.numGroups = nbt.getInt("NumGroups");
+        this.status = Raid.RaidStatus.getByName(nbt.getString("Status"));
         this.heroesOfTheVillage.clear();
-        if (nbttagcompound.contains("HeroesOfTheVillage", 9)) {
-            NBTTagList nbttaglist = nbttagcompound.getList("HeroesOfTheVillage", 11);
+        if (nbt.contains("HeroesOfTheVillage", 9)) {
+            ListTag nbttaglist = nbt.getList("HeroesOfTheVillage", 11);
 
             for (int i = 0; i < nbttaglist.size(); ++i) {
-                this.heroesOfTheVillage.add(GameProfileSerializer.loadUUID(nbttaglist.get(i)));
+                this.heroesOfTheVillage.add(NbtUtils.loadUUID(nbttaglist.get(i)));
             }
         }
 
@@ -163,20 +163,20 @@ public class Raid {
     }
 
     public boolean isStopped() {
-        return this.status == Raid.Status.STOPPED;
+        return this.status == Raid.RaidStatus.STOPPED;
     }
 
     public boolean isVictory() {
-        return this.status == Raid.Status.VICTORY;
+        return this.status == Raid.RaidStatus.VICTORY;
     }
 
     public boolean isLoss() {
-        return this.status == Raid.Status.LOSS;
+        return this.status == Raid.RaidStatus.LOSS;
     }
 
     // CraftBukkit start
     public boolean isInProgress() {
-        return this.status == Status.ONGOING;
+        return this.status == RaidStatus.ONGOING;
     }
     // CraftBukkit end
 
@@ -184,12 +184,12 @@ public class Raid {
         return this.totalHealth;
     }
 
-    public Set<EntityRaider> getAllRaiders() {
-        Set<EntityRaider> set = Sets.newHashSet();
+    public Set<Raider> getAllRaiders() {
+        Set<Raider> set = Sets.newHashSet();
         Iterator iterator = this.groupRaiderMap.values().iterator();
 
         while (iterator.hasNext()) {
-            Set<EntityRaider> set1 = (Set) iterator.next();
+            Set<Raider> set1 = (Set) iterator.next();
 
             set.addAll(set1);
         }
@@ -197,7 +197,7 @@ public class Raid {
         return set;
     }
 
-    public World getLevel() {
+    public Level getLevel() {
         return this.level;
     }
 
@@ -209,23 +209,23 @@ public class Raid {
         return this.groupsSpawned;
     }
 
-    private Predicate<EntityPlayer> validPlayer() {
+    private Predicate<ServerPlayer> validPlayer() {
         return (entityplayer) -> {
-            BlockPosition blockposition = entityplayer.blockPosition();
+            BlockPos blockposition = entityplayer.blockPosition();
 
             return entityplayer.isAlive() && this.level.getRaidAt(blockposition) == this;
         };
     }
 
     private void updatePlayers() {
-        Set<EntityPlayer> set = Sets.newHashSet(this.raidEvent.getPlayers());
-        List<EntityPlayer> list = this.level.getPlayers(this.validPlayer());
+        Set<ServerPlayer> set = Sets.newHashSet(this.raidEvent.getPlayers());
+        List<ServerPlayer> list = this.level.getPlayers(this.validPlayer());
         Iterator iterator = list.iterator();
 
-        EntityPlayer entityplayer;
+        ServerPlayer entityplayer;
 
         while (iterator.hasNext()) {
-            entityplayer = (EntityPlayer) iterator.next();
+            entityplayer = (ServerPlayer) iterator.next();
             if (!set.contains(entityplayer)) {
                 this.raidEvent.addPlayer(entityplayer);
             }
@@ -234,7 +234,7 @@ public class Raid {
         iterator = set.iterator();
 
         while (iterator.hasNext()) {
-            entityplayer = (EntityPlayer) iterator.next();
+            entityplayer = (ServerPlayer) iterator.next();
             if (!list.contains(entityplayer)) {
                 this.raidEvent.removePlayer(entityplayer);
             }
@@ -250,32 +250,32 @@ public class Raid {
         return this.badOmenLevel;
     }
 
-    public void setBadOmenLevel(int i) {
-        this.badOmenLevel = i;
+    public void setBadOmenLevel(int badOmenLevel) {
+        this.badOmenLevel = badOmenLevel;
     }
 
-    public void absorbBadOmen(EntityHuman entityhuman) {
-        if (entityhuman.hasEffect(MobEffects.BAD_OMEN)) {
-            this.badOmenLevel += entityhuman.getEffect(MobEffects.BAD_OMEN).getAmplifier() + 1;
-            this.badOmenLevel = MathHelper.clamp(this.badOmenLevel, 0, this.getMaxBadOmenLevel());
+    public void absorbBadOmen(Player player) {
+        if (player.hasEffect(MobEffects.BAD_OMEN)) {
+            this.badOmenLevel += player.getEffect(MobEffects.BAD_OMEN).getAmplifier() + 1;
+            this.badOmenLevel = Mth.clamp(this.badOmenLevel, 0, this.getMaxBadOmenLevel());
         }
 
-        entityhuman.removeEffect(MobEffects.BAD_OMEN);
+        player.removeEffect(MobEffects.BAD_OMEN);
     }
 
     public void stop() {
         this.active = false;
         this.raidEvent.removeAllPlayers();
-        this.status = Raid.Status.STOPPED;
+        this.status = Raid.RaidStatus.STOPPED;
     }
 
     public void tick() {
         if (!this.isStopped()) {
-            if (this.status == Raid.Status.ONGOING) {
+            if (this.status == Raid.RaidStatus.ONGOING) {
                 boolean flag = this.active;
 
                 this.active = this.level.hasChunkAt(this.center);
-                if (this.level.getDifficulty() == EnumDifficulty.PEACEFUL) {
+                if (this.level.getDifficulty() == Difficulty.PEACEFUL) {
                     org.bukkit.craftbukkit.event.CraftEventFactory.callRaidStopEvent(this, org.bukkit.event.raid.RaidStopEvent.Reason.PEACE); // CraftBukkit
                     this.stop();
                     return;
@@ -295,7 +295,7 @@ public class Raid {
 
                 if (!this.level.isVillage(this.center)) {
                     if (this.groupsSpawned > 0) {
-                        this.status = Raid.Status.LOSS;
+                        this.status = Raid.RaidStatus.LOSS;
                         org.bukkit.craftbukkit.event.CraftEventFactory.callRaidFinishEvent(this, new java.util.ArrayList<>()); // CraftBukkit
                     } else {
                         org.bukkit.craftbukkit.event.CraftEventFactory.callRaidStopEvent(this, org.bukkit.event.raid.RaidStopEvent.Reason.NOT_IN_VILLAGE); // CraftBukkit
@@ -318,7 +318,7 @@ public class Raid {
                         flag1 = this.waveSpawnPos.isPresent();
                         boolean flag2 = !flag1 && this.raidCooldownTicks % 5 == 0;
 
-                        if (flag1 && !this.level.isPositionEntityTicking((BlockPosition) this.waveSpawnPos.get())) {
+                        if (flag1 && !this.level.isPositionEntityTicking((BlockPos) this.waveSpawnPos.get())) {
                             flag2 = true;
                         }
 
@@ -339,7 +339,7 @@ public class Raid {
                         }
 
                         --this.raidCooldownTicks;
-                        this.raidEvent.setProgress(MathHelper.clamp((float) (300 - this.raidCooldownTicks) / 300.0F, 0.0F, 1.0F));
+                        this.raidEvent.setProgress(Mth.clamp((float) (300 - this.raidCooldownTicks) / 300.0F, 0.0F, 1.0F));
                     } else if (this.raidCooldownTicks == 0 && this.groupsSpawned > 0) {
                         this.raidCooldownTicks = 300;
                         this.raidEvent.setName(Raid.RAID_NAME_COMPONENT);
@@ -352,7 +352,7 @@ public class Raid {
                     this.updateRaiders();
                     if (i > 0) {
                         if (i <= 2) {
-                            this.raidEvent.setName(Raid.RAID_NAME_COMPONENT.copy().append(" - ").append((IChatBaseComponent) IChatBaseComponent.translatable("event.minecraft.raid.raiders_remaining", i)));
+                            this.raidEvent.setName(Raid.RAID_NAME_COMPONENT.copy().append(" - ").append((Component) Component.translatable("event.minecraft.raid.raiders_remaining", i)));
                         } else {
                             this.raidEvent.setName(Raid.RAID_NAME_COMPONENT);
                         }
@@ -365,7 +365,7 @@ public class Raid {
                 int j = 0;
 
                 while (this.shouldSpawnGroup()) {
-                    BlockPosition blockposition = this.waveSpawnPos.isPresent() ? (BlockPosition) this.waveSpawnPos.get() : this.findRandomSpawnPos(j, 20);
+                    BlockPos blockposition = this.waveSpawnPos.isPresent() ? (BlockPos) this.waveSpawnPos.get() : this.findRandomSpawnPos(j, 20);
 
                     if (blockposition != null) {
                         this.started = true;
@@ -389,7 +389,7 @@ public class Raid {
                     if (this.postRaidTicks < 40) {
                         ++this.postRaidTicks;
                     } else {
-                        this.status = Raid.Status.VICTORY;
+                        this.status = Raid.RaidStatus.VICTORY;
                         Iterator iterator = this.heroesOfTheVillage.iterator();
 
                         List<org.bukkit.entity.Player> winners = new java.util.ArrayList<>(); // CraftBukkit
@@ -397,15 +397,15 @@ public class Raid {
                             UUID uuid = (UUID) iterator.next();
                             Entity entity = this.level.getEntity(uuid);
 
-                            if (entity instanceof EntityLiving && !entity.isSpectator()) {
-                                EntityLiving entityliving = (EntityLiving) entity;
+                            if (entity instanceof LivingEntity && !entity.isSpectator()) {
+                                LivingEntity entityliving = (LivingEntity) entity;
 
-                                entityliving.addEffect(new MobEffect(MobEffects.HERO_OF_THE_VILLAGE, 48000, this.badOmenLevel - 1, false, false, true));
-                                if (entityliving instanceof EntityPlayer) {
-                                    EntityPlayer entityplayer = (EntityPlayer) entityliving;
+                                entityliving.addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 48000, this.badOmenLevel - 1, false, false, true));
+                                if (entityliving instanceof ServerPlayer) {
+                                    ServerPlayer entityplayer = (ServerPlayer) entityliving;
 
-                                    entityplayer.awardStat(StatisticList.RAID_WIN);
-                                    CriterionTriggers.RAID_WIN.trigger(entityplayer);
+                                    entityplayer.awardStat(Stats.RAID_WIN);
+                                    CriteriaTriggers.RAID_WIN.trigger(entityplayer);
                                     winners.add(entityplayer.getBukkitEntity()); // CraftBukkit
                                 }
                             }
@@ -439,18 +439,18 @@ public class Raid {
     }
 
     private void moveRaidCenterToNearbyVillageSection() {
-        Stream<SectionPosition> stream = SectionPosition.cube(SectionPosition.of(this.center), 2);
-        WorldServer worldserver = this.level;
+        Stream<SectionPos> stream = SectionPos.cube(SectionPos.of(this.center), 2);
+        ServerLevel worldserver = this.level;
 
         Objects.requireNonNull(this.level);
-        stream.filter(worldserver::isVillage).map(SectionPosition::center).min(Comparator.comparingDouble((blockposition) -> {
+        stream.filter(worldserver::isVillage).map(SectionPos::center).min(Comparator.comparingDouble((blockposition) -> {
             return blockposition.distSqr(this.center);
         })).ifPresent(this::setCenter);
     }
 
-    private Optional<BlockPosition> getValidSpawnPos(int i) {
+    private Optional<BlockPos> getValidSpawnPos(int proximity) {
         for (int j = 0; j < 3; ++j) {
-            BlockPosition blockposition = this.findRandomSpawnPos(i, 1);
+            BlockPos blockposition = this.findRandomSpawnPos(proximity, 1);
 
             if (blockposition != null) {
                 return Optional.of(blockposition);
@@ -481,16 +481,16 @@ public class Raid {
     }
 
     private void updateRaiders() {
-        Iterator<Set<EntityRaider>> iterator = this.groupRaiderMap.values().iterator();
+        Iterator<Set<Raider>> iterator = this.groupRaiderMap.values().iterator();
         HashSet hashset = Sets.newHashSet();
 
         while (iterator.hasNext()) {
-            Set<EntityRaider> set = (Set) iterator.next();
+            Set<Raider> set = (Set) iterator.next();
             Iterator iterator1 = set.iterator();
 
             while (iterator1.hasNext()) {
-                EntityRaider entityraider = (EntityRaider) iterator1.next();
-                BlockPosition blockposition = entityraider.blockPosition();
+                Raider entityraider = (Raider) iterator1.next();
+                BlockPos blockposition = entityraider.blockPosition();
 
                 if (!entityraider.isRemoved() && entityraider.level.dimension() == this.level.dimension() && this.center.distSqr(blockposition) < 12544.0D) {
                     if (entityraider.tickCount > 600) {
@@ -515,59 +515,59 @@ public class Raid {
         Iterator iterator2 = hashset.iterator();
 
         while (iterator2.hasNext()) {
-            EntityRaider entityraider1 = (EntityRaider) iterator2.next();
+            Raider entityraider1 = (Raider) iterator2.next();
 
             this.removeFromRaid(entityraider1, true);
         }
 
     }
 
-    private void playSound(BlockPosition blockposition) {
+    private void playSound(BlockPos pos) {
         float f = 13.0F;
         boolean flag = true;
-        Collection<EntityPlayer> collection = this.raidEvent.getPlayers();
+        Collection<ServerPlayer> collection = this.raidEvent.getPlayers();
         long i = this.random.nextLong();
         Iterator iterator = this.level.players().iterator();
 
         while (iterator.hasNext()) {
-            EntityPlayer entityplayer = (EntityPlayer) iterator.next();
-            Vec3D vec3d = entityplayer.position();
-            Vec3D vec3d1 = Vec3D.atCenterOf(blockposition);
+            ServerPlayer entityplayer = (ServerPlayer) iterator.next();
+            Vec3 vec3d = entityplayer.position();
+            Vec3 vec3d1 = Vec3.atCenterOf(pos);
             double d0 = Math.sqrt((vec3d1.x - vec3d.x) * (vec3d1.x - vec3d.x) + (vec3d1.z - vec3d.z) * (vec3d1.z - vec3d.z));
             double d1 = vec3d.x + 13.0D / d0 * (vec3d1.x - vec3d.x);
             double d2 = vec3d.z + 13.0D / d0 * (vec3d1.z - vec3d.z);
 
             if (d0 <= 64.0D || collection.contains(entityplayer)) {
-                entityplayer.connection.send(new PacketPlayOutNamedSoundEffect(SoundEffects.RAID_HORN, SoundCategory.NEUTRAL, d1, entityplayer.getY(), d2, 64.0F, 1.0F, i));
+                entityplayer.connection.send(new ClientboundSoundPacket(SoundEvents.RAID_HORN, SoundSource.NEUTRAL, d1, entityplayer.getY(), d2, 64.0F, 1.0F, i));
             }
         }
 
     }
 
-    private void spawnGroup(BlockPosition blockposition) {
+    private void spawnGroup(BlockPos pos) {
         boolean flag = false;
         int i = this.groupsSpawned + 1;
 
         this.totalHealth = 0.0F;
-        DifficultyDamageScaler difficultydamagescaler = this.level.getCurrentDifficultyAt(blockposition);
+        DifficultyInstance difficultydamagescaler = this.level.getCurrentDifficultyAt(pos);
         boolean flag1 = this.shouldSpawnBonusGroup();
-        Raid.Wave[] araid_wave = Raid.Wave.VALUES;
+        Raid.RaiderType[] araid_wave = Raid.RaiderType.VALUES;
         int j = araid_wave.length;
         int k = 0;
 
         // CraftBukkit start
-        EntityRaider leader = null;
-        List<EntityRaider> raiders = new java.util.ArrayList<>();
+        Raider leader = null;
+        List<Raider> raiders = new java.util.ArrayList<>();
         // CraftBukkit end
         while (k < j) {
-            Raid.Wave raid_wave = araid_wave[k];
+            Raid.RaiderType raid_wave = araid_wave[k];
             int l = this.getDefaultNumSpawns(raid_wave, i, flag1) + this.getPotentialBonusSpawns(raid_wave, this.random, i, difficultydamagescaler, flag1);
             int i1 = 0;
             int j1 = 0;
 
             while (true) {
                 if (j1 < l) {
-                    EntityRaider entityraider = (EntityRaider) raid_wave.entityType.create(this.level);
+                    Raider entityraider = (Raider) raid_wave.entityType.create(this.level);
 
                     if (entityraider != null) {
                         if (!flag && entityraider.canBeLeader()) {
@@ -577,25 +577,25 @@ public class Raid {
                             leader = entityraider; // CraftBukkit
                         }
 
-                        this.joinRaid(i, entityraider, blockposition, false);
+                        this.joinRaid(i, entityraider, pos, false);
                         raiders.add(entityraider); // CraftBukkit
-                        if (raid_wave.entityType == EntityTypes.RAVAGER) {
-                            EntityRaider entityraider1 = null;
+                        if (raid_wave.entityType == EntityType.RAVAGER) {
+                            Raider entityraider1 = null;
 
-                            if (i == this.getNumGroups(EnumDifficulty.NORMAL)) {
-                                entityraider1 = (EntityRaider) EntityTypes.PILLAGER.create(this.level);
-                            } else if (i >= this.getNumGroups(EnumDifficulty.HARD)) {
+                            if (i == this.getNumGroups(Difficulty.NORMAL)) {
+                                entityraider1 = (Raider) EntityType.PILLAGER.create(this.level);
+                            } else if (i >= this.getNumGroups(Difficulty.HARD)) {
                                 if (i1 == 0) {
-                                    entityraider1 = (EntityRaider) EntityTypes.EVOKER.create(this.level);
+                                    entityraider1 = (Raider) EntityType.EVOKER.create(this.level);
                                 } else {
-                                    entityraider1 = (EntityRaider) EntityTypes.VINDICATOR.create(this.level);
+                                    entityraider1 = (Raider) EntityType.VINDICATOR.create(this.level);
                                 }
                             }
 
                             ++i1;
                             if (entityraider1 != null) {
-                                this.joinRaid(i, entityraider1, blockposition, false);
-                                entityraider1.moveTo(blockposition, 0.0F, 0.0F);
+                                this.joinRaid(i, entityraider1, pos, false);
+                                entityraider1.moveTo(pos, 0.0F, 0.0F);
                                 entityraider1.startRiding(entityraider);
                                 raiders.add(entityraider); // CraftBukkit
                             }
@@ -618,27 +618,27 @@ public class Raid {
         org.bukkit.craftbukkit.event.CraftEventFactory.callRaidSpawnWaveEvent(this, leader, raiders); // CraftBukkit
     }
 
-    public void joinRaid(int i, EntityRaider entityraider, @Nullable BlockPosition blockposition, boolean flag) {
-        boolean flag1 = this.addWaveMob(i, entityraider);
+    public void joinRaid(int wave, Raider raider, @Nullable BlockPos pos, boolean existing) {
+        boolean flag1 = this.addWaveMob(wave, raider);
 
         if (flag1) {
-            entityraider.setCurrentRaid(this);
-            entityraider.setWave(i);
-            entityraider.setCanJoinRaid(true);
-            entityraider.setTicksOutsideRaid(0);
-            if (!flag && blockposition != null) {
-                entityraider.setPos((double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 1.0D, (double) blockposition.getZ() + 0.5D);
-                entityraider.finalizeSpawn(this.level, this.level.getCurrentDifficultyAt(blockposition), EnumMobSpawn.EVENT, (GroupDataEntity) null, (NBTTagCompound) null);
-                entityraider.applyRaidBuffs(i, false);
-                entityraider.setOnGround(true);
-                this.level.addFreshEntityWithPassengers(entityraider, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.RAID); // CraftBukkit
+            raider.setCurrentRaid(this);
+            raider.setWave(wave);
+            raider.setCanJoinRaid(true);
+            raider.setTicksOutsideRaid(0);
+            if (!existing && pos != null) {
+                raider.setPos((double) pos.getX() + 0.5D, (double) pos.getY() + 1.0D, (double) pos.getZ() + 0.5D);
+                raider.finalizeSpawn(this.level, this.level.getCurrentDifficultyAt(pos), MobSpawnType.EVENT, (SpawnGroupData) null, (CompoundTag) null);
+                raider.applyRaidBuffs(wave, false);
+                raider.setOnGround(true);
+                this.level.addFreshEntityWithPassengers(raider, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.RAID); // CraftBukkit
             }
         }
 
     }
 
     public void updateBossbar() {
-        this.raidEvent.setProgress(MathHelper.clamp(this.getHealthOfLivingRaiders() / this.totalHealth, 0.0F, 1.0F));
+        this.raidEvent.setProgress(Mth.clamp(this.getHealthOfLivingRaiders() / this.totalHealth, 0.0F, 1.0F));
     }
 
     public float getHealthOfLivingRaiders() {
@@ -646,12 +646,12 @@ public class Raid {
         Iterator iterator = this.groupRaiderMap.values().iterator();
 
         while (iterator.hasNext()) {
-            Set<EntityRaider> set = (Set) iterator.next();
+            Set<Raider> set = (Set) iterator.next();
 
-            EntityRaider entityraider;
+            Raider entityraider;
 
             for (Iterator iterator1 = set.iterator(); iterator1.hasNext(); f += entityraider.getHealth()) {
-                entityraider = (EntityRaider) iterator1.next();
+                entityraider = (Raider) iterator1.next();
             }
         }
 
@@ -666,18 +666,18 @@ public class Raid {
         return this.groupRaiderMap.values().stream().mapToInt(Set::size).sum();
     }
 
-    public void removeFromRaid(EntityRaider entityraider, boolean flag) {
-        Set<EntityRaider> set = (Set) this.groupRaiderMap.get(entityraider.getWave());
+    public void removeFromRaid(Raider entity, boolean countHealth) {
+        Set<Raider> set = (Set) this.groupRaiderMap.get(entity.getWave());
 
         if (set != null) {
-            boolean flag1 = set.remove(entityraider);
+            boolean flag1 = set.remove(entity);
 
             if (flag1) {
-                if (flag) {
-                    this.totalHealth -= entityraider.getHealth();
+                if (countHealth) {
+                    this.totalHealth -= entity.getHealth();
                 }
 
-                entityraider.setCurrentRaid((Raid) null);
+                entity.setCurrentRaid((Raid) null);
                 this.updateBossbar();
                 this.setDirty();
             }
@@ -691,37 +691,37 @@ public class Raid {
 
     public static ItemStack getLeaderBannerInstance() {
         ItemStack itemstack = new ItemStack(Items.WHITE_BANNER);
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
-        NBTTagList nbttaglist = (new EnumBannerPatternType.a()).addPattern(BannerPatterns.RHOMBUS_MIDDLE, EnumColor.CYAN).addPattern(BannerPatterns.STRIPE_BOTTOM, EnumColor.LIGHT_GRAY).addPattern(BannerPatterns.STRIPE_CENTER, EnumColor.GRAY).addPattern(BannerPatterns.BORDER, EnumColor.LIGHT_GRAY).addPattern(BannerPatterns.STRIPE_MIDDLE, EnumColor.BLACK).addPattern(BannerPatterns.HALF_HORIZONTAL, EnumColor.LIGHT_GRAY).addPattern(BannerPatterns.CIRCLE_MIDDLE, EnumColor.LIGHT_GRAY).addPattern(BannerPatterns.BORDER, EnumColor.BLACK).toListTag();
+        CompoundTag nbttagcompound = new CompoundTag();
+        ListTag nbttaglist = (new BannerPattern.Builder()).addPattern(BannerPatterns.RHOMBUS_MIDDLE, DyeColor.CYAN).addPattern(BannerPatterns.STRIPE_BOTTOM, DyeColor.LIGHT_GRAY).addPattern(BannerPatterns.STRIPE_CENTER, DyeColor.GRAY).addPattern(BannerPatterns.BORDER, DyeColor.LIGHT_GRAY).addPattern(BannerPatterns.STRIPE_MIDDLE, DyeColor.BLACK).addPattern(BannerPatterns.HALF_HORIZONTAL, DyeColor.LIGHT_GRAY).addPattern(BannerPatterns.CIRCLE_MIDDLE, DyeColor.LIGHT_GRAY).addPattern(BannerPatterns.BORDER, DyeColor.BLACK).toListTag();
 
         nbttagcompound.put("Patterns", nbttaglist);
-        ItemBlock.setBlockEntityData(itemstack, TileEntityTypes.BANNER, nbttagcompound);
-        itemstack.hideTooltipPart(ItemStack.HideFlags.ADDITIONAL);
-        itemstack.setHoverName(IChatBaseComponent.translatable("block.minecraft.ominous_banner").withStyle(EnumChatFormat.GOLD));
+        BlockItem.setBlockEntityData(itemstack, BlockEntityType.BANNER, nbttagcompound);
+        itemstack.hideTooltipPart(ItemStack.TooltipPart.ADDITIONAL);
+        itemstack.setHoverName(Component.translatable("block.minecraft.ominous_banner").withStyle(ChatFormatting.GOLD));
         return itemstack;
     }
 
     @Nullable
-    public EntityRaider getLeader(int i) {
-        return (EntityRaider) this.groupToLeaderMap.get(i);
+    public Raider getLeader(int wave) {
+        return (Raider) this.groupToLeaderMap.get(wave);
     }
 
     @Nullable
-    private BlockPosition findRandomSpawnPos(int i, int j) {
-        int k = i == 0 ? 2 : 2 - i;
-        BlockPosition.MutableBlockPosition blockposition_mutableblockposition = new BlockPosition.MutableBlockPosition();
+    private BlockPos findRandomSpawnPos(int proximity, int tries) {
+        int k = proximity == 0 ? 2 : 2 - proximity;
+        BlockPos.MutableBlockPos blockposition_mutableblockposition = new BlockPos.MutableBlockPos();
 
-        for (int l = 0; l < j; ++l) {
+        for (int l = 0; l < tries; ++l) {
             float f = this.level.random.nextFloat() * 6.2831855F;
-            int i1 = this.center.getX() + MathHelper.floor(MathHelper.cos(f) * 32.0F * (float) k) + this.level.random.nextInt(5);
-            int j1 = this.center.getZ() + MathHelper.floor(MathHelper.sin(f) * 32.0F * (float) k) + this.level.random.nextInt(5);
-            int k1 = this.level.getHeight(HeightMap.Type.WORLD_SURFACE, i1, j1);
+            int i1 = this.center.getX() + Mth.floor(Mth.cos(f) * 32.0F * (float) k) + this.level.random.nextInt(5);
+            int j1 = this.center.getZ() + Mth.floor(Mth.sin(f) * 32.0F * (float) k) + this.level.random.nextInt(5);
+            int k1 = this.level.getHeight(Heightmap.Types.WORLD_SURFACE, i1, j1);
 
             blockposition_mutableblockposition.set(i1, k1, j1);
-            if (!this.level.isVillage((BlockPosition) blockposition_mutableblockposition) || i >= 2) {
+            if (!this.level.isVillage((BlockPos) blockposition_mutableblockposition) || proximity >= 2) {
                 boolean flag = true;
 
-                if (this.level.hasChunksAt(blockposition_mutableblockposition.getX() - 10, blockposition_mutableblockposition.getZ() - 10, blockposition_mutableblockposition.getX() + 10, blockposition_mutableblockposition.getZ() + 10) && this.level.isPositionEntityTicking(blockposition_mutableblockposition) && (SpawnerCreature.isSpawnPositionOk(EntityPositionTypes.Surface.ON_GROUND, this.level, blockposition_mutableblockposition, EntityTypes.RAVAGER) || this.level.getBlockState(blockposition_mutableblockposition.below()).is(Blocks.SNOW) && this.level.getBlockState(blockposition_mutableblockposition).isAir())) {
+                if (this.level.hasChunksAt(blockposition_mutableblockposition.getX() - 10, blockposition_mutableblockposition.getZ() - 10, blockposition_mutableblockposition.getX() + 10, blockposition_mutableblockposition.getZ() + 10) && this.level.isPositionEntityTicking(blockposition_mutableblockposition) && (NaturalSpawner.isSpawnPositionOk(SpawnPlacements.Type.ON_GROUND, this.level, blockposition_mutableblockposition, EntityType.RAVAGER) || this.level.getBlockState(blockposition_mutableblockposition.below()).is(Blocks.SNOW) && this.level.getBlockState(blockposition_mutableblockposition).isAir())) {
                     return blockposition_mutableblockposition;
                 }
             }
@@ -730,22 +730,22 @@ public class Raid {
         return null;
     }
 
-    private boolean addWaveMob(int i, EntityRaider entityraider) {
-        return this.addWaveMob(i, entityraider, true);
+    private boolean addWaveMob(int wave, Raider entity) {
+        return this.addWaveMob(wave, entity, true);
     }
 
-    public boolean addWaveMob(int i, EntityRaider entityraider, boolean flag) {
-        this.groupRaiderMap.computeIfAbsent(i, (integer) -> {
+    public boolean addWaveMob(int wave, Raider entity, boolean countHealth) {
+        this.groupRaiderMap.computeIfAbsent(wave, (integer) -> {
             return Sets.newHashSet();
         });
-        Set<EntityRaider> set = (Set) this.groupRaiderMap.get(i);
-        EntityRaider entityraider1 = null;
+        Set<Raider> set = (Set) this.groupRaiderMap.get(wave);
+        Raider entityraider1 = null;
         Iterator iterator = set.iterator();
 
         while (iterator.hasNext()) {
-            EntityRaider entityraider2 = (EntityRaider) iterator.next();
+            Raider entityraider2 = (Raider) iterator.next();
 
-            if (entityraider2.getUUID().equals(entityraider.getUUID())) {
+            if (entityraider2.getUUID().equals(entity.getUUID())) {
                 entityraider1 = entityraider2;
                 break;
             }
@@ -753,12 +753,12 @@ public class Raid {
 
         if (entityraider1 != null) {
             set.remove(entityraider1);
-            set.add(entityraider);
+            set.add(entity);
         }
 
-        set.add(entityraider);
-        if (flag) {
-            this.totalHealth += entityraider.getHealth();
+        set.add(entity);
+        if (countHealth) {
+            this.totalHealth += entity.getHealth();
         }
 
         this.updateBossbar();
@@ -766,41 +766,41 @@ public class Raid {
         return true;
     }
 
-    public void setLeader(int i, EntityRaider entityraider) {
-        this.groupToLeaderMap.put(i, entityraider);
-        entityraider.setItemSlot(EnumItemSlot.HEAD, getLeaderBannerInstance());
-        entityraider.setDropChance(EnumItemSlot.HEAD, 2.0F);
+    public void setLeader(int wave, Raider entity) {
+        this.groupToLeaderMap.put(wave, entity);
+        entity.setItemSlot(EquipmentSlot.HEAD, Raid.getLeaderBannerInstance());
+        entity.setDropChance(EquipmentSlot.HEAD, 2.0F);
     }
 
-    public void removeLeader(int i) {
-        this.groupToLeaderMap.remove(i);
+    public void removeLeader(int wave) {
+        this.groupToLeaderMap.remove(wave);
     }
 
-    public BlockPosition getCenter() {
+    public BlockPos getCenter() {
         return this.center;
     }
 
-    private void setCenter(BlockPosition blockposition) {
-        this.center = blockposition;
+    private void setCenter(BlockPos center) {
+        this.center = center;
     }
 
     public int getId() {
         return this.id;
     }
 
-    private int getDefaultNumSpawns(Raid.Wave raid_wave, int i, boolean flag) {
-        return flag ? raid_wave.spawnsPerWaveBeforeBonus[this.numGroups] : raid_wave.spawnsPerWaveBeforeBonus[i];
+    private int getDefaultNumSpawns(Raid.RaiderType member, int wave, boolean extra) {
+        return extra ? member.spawnsPerWaveBeforeBonus[this.numGroups] : member.spawnsPerWaveBeforeBonus[wave];
     }
 
-    private int getPotentialBonusSpawns(Raid.Wave raid_wave, RandomSource randomsource, int i, DifficultyDamageScaler difficultydamagescaler, boolean flag) {
-        EnumDifficulty enumdifficulty = difficultydamagescaler.getDifficulty();
-        boolean flag1 = enumdifficulty == EnumDifficulty.EASY;
-        boolean flag2 = enumdifficulty == EnumDifficulty.NORMAL;
+    private int getPotentialBonusSpawns(Raid.RaiderType member, RandomSource random, int wave, DifficultyInstance localDifficulty, boolean extra) {
+        Difficulty enumdifficulty = localDifficulty.getDifficulty();
+        boolean flag1 = enumdifficulty == Difficulty.EASY;
+        boolean flag2 = enumdifficulty == Difficulty.NORMAL;
         int j;
 
-        switch (raid_wave) {
+        switch (member) {
             case WITCH:
-                if (flag1 || i <= 2 || i == 4) {
+                if (flag1 || wave <= 2 || wave == 4) {
                     return 0;
                 }
 
@@ -809,7 +809,7 @@ public class Raid {
             case PILLAGER:
             case VINDICATOR:
                 if (flag1) {
-                    j = randomsource.nextInt(2);
+                    j = random.nextInt(2);
                 } else if (flag2) {
                     j = 1;
                 } else {
@@ -817,49 +817,49 @@ public class Raid {
                 }
                 break;
             case RAVAGER:
-                j = !flag1 && flag ? 1 : 0;
+                j = !flag1 && extra ? 1 : 0;
                 break;
             default:
                 return 0;
         }
 
-        return j > 0 ? randomsource.nextInt(j + 1) : 0;
+        return j > 0 ? random.nextInt(j + 1) : 0;
     }
 
     public boolean isActive() {
         return this.active;
     }
 
-    public NBTTagCompound save(NBTTagCompound nbttagcompound) {
-        nbttagcompound.putInt("Id", this.id);
-        nbttagcompound.putBoolean("Started", this.started);
-        nbttagcompound.putBoolean("Active", this.active);
-        nbttagcompound.putLong("TicksActive", this.ticksActive);
-        nbttagcompound.putInt("BadOmenLevel", this.badOmenLevel);
-        nbttagcompound.putInt("GroupsSpawned", this.groupsSpawned);
-        nbttagcompound.putInt("PreRaidTicks", this.raidCooldownTicks);
-        nbttagcompound.putInt("PostRaidTicks", this.postRaidTicks);
-        nbttagcompound.putFloat("TotalHealth", this.totalHealth);
-        nbttagcompound.putInt("NumGroups", this.numGroups);
-        nbttagcompound.putString("Status", this.status.getName());
-        nbttagcompound.putInt("CX", this.center.getX());
-        nbttagcompound.putInt("CY", this.center.getY());
-        nbttagcompound.putInt("CZ", this.center.getZ());
-        NBTTagList nbttaglist = new NBTTagList();
+    public CompoundTag save(CompoundTag nbt) {
+        nbt.putInt("Id", this.id);
+        nbt.putBoolean("Started", this.started);
+        nbt.putBoolean("Active", this.active);
+        nbt.putLong("TicksActive", this.ticksActive);
+        nbt.putInt("BadOmenLevel", this.badOmenLevel);
+        nbt.putInt("GroupsSpawned", this.groupsSpawned);
+        nbt.putInt("PreRaidTicks", this.raidCooldownTicks);
+        nbt.putInt("PostRaidTicks", this.postRaidTicks);
+        nbt.putFloat("TotalHealth", this.totalHealth);
+        nbt.putInt("NumGroups", this.numGroups);
+        nbt.putString("Status", this.status.getName());
+        nbt.putInt("CX", this.center.getX());
+        nbt.putInt("CY", this.center.getY());
+        nbt.putInt("CZ", this.center.getZ());
+        ListTag nbttaglist = new ListTag();
         Iterator iterator = this.heroesOfTheVillage.iterator();
 
         while (iterator.hasNext()) {
             UUID uuid = (UUID) iterator.next();
 
-            nbttaglist.add(GameProfileSerializer.createUUID(uuid));
+            nbttaglist.add(NbtUtils.createUUID(uuid));
         }
 
-        nbttagcompound.put("HeroesOfTheVillage", nbttaglist);
-        return nbttagcompound;
+        nbt.put("HeroesOfTheVillage", nbttaglist);
+        return nbt;
     }
 
-    public int getNumGroups(EnumDifficulty enumdifficulty) {
-        switch (enumdifficulty) {
+    public int getNumGroups(Difficulty difficulty) {
+        switch (difficulty) {
             case EASY:
                 return 3;
             case NORMAL:
@@ -882,32 +882,32 @@ public class Raid {
     }
 
     // CraftBukkit start - a method to get all raiders
-    public java.util.Collection<EntityRaider> getRaiders() {
+    public java.util.Collection<Raider> getRaiders() {
         return this.groupRaiderMap.values().stream().flatMap(Set::stream).collect(java.util.stream.Collectors.toSet());
     }
     // CraftBukkit end
 
-    private static enum Status {
+    private static enum RaidStatus {
 
         ONGOING, VICTORY, LOSS, STOPPED;
 
-        private static final Raid.Status[] VALUES = values();
+        private static final Raid.RaidStatus[] VALUES = values();
 
-        private Status() {}
+        private RaidStatus() {}
 
-        static Raid.Status getByName(String s) {
-            Raid.Status[] araid_status = Raid.Status.VALUES;
+        static Raid.RaidStatus getByName(String name) {
+            Raid.RaidStatus[] araid_status = Raid.RaidStatus.VALUES;
             int i = araid_status.length;
 
             for (int j = 0; j < i; ++j) {
-                Raid.Status raid_status = araid_status[j];
+                Raid.RaidStatus raid_status = araid_status[j];
 
-                if (s.equalsIgnoreCase(raid_status.name())) {
+                if (name.equalsIgnoreCase(raid_status.name())) {
                     return raid_status;
                 }
             }
 
-            return Raid.Status.ONGOING;
+            return Raid.RaidStatus.ONGOING;
         }
 
         public String getName() {
@@ -915,15 +915,15 @@ public class Raid {
         }
     }
 
-    private static enum Wave {
+    private static enum RaiderType {
 
-        VINDICATOR(EntityTypes.VINDICATOR, new int[]{0, 0, 2, 0, 1, 4, 2, 5}), EVOKER(EntityTypes.EVOKER, new int[]{0, 0, 0, 0, 0, 1, 1, 2}), PILLAGER(EntityTypes.PILLAGER, new int[]{0, 4, 3, 3, 4, 4, 4, 2}), WITCH(EntityTypes.WITCH, new int[]{0, 0, 0, 0, 3, 0, 0, 1}), RAVAGER(EntityTypes.RAVAGER, new int[]{0, 0, 0, 1, 0, 1, 0, 2});
+        VINDICATOR(EntityType.VINDICATOR, new int[]{0, 0, 2, 0, 1, 4, 2, 5}), EVOKER(EntityType.EVOKER, new int[]{0, 0, 0, 0, 0, 1, 1, 2}), PILLAGER(EntityType.PILLAGER, new int[]{0, 4, 3, 3, 4, 4, 4, 2}), WITCH(EntityType.WITCH, new int[]{0, 0, 0, 0, 3, 0, 0, 1}), RAVAGER(EntityType.RAVAGER, new int[]{0, 0, 0, 1, 0, 1, 0, 2});
 
-        static final Raid.Wave[] VALUES = values();
-        final EntityTypes<? extends EntityRaider> entityType;
+        static final Raid.RaiderType[] VALUES = values();
+        final EntityType<? extends Raider> entityType;
         final int[] spawnsPerWaveBeforeBonus;
 
-        private Wave(EntityTypes entitytypes, int[] aint) {
+        private RaiderType(EntityType entitytypes, int[] aint) {
             this.entityType = entitytypes;
             this.spawnsPerWaveBeforeBonus = aint;
         }

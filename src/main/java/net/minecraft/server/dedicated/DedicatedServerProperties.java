@@ -21,26 +21,26 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.IRegistry;
-import net.minecraft.core.IRegistryCustom;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.IChatBaseComponent;
-import net.minecraft.resources.MinecraftKey;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ChatDeserializer;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.EnumDifficulty;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.util.Mth;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
-import net.minecraft.world.level.DataPackConfiguration;
-import net.minecraft.world.level.EnumGamemode;
+import net.minecraft.world.level.DataPackConfig;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.WorldDataConfiguration;
-import net.minecraft.world.level.levelgen.ChunkProviderFlat;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.WorldOptions;
-import net.minecraft.world.level.levelgen.flat.GeneratorSettingsFlat;
+import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ import org.slf4j.Logger;
 import joptsimple.OptionSet;
 // CraftBukkit end
 
-public class DedicatedServerProperties extends PropertyManager<DedicatedServerProperties> {
+public class DedicatedServerProperties extends Settings<DedicatedServerProperties> {
 
     static final Logger LOGGER = LogUtils.getLogger();
     private static final Pattern SHA1 = Pattern.compile("^[a-fA-F0-9]{40}$");
@@ -65,8 +65,8 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
     public final String motd = this.get("motd", "A Minecraft Server");
     public final boolean forceGameMode = this.get("force-gamemode", false);
     public final boolean enforceWhitelist = this.get("enforce-whitelist", false);
-    public final EnumDifficulty difficulty;
-    public final EnumGamemode gamemode;
+    public final Difficulty difficulty;
+    public final GameType gamemode;
     public final String levelName;
     public final int serverPort;
     @Nullable
@@ -101,9 +101,9 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
     public final int entityBroadcastRangePercentage;
     public final String textFilteringConfig;
     public final Optional<MinecraftServer.ServerResourcePackInfo> serverResourcePackInfo;
-    public final DataPackConfiguration initialDataPackConfiguration;
-    public final PropertyManager<DedicatedServerProperties>.EditableProperty<Integer> playerIdleTimeout;
-    public final PropertyManager<DedicatedServerProperties>.EditableProperty<Boolean> whiteList;
+    public final DataPackConfig initialDataPackConfiguration;
+    public final Settings<DedicatedServerProperties>.MutableValue<Integer> playerIdleTimeout;
+    public final Settings<DedicatedServerProperties>.MutableValue<Boolean> whiteList;
     public final boolean enforceSecureProfile;
     private final DedicatedServerProperties.WorldDimensionData worldDimensionData;
     public final WorldOptions worldOptions;
@@ -112,8 +112,8 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
     public DedicatedServerProperties(Properties properties, OptionSet optionset) {
         super(properties, optionset);
         // CraftBukkit end
-        this.difficulty = (EnumDifficulty) this.get("difficulty", dispatchNumberOrString(EnumDifficulty::byId, EnumDifficulty::byName), EnumDifficulty::getKey, EnumDifficulty.EASY);
-        this.gamemode = (EnumGamemode) this.get("gamemode", dispatchNumberOrString(EnumGamemode::byId, EnumGamemode::byName), EnumGamemode::getName, EnumGamemode.SURVIVAL);
+        this.difficulty = (Difficulty) this.get("difficulty", dispatchNumberOrString(Difficulty::byId, Difficulty::byName), Difficulty::getKey, Difficulty.EASY);
+        this.gamemode = (GameType) this.get("gamemode", dispatchNumberOrString(GameType::byId, GameType::byName), GameType::getName, GameType.SURVIVAL);
         this.levelName = this.get("level-name", "world");
         this.serverPort = this.get("server-port", 25565);
         this.announcePlayerAchievements = this.getLegacyBoolean("announce-player-achievements");
@@ -140,14 +140,14 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
         this.broadcastRconToOps = this.get("broadcast-rcon-to-ops", true);
         this.broadcastConsoleToOps = this.get("broadcast-console-to-ops", true);
         this.maxWorldSize = this.get("max-world-size", (integer) -> {
-            return MathHelper.clamp(integer, 1, 29999984);
+            return Mth.clamp(integer, 1, 29999984);
         }, 29999984);
         this.syncChunkWrites = this.get("sync-chunk-writes", true);
         this.enableJmxMonitoring = this.get("enable-jmx-monitoring", false);
         this.enableStatus = this.get("enable-status", true);
         this.hideOnlinePlayers = this.get("hide-online-players", false);
         this.entityBroadcastRangePercentage = this.get("entity-broadcast-range-percentage", (integer) -> {
-            return MathHelper.clamp(integer, 10, 1000);
+            return Mth.clamp(integer, 10, 1000);
         }, 100);
         this.textFilteringConfig = this.get("text-filtering-config", "");
         this.playerIdleTimeout = this.getMutable("player-idle-timeout", 0);
@@ -159,12 +159,12 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
 
         this.worldOptions = new WorldOptions(i, flag, false);
         this.worldDimensionData = new DedicatedServerProperties.WorldDimensionData((JsonObject) this.get("generator-settings", (s1) -> {
-            return ChatDeserializer.parse(!s1.isEmpty() ? s1 : "{}");
+            return GsonHelper.parse(!s1.isEmpty() ? s1 : "{}");
         }, new JsonObject()), (String) this.get("level-type", (s1) -> {
             return s1.toLowerCase(Locale.ROOT);
         }, WorldPresets.NORMAL.location().toString()));
-        this.serverResourcePackInfo = getServerPackInfo(this.get("resource-pack", ""), this.get("resource-pack-sha1", ""), this.getLegacyString("resource-pack-hash"), this.get("require-resource-pack", false), this.get("resource-pack-prompt", ""));
-        this.initialDataPackConfiguration = getDatapackConfig(this.get("initial-enabled-packs", String.join(",", WorldDataConfiguration.DEFAULT.dataPacks().getEnabled())), this.get("initial-disabled-packs", String.join(",", WorldDataConfiguration.DEFAULT.dataPacks().getDisabled())));
+        this.serverResourcePackInfo = DedicatedServerProperties.getServerPackInfo(this.get("resource-pack", ""), this.get("resource-pack-sha1", ""), this.getLegacyString("resource-pack-hash"), this.get("require-resource-pack", false), this.get("resource-pack-prompt", ""));
+        this.initialDataPackConfiguration = DedicatedServerProperties.getDatapackConfig(this.get("initial-enabled-packs", String.join(",", WorldDataConfiguration.DEFAULT.dataPacks().getEnabled())), this.get("initial-disabled-packs", String.join(",", WorldDataConfiguration.DEFAULT.dataPacks().getDisabled())));
     }
 
     // CraftBukkit start
@@ -173,38 +173,38 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
     }
 
     @Override
-    protected DedicatedServerProperties reload(IRegistryCustom iregistrycustom, Properties properties, OptionSet optionset) {
+    protected DedicatedServerProperties reload(RegistryAccess iregistrycustom, Properties properties, OptionSet optionset) {
         return new DedicatedServerProperties(properties, optionset);
         // CraftBukkit end
     }
 
     @Nullable
-    private static IChatBaseComponent parseResourcePackPrompt(String s) {
-        if (!Strings.isNullOrEmpty(s)) {
+    private static Component parseResourcePackPrompt(String prompt) {
+        if (!Strings.isNullOrEmpty(prompt)) {
             try {
-                return IChatBaseComponent.ChatSerializer.fromJson(s);
+                return Component.Serializer.fromJson(prompt);
             } catch (Exception exception) {
-                DedicatedServerProperties.LOGGER.warn("Failed to parse resource pack prompt '{}'", s, exception);
+                DedicatedServerProperties.LOGGER.warn("Failed to parse resource pack prompt '{}'", prompt, exception);
             }
         }
 
         return null;
     }
 
-    private static Optional<MinecraftServer.ServerResourcePackInfo> getServerPackInfo(String s, String s1, @Nullable String s2, boolean flag, String s3) {
-        if (s.isEmpty()) {
+    private static Optional<MinecraftServer.ServerResourcePackInfo> getServerPackInfo(String url, String sha1, @Nullable String hash, boolean required, String prompt) {
+        if (url.isEmpty()) {
             return Optional.empty();
         } else {
             String s4;
 
-            if (!s1.isEmpty()) {
-                s4 = s1;
-                if (!Strings.isNullOrEmpty(s2)) {
+            if (!sha1.isEmpty()) {
+                s4 = sha1;
+                if (!Strings.isNullOrEmpty(hash)) {
                     DedicatedServerProperties.LOGGER.warn("resource-pack-hash is deprecated and found along side resource-pack-sha1. resource-pack-hash will be ignored.");
                 }
-            } else if (!Strings.isNullOrEmpty(s2)) {
+            } else if (!Strings.isNullOrEmpty(hash)) {
                 DedicatedServerProperties.LOGGER.warn("resource-pack-hash is deprecated. Please use resource-pack-sha1 instead.");
-                s4 = s2;
+                s4 = hash;
             } else {
                 s4 = "";
             }
@@ -215,22 +215,22 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
                 DedicatedServerProperties.LOGGER.warn("Invalid sha1 for resource-pack-sha1");
             }
 
-            IChatBaseComponent ichatbasecomponent = parseResourcePackPrompt(s3);
+            Component ichatbasecomponent = DedicatedServerProperties.parseResourcePackPrompt(prompt);
 
-            return Optional.of(new MinecraftServer.ServerResourcePackInfo(s, s4, flag, ichatbasecomponent));
+            return Optional.of(new MinecraftServer.ServerResourcePackInfo(url, s4, required, ichatbasecomponent));
         }
     }
 
-    private static DataPackConfiguration getDatapackConfig(String s, String s1) {
-        List<String> list = DedicatedServerProperties.COMMA_SPLITTER.splitToList(s);
-        List<String> list1 = DedicatedServerProperties.COMMA_SPLITTER.splitToList(s1);
+    private static DataPackConfig getDatapackConfig(String enabled, String disabled) {
+        List<String> list = DedicatedServerProperties.COMMA_SPLITTER.splitToList(enabled);
+        List<String> list1 = DedicatedServerProperties.COMMA_SPLITTER.splitToList(disabled);
 
-        return new DataPackConfiguration(list, list1);
+        return new DataPackConfig(list, list1);
     }
 
-    private static FeatureFlagSet getFeatures(String s) {
-        return FeatureFlags.REGISTRY.fromNames((Iterable) DedicatedServerProperties.COMMA_SPLITTER.splitToStream(s).mapMulti((s1, consumer) -> {
-            MinecraftKey minecraftkey = MinecraftKey.tryParse(s1);
+    private static FeatureFlagSet getFeatures(String featureFlags) {
+        return FeatureFlags.REGISTRY.fromNames((Iterable) DedicatedServerProperties.COMMA_SPLITTER.splitToStream(featureFlags).mapMulti((s1, consumer) -> {
+            ResourceLocation minecraftkey = ResourceLocation.tryParse(s1);
 
             if (minecraftkey == null) {
                 DedicatedServerProperties.LOGGER.warn("Invalid resource location {}, ignoring", s1);
@@ -241,22 +241,22 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
         }).collect(Collectors.toList()));
     }
 
-    public WorldDimensions createDimensions(IRegistryCustom iregistrycustom) {
-        return this.worldDimensionData.create(iregistrycustom);
+    public WorldDimensions createDimensions(RegistryAccess dynamicRegistry) {
+        return this.worldDimensionData.create(dynamicRegistry);
     }
 
     public static record WorldDimensionData(JsonObject generatorSettings, String levelType) {
 
         private static final Map<String, ResourceKey<WorldPreset>> LEGACY_PRESET_NAMES = Map.of("default", WorldPresets.NORMAL, "largebiomes", WorldPresets.LARGE_BIOMES);
 
-        public WorldDimensions create(IRegistryCustom iregistrycustom) {
-            IRegistry<WorldPreset> iregistry = iregistrycustom.registryOrThrow(Registries.WORLD_PRESET);
-            Holder.c<WorldPreset> holder_c = (Holder.c) iregistry.getHolder(WorldPresets.NORMAL).or(() -> {
+        public WorldDimensions create(RegistryAccess dynamicRegistryManager) {
+            Registry<WorldPreset> iregistry = dynamicRegistryManager.registryOrThrow(Registries.WORLD_PRESET);
+            Holder.Reference<WorldPreset> holder_c = (Holder.Reference) iregistry.getHolder(WorldPresets.NORMAL).or(() -> {
                 return iregistry.holders().findAny();
             }).orElseThrow(() -> {
                 return new IllegalStateException("Invalid datapack contents: can't find default preset");
             });
-            Optional<ResourceKey<WorldPreset>> optional = Optional.ofNullable(MinecraftKey.tryParse(this.levelType)).map((minecraftkey) -> { // CraftBukkit - decompile error
+            Optional<ResourceKey<WorldPreset>> optional = Optional.ofNullable(ResourceLocation.tryParse(this.levelType)).map((minecraftkey) -> { // CraftBukkit - decompile error
                 return ResourceKey.create(Registries.WORLD_PRESET, minecraftkey);
             }).or(() -> {
                 return Optional.ofNullable(DedicatedServerProperties.WorldDimensionData.LEGACY_PRESET_NAMES.get(this.levelType)); // CraftBukkit - decompile error
@@ -270,15 +270,15 @@ public class DedicatedServerProperties extends PropertyManager<DedicatedServerPr
             WorldDimensions worlddimensions = ((WorldPreset) holder.value()).createWorldDimensions();
 
             if (holder.is(WorldPresets.FLAT)) {
-                RegistryOps<JsonElement> registryops = RegistryOps.create(JsonOps.INSTANCE, (HolderLookup.b) iregistrycustom);
-                DataResult<GeneratorSettingsFlat> dataresult = GeneratorSettingsFlat.CODEC.parse(new Dynamic(registryops, this.generatorSettings())); // CraftBukkit - decompile error
+                RegistryOps<JsonElement> registryops = RegistryOps.create(JsonOps.INSTANCE, (HolderLookup.Provider) dynamicRegistryManager);
+                DataResult<FlatLevelGeneratorSettings> dataresult = FlatLevelGeneratorSettings.CODEC.parse(new Dynamic(registryops, this.generatorSettings())); // CraftBukkit - decompile error
                 Logger logger = DedicatedServerProperties.LOGGER;
 
                 Objects.requireNonNull(logger);
-                Optional<GeneratorSettingsFlat> optional1 = dataresult.resultOrPartial(logger::error);
+                Optional<FlatLevelGeneratorSettings> optional1 = dataresult.resultOrPartial(logger::error);
 
                 if (optional1.isPresent()) {
-                    return worlddimensions.replaceOverworldGenerator(iregistrycustom, new ChunkProviderFlat((GeneratorSettingsFlat) optional1.get()));
+                    return worlddimensions.replaceOverworldGenerator(dynamicRegistryManager, new FlatLevelSource((FlatLevelGeneratorSettings) optional1.get()));
                 }
             }
 

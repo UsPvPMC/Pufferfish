@@ -16,25 +16,25 @@ public class CraftAdvancement implements org.bukkit.advancement.Advancement {
     }
 
     public Advancement getHandle() {
-        return handle;
+        return this.handle;
     }
 
     @Override
     public NamespacedKey getKey() {
-        return CraftNamespacedKey.fromMinecraft(handle.getId());
+        return CraftNamespacedKey.fromMinecraft(this.handle.getId());
     }
 
     @Override
     public Collection<String> getCriteria() {
-        return Collections.unmodifiableCollection(handle.getCriteria().keySet());
+        return Collections.unmodifiableCollection(this.handle.getCriteria().keySet());
     }
 
     @Override
     public AdvancementDisplay getDisplay() {
-        if (handle.getDisplay() == null) {
+        if (this.handle.getDisplay() == null) {
             return null;
         }
 
-        return new CraftAdvancementDisplay(handle.getDisplay());
+        return new CraftAdvancementDisplay(this.handle.getDisplay());
     }
 }

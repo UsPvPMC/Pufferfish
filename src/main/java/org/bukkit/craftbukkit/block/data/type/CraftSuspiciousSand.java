@@ -5,20 +5,20 @@ import org.bukkit.craftbukkit.block.data.CraftBlockData;
 
 public abstract class CraftSuspiciousSand extends CraftBlockData implements SuspiciousSand {
 
-    private static final net.minecraft.world.level.block.state.properties.BlockStateInteger DUSTED = getInteger("dusted");
+    private static final net.minecraft.world.level.block.state.properties.IntegerProperty DUSTED = getInteger("dusted");
 
     @Override
     public int getDusted() {
-        return get(DUSTED);
+        return get(CraftSuspiciousSand.DUSTED);
     }
 
     @Override
     public void setDusted(int dusted) {
-        set(DUSTED, dusted);
+        set(CraftSuspiciousSand.DUSTED, dusted);
     }
 
     @Override
     public int getMaximumDusted() {
-        return getMax(DUSTED);
+        return getMax(CraftSuspiciousSand.DUSTED);
     }
 }

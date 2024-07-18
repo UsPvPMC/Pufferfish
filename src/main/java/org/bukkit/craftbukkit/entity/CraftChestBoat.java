@@ -1,6 +1,6 @@
 package org.bukkit.craftbukkit.entity;
 
-import net.minecraft.resources.MinecraftKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.vehicle.ChestBoat;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -17,7 +17,7 @@ public class CraftChestBoat extends CraftBoat implements org.bukkit.entity.Chest
 
     public CraftChestBoat(CraftServer server, ChestBoat entity) {
         super(server, entity);
-        inventory = new CraftInventory(entity);
+        this.inventory = new CraftInventory(entity);
     }
 
     @Override
@@ -37,17 +37,17 @@ public class CraftChestBoat extends CraftBoat implements org.bukkit.entity.Chest
 
     @Override
     public Inventory getInventory() {
-        return inventory;
+        return this.inventory;
     }
 
     @Override
     public void setLootTable(LootTable table) {
-        setLootTable(table, getSeed());
+        this.setLootTable(table, this.getSeed());
     }
 
     @Override
     public LootTable getLootTable() {
-        MinecraftKey nmsTable = getHandle().getLootTable();
+        ResourceLocation nmsTable = this.getHandle().getLootTable();
         if (nmsTable == null) {
             return null; // return empty loot table?
         }
@@ -58,17 +58,17 @@ public class CraftChestBoat extends CraftBoat implements org.bukkit.entity.Chest
 
     @Override
     public void setSeed(long seed) {
-        setLootTable(getLootTable(), seed);
+        this.setLootTable(this.getLootTable(), seed);
     }
 
     @Override
     public long getSeed() {
-        return getHandle().getLootTableSeed();
+        return this.getHandle().getLootTableSeed();
     }
 
     private void setLootTable(LootTable table, long seed) {
-        MinecraftKey newKey = (table == null) ? null : CraftNamespacedKey.toMinecraft(table.getKey());
-        getHandle().setLootTable(newKey);
-        getHandle().setLootTableSeed(seed);
+        ResourceLocation newKey = (table == null) ? null : CraftNamespacedKey.toMinecraft(table.getKey());
+        this.getHandle().setLootTable(newKey);
+        this.getHandle().setLootTableSeed(seed);
     }
 }

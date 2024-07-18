@@ -1,6 +1,6 @@
 package org.bukkit.craftbukkit.inventory;
 
-import net.minecraft.world.inventory.Container;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.bukkit.GameMode;
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.util.CraftChatMessage;
@@ -11,11 +11,11 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
 public class CraftInventoryView extends InventoryView {
-    private final Container container;
+    private final AbstractContainerMenu container;
     private final CraftHumanEntity player;
     private final CraftInventory viewing;
 
-    public CraftInventoryView(HumanEntity player, Inventory viewing, Container container) {
+    public CraftInventoryView(HumanEntity player, Inventory viewing, AbstractContainerMenu container) {
         // TODO: Should we make sure it really IS a CraftHumanEntity first? And a CraftInventory?
         this.player = (CraftHumanEntity) player;
         this.viewing = (CraftInventory) viewing;
@@ -24,23 +24,23 @@ public class CraftInventoryView extends InventoryView {
 
     @Override
     public Inventory getTopInventory() {
-        return viewing;
+        return this.viewing;
     }
 
     @Override
     public Inventory getBottomInventory() {
-        return player.getInventory();
+        return this.player.getInventory();
     }
 
     @Override
     public HumanEntity getPlayer() {
-        return player;
+        return this.player;
     }
 
     @Override
     public InventoryType getType() {
-        InventoryType type = viewing.getType();
-        if (type == InventoryType.CRAFTING && player.getGameMode() == GameMode.CREATIVE) {
+        InventoryType type = this.viewing.getType();
+        if (type == InventoryType.CRAFTING && this.player.getGameMode() == GameMode.CREATIVE) {
             return InventoryType.CREATIVE;
         }
         return type;
@@ -50,9 +50,9 @@ public class CraftInventoryView extends InventoryView {
     public void setItem(int slot, ItemStack item) {
         net.minecraft.world.item.ItemStack stack = CraftItemStack.asNMSCopy(item);
         if (slot >= 0) {
-            container.getSlot(slot).set(stack);
+            this.container.getSlot(slot).set(stack);
         } else {
-            player.getHandle().drop(stack, false);
+            this.player.getHandle().drop(stack, false);
         }
     }
 
@@ -61,19 +61,19 @@ public class CraftInventoryView extends InventoryView {
         if (slot < 0) {
             return null;
         }
-        return CraftItemStack.asCraftMirror(container.getSlot(slot).getItem());
+        return CraftItemStack.asCraftMirror(this.container.getSlot(slot).getItem());
     }
 
     @Override
     public String getTitle() {
-        return CraftChatMessage.fromComponent(container.getTitle());
+        return CraftChatMessage.fromComponent(this.container.getTitle());
     }
 
     public boolean isInTop(int rawSlot) {
-        return rawSlot < viewing.getSize();
+        return rawSlot < this.viewing.getSize();
     }
 
-    public Container getHandle() {
-        return container;
+    public AbstractContainerMenu getHandle() {
+        return this.container;
     }
 }

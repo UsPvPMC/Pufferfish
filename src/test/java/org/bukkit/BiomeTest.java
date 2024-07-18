@@ -1,6 +1,5 @@
 package org.bukkit;
 
-import net.minecraft.world.level.biome.BiomeBase;
 import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.support.AbstractTestingBase;
@@ -22,7 +21,7 @@ public class BiomeTest extends AbstractTestingBase {
 
     @Test
     public void testMinecraftToBukkit() {
-        for (BiomeBase biomeBase : BIOMES) {
+        for (net.minecraft.world.level.biome.Biome biomeBase : BIOMES) {
             Biome biome = CraftBlock.biomeBaseToBiome(BIOMES, biomeBase);
             Assert.assertTrue("No Bukkit mapping for " + biomeBase, biome != null && biome != Biome.CUSTOM);
         }

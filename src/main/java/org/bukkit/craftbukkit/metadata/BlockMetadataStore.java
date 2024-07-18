@@ -42,10 +42,10 @@ public class BlockMetadataStore extends MetadataStoreBase<Block> implements Meta
      */
     @Override
     public List<MetadataValue> getMetadata(Block block, String metadataKey) {
-        if (block.getWorld() == owningWorld) {
+        if (block.getWorld() == this.owningWorld) {
             return super.getMetadata(block, metadataKey);
         } else {
-            throw new IllegalArgumentException("Block does not belong to world " + owningWorld.getName());
+            throw new IllegalArgumentException("Block does not belong to world " + this.owningWorld.getName());
         }
     }
 
@@ -56,10 +56,10 @@ public class BlockMetadataStore extends MetadataStoreBase<Block> implements Meta
      */
     @Override
     public boolean hasMetadata(Block block, String metadataKey) {
-        if (block.getWorld() == owningWorld) {
+        if (block.getWorld() == this.owningWorld) {
             return super.hasMetadata(block, metadataKey);
         } else {
-            throw new IllegalArgumentException("Block does not belong to world " + owningWorld.getName());
+            throw new IllegalArgumentException("Block does not belong to world " + this.owningWorld.getName());
         }
     }
 
@@ -70,10 +70,10 @@ public class BlockMetadataStore extends MetadataStoreBase<Block> implements Meta
      */
     @Override
     public void removeMetadata(Block block, String metadataKey, Plugin owningPlugin) {
-        if (block.getWorld() == owningWorld) {
+        if (block.getWorld() == this.owningWorld) {
             super.removeMetadata(block, metadataKey, owningPlugin);
         } else {
-            throw new IllegalArgumentException("Block does not belong to world " + owningWorld.getName());
+            throw new IllegalArgumentException("Block does not belong to world " + this.owningWorld.getName());
         }
     }
 
@@ -84,10 +84,10 @@ public class BlockMetadataStore extends MetadataStoreBase<Block> implements Meta
      */
     @Override
     public void setMetadata(Block block, String metadataKey, MetadataValue newMetadataValue) {
-        if (block.getWorld() == owningWorld) {
+        if (block.getWorld() == this.owningWorld) {
             super.setMetadata(block, metadataKey, newMetadataValue);
         } else {
-            throw new IllegalArgumentException("Block does not belong to world " + owningWorld.getName());
+            throw new IllegalArgumentException("Block does not belong to world " + this.owningWorld.getName());
         }
     }
 }

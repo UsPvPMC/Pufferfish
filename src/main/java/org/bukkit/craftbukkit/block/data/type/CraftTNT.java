@@ -5,15 +5,15 @@ import org.bukkit.craftbukkit.block.data.CraftBlockData;
 
 public abstract class CraftTNT extends CraftBlockData implements TNT {
 
-    private static final net.minecraft.world.level.block.state.properties.BlockStateBoolean UNSTABLE = getBoolean("unstable");
+    private static final net.minecraft.world.level.block.state.properties.BooleanProperty UNSTABLE = getBoolean("unstable");
 
     @Override
     public boolean isUnstable() {
-        return get(UNSTABLE);
+        return get(CraftTNT.UNSTABLE);
     }
 
     @Override
     public void setUnstable(boolean unstable) {
-        set(UNSTABLE, unstable);
+        set(CraftTNT.UNSTABLE, unstable);
     }
 }

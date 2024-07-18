@@ -69,12 +69,12 @@ public class Commodore
             {
                 if ( in.getName().endsWith( ".jar" ) )
                 {
-                    convert( in, new File( output, in.getName() ) );
+                    Commodore.convert( in, new File( output, in.getName() ) );
                 }
             }
         } else
         {
-            convert( input, output );
+            Commodore.convert( input, output );
         }
     }
 
@@ -104,7 +104,7 @@ public class Commodore
 
                             if ( entry.getName().endsWith( ".class" ) )
                             {
-                                b = convert( b, false );
+                                b = Commodore.convert( b, false );
                                 entry = new JarEntry( entry.getName() );
                             }
 
@@ -356,7 +356,7 @@ public class Commodore
 
                         Type retType = Type.getReturnType( desc );
 
-                        if ( EVIL.contains( owner + " " + desc + " " + name )
+                        if ( Commodore.EVIL.contains( owner + " " + desc + " " + name )
                                 || ( owner.startsWith( "org/bukkit/block/" ) && ( desc + " " + name ).equals( "()I getTypeId" ) )
                                 || ( owner.startsWith( "org/bukkit/block/" ) && ( desc + " " + name ).equals( "(I)Z setTypeId" ) )
                                 || ( owner.startsWith( "org/bukkit/block/" ) && ( desc + " " + name ).equals( "()Lorg/bukkit/Material; getType" ) ) )

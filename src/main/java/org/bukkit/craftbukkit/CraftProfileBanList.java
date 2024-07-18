@@ -8,17 +8,17 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.players.GameProfileBanEntry;
-import net.minecraft.server.players.GameProfileBanList;
-import net.minecraft.server.players.JsonListEntry;
+import net.minecraft.server.players.StoredUserEntry;
+import net.minecraft.server.players.UserBanList;
+import net.minecraft.server.players.UserBanListEntry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 
 public class CraftProfileBanList implements org.bukkit.BanList {
-    private final GameProfileBanList list;
+    private final UserBanList list;
 
-    public CraftProfileBanList(GameProfileBanList list) {
+    public CraftProfileBanList(UserBanList list) {
         this.list = list;
     }
 
@@ -26,50 +26,50 @@ public class CraftProfileBanList implements org.bukkit.BanList {
     public org.bukkit.BanEntry getBanEntry(String target) {
         Validate.notNull(target, "Target cannot be null");
 
-        GameProfile profile = getProfile(target);
+        GameProfile profile = this.getProfile(target);
         if (profile == null) {
             return null;
         }
 
-        GameProfileBanEntry entry = (GameProfileBanEntry) list.get(profile);
+        UserBanListEntry entry = (UserBanListEntry) this.list.get(profile);
         if (entry == null) {
             return null;
         }
 
-        return new CraftProfileBanEntry(profile, entry, list);
+        return new CraftProfileBanEntry(profile, entry, this.list);
     }
 
     @Override
     public org.bukkit.BanEntry addBan(String target, String reason, Date expires, String source) {
         Validate.notNull(target, "Ban target cannot be null");
 
-        GameProfile profile = getProfile(target);
+        GameProfile profile = this.getProfile(target);
         if (profile == null) {
             return null;
         }
 
-        GameProfileBanEntry entry = new GameProfileBanEntry(profile, new Date(),
+        UserBanListEntry entry = new UserBanListEntry(profile, new Date(),
                 StringUtils.isBlank(source) ? null : source, expires,
                 StringUtils.isBlank(reason) ? null : reason);
 
-        list.add(entry);
+        this.list.add(entry);
 
         try {
-            list.save();
+            this.list.save();
         } catch (IOException ex) {
             Bukkit.getLogger().log(Level.SEVERE, "Failed to save banned-players.json, {0}", ex.getMessage());
         }
 
-        return new CraftProfileBanEntry(profile, entry, list);
+        return new CraftProfileBanEntry(profile, entry, this.list);
     }
 
     @Override
     public Set<org.bukkit.BanEntry> getBanEntries() {
         ImmutableSet.Builder<org.bukkit.BanEntry> builder = ImmutableSet.builder();
 
-        for (JsonListEntry entry : list.getValues()) {
+        for (StoredUserEntry entry : this.list.getValues()) {
             GameProfile profile = (GameProfile) entry.getUser();
-            builder.add(new CraftProfileBanEntry(profile, (GameProfileBanEntry) entry, list));
+            builder.add(new CraftProfileBanEntry(profile, (UserBanListEntry) entry, this.list));
         }
 
         return builder.build();
@@ -79,20 +79,20 @@ public class CraftProfileBanList implements org.bukkit.BanList {
     public boolean isBanned(String target) {
         Validate.notNull(target, "Target cannot be null");
 
-        GameProfile profile = getProfile(target);
+        GameProfile profile = this.getProfile(target);
         if (profile == null) {
             return false;
         }
 
-        return list.isBanned(profile);
+        return this.list.isBanned(profile);
     }
 
     @Override
     public void pardon(String target) {
         Validate.notNull(target, "Target cannot be null");
 
-        GameProfile profile = getProfile(target);
-        list.remove(profile);
+        GameProfile profile = this.getProfile(target);
+        this.list.remove(profile);
     }
 
     private GameProfile getProfile(String target) {

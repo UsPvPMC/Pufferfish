@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectList;
+import net.minecraft.world.effect.MobEffectInstance;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -65,11 +65,11 @@ public class CraftPotionUtil {
     public static String fromBukkit(PotionData data) {
         String type;
         if (data.isUpgraded()) {
-            type = upgradeable.get(data.getType());
+            type = CraftPotionUtil.upgradeable.get(data.getType());
         } else if (data.isExtended()) {
-            type = extendable.get(data.getType());
+            type = CraftPotionUtil.extendable.get(data.getType());
         } else {
-            type = regular.get(data.getType());
+            type = CraftPotionUtil.regular.get(data.getType());
         }
         Preconditions.checkNotNull(type, "Unknown potion type from data " + data);
 
@@ -84,28 +84,28 @@ public class CraftPotionUtil {
             type = type.substring(10);
         }
         PotionType potionType = null;
-        potionType = extendable.inverse().get(type);
+        potionType = CraftPotionUtil.extendable.inverse().get(type);
         if (potionType != null) {
             return new PotionData(potionType, true, false);
         }
-        potionType = upgradeable.inverse().get(type);
+        potionType = CraftPotionUtil.upgradeable.inverse().get(type);
         if (potionType != null) {
             return new PotionData(potionType, false, true);
         }
-        potionType = regular.inverse().get(type);
+        potionType = CraftPotionUtil.regular.inverse().get(type);
         if (potionType != null) {
             return new PotionData(potionType, false, false);
         }
         return new PotionData(PotionType.UNCRAFTABLE, false, false);
     }
 
-    public static MobEffect fromBukkit(PotionEffect effect) {
-        MobEffectList type = MobEffectList.byId(effect.getType().getId());
-        return new MobEffect(type, effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasParticles());
+    public static MobEffectInstance fromBukkit(PotionEffect effect) {
+        MobEffect type = MobEffect.byId(effect.getType().getId());
+        return new MobEffectInstance(type, effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasParticles());
     }
 
-    public static PotionEffect toBukkit(MobEffect effect) {
-        PotionEffectType type = PotionEffectType.getById(MobEffectList.getId(effect.getEffect()));
+    public static PotionEffect toBukkit(MobEffectInstance effect) {
+        PotionEffectType type = PotionEffectType.getById(MobEffect.getId(effect.getEffect()));
         int amp = effect.getAmplifier();
         int duration = effect.getDuration();
         boolean ambient = effect.isAmbient();
@@ -113,8 +113,8 @@ public class CraftPotionUtil {
         return new PotionEffect(type, duration, amp, ambient, particles);
     }
 
-    public static boolean equals(MobEffectList mobEffect, PotionEffectType type) {
-        PotionEffectType typeV = PotionEffectType.getById(MobEffectList.getId(mobEffect));
+    public static boolean equals(MobEffect mobEffect, PotionEffectType type) {
+        PotionEffectType typeV = PotionEffectType.getById(MobEffect.getId(mobEffect));
         return typeV.equals(type);
     }
 }

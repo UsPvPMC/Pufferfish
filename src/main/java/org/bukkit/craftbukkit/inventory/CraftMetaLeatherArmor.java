@@ -5,8 +5,8 @@ import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Sets;
 import java.util.Map;
 import java.util.Set;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntTag;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
@@ -30,37 +30,37 @@ class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
 
     CraftMetaLeatherArmor(CraftMetaItem meta) {
         super(meta);
-        readColor(this, meta);
+        CraftMetaLeatherArmor.readColor(this, meta);
     }
 
-    CraftMetaLeatherArmor(NBTTagCompound tag) {
+    CraftMetaLeatherArmor(CompoundTag tag) {
         super(tag);
-        readColor(this, tag);
+        CraftMetaLeatherArmor.readColor(this, tag);
     }
 
     CraftMetaLeatherArmor(Map<String, Object> map) {
         super(map);
-        readColor(this, map);
+        CraftMetaLeatherArmor.readColor(this, map);
     }
 
     @Override
-    void applyToItem(NBTTagCompound itemTag) {
+    void applyToItem(CompoundTag itemTag) {
         super.applyToItem(itemTag);
-        applyColor(this, itemTag);
+        CraftMetaLeatherArmor.applyColor(this, itemTag);
     }
 
     @Override
     boolean isEmpty() {
-        return super.isEmpty() && isLeatherArmorEmpty();
+        return super.isEmpty() && this.isLeatherArmorEmpty();
     }
 
     boolean isLeatherArmorEmpty() {
-        return !(hasColor());
+        return !(this.hasColor());
     }
 
     @Override
     boolean applicableTo(Material type) {
-        return LEATHER_ARMOR_MATERIALS.contains(type);
+        return CraftMetaLeatherArmor.LEATHER_ARMOR_MATERIALS.contains(type);
     }
 
     @Override
@@ -70,7 +70,7 @@ class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
 
     @Override
     public Color getColor() {
-        return color;
+        return this.color;
     }
 
     @Override
@@ -79,14 +79,14 @@ class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
     }
 
     boolean hasColor() {
-        return hasColor(this);
+        return CraftMetaLeatherArmor.hasColor(this);
     }
 
     @Override
     Builder<String, Object> serialize(Builder<String, Object> builder) {
         super.serialize(builder);
 
-        serialize(this, builder);
+        CraftMetaLeatherArmor.serialize(this, builder);
 
         return builder;
     }
@@ -99,22 +99,22 @@ class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
         if (meta instanceof CraftMetaLeatherArmor) {
             CraftMetaLeatherArmor that = (CraftMetaLeatherArmor) meta;
 
-            return color.equals(that.color);
+            return this.color.equals(that.color);
         }
         return true;
     }
 
     @Override
     boolean notUncommon(CraftMetaItem meta) {
-        return super.notUncommon(meta) && (meta instanceof CraftMetaLeatherArmor || isLeatherArmorEmpty());
+        return super.notUncommon(meta) && (meta instanceof CraftMetaLeatherArmor || this.isLeatherArmorEmpty());
     }
 
     @Override
     int applyHash() {
         final int original;
         int hash = original = super.applyHash();
-        if (hasColor()) {
-            hash ^= color.hashCode();
+        if (this.hasColor()) {
+            hash ^= this.color.hashCode();
         }
         return original != hash ? CraftMetaLeatherArmor.class.hashCode() ^ hash : hash;
     }
@@ -127,9 +127,9 @@ class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
         meta.setColor(armorMeta.color);
     }
 
-    static void readColor(LeatherArmorMeta meta, NBTTagCompound tag) {
+    static void readColor(LeatherArmorMeta meta, CompoundTag tag) {
         if (tag.contains(DISPLAY.NBT)) {
-            NBTTagCompound display = tag.getCompound(DISPLAY.NBT);
+            CompoundTag display = tag.getCompound(DISPLAY.NBT);
             if (display.contains(COLOR.NBT)) {
                 try {
                     meta.setColor(Color.fromRGB(display.getInt(COLOR.NBT)));
@@ -148,14 +148,14 @@ class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
         return !DEFAULT_LEATHER_COLOR.equals(meta.getColor());
     }
 
-    static void applyColor(LeatherArmorMeta meta, NBTTagCompound tag) {
-        if (hasColor(meta)) {
-            ((CraftMetaItem) meta).setDisplayTag(tag, COLOR.NBT, NBTTagInt.valueOf(meta.getColor().asRGB()));
+    static void applyColor(LeatherArmorMeta meta, CompoundTag tag) {
+        if (CraftMetaLeatherArmor.hasColor(meta)) {
+            ((CraftMetaItem) meta).setDisplayTag(tag, COLOR.NBT, IntTag.valueOf(meta.getColor().asRGB()));
         }
     }
 
     static void serialize(LeatherArmorMeta meta, Builder<String, Object> builder) {
-        if (hasColor(meta)) {
+        if (CraftMetaLeatherArmor.hasColor(meta)) {
             builder.put(COLOR.BUKKIT, meta.getColor());
         }
     }

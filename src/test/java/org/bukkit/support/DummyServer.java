@@ -118,7 +118,7 @@ public final class DummyServer implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        MethodHandler handler = methods.get(method);
+        MethodHandler handler = DummyServer.methods.get(method);
         if (handler != null) {
             return handler.handle(this, args);
         }

@@ -1,9 +1,8 @@
 package org.bukkit.craftbukkit.enchantments;
 
-import net.minecraft.core.IRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.enchantment.EnchantmentBinding;
-import net.minecraft.world.item.enchantment.EnchantmentVanishing;
+import net.minecraft.world.item.enchantment.BindingCurseEnchantment;
+import net.minecraft.world.item.enchantment.VanishingCurseEnchantment;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -21,12 +20,12 @@ public class CraftEnchantment extends Enchantment {
 
     @Override
     public int getMaxLevel() {
-        return target.getMaxLevel();
+        return this.target.getMaxLevel();
     }
 
     @Override
     public int getStartLevel() {
-        return target.getMinLevel();
+        return this.target.getMinLevel();
     }
 
     @Override
@@ -67,17 +66,17 @@ public class CraftEnchantment extends Enchantment {
 
     @Override
     public boolean isTreasure() {
-        return target.isTreasureOnly();
+        return this.target.isTreasureOnly();
     }
 
     @Override
     public boolean isCursed() {
-        return target instanceof EnchantmentBinding || target instanceof EnchantmentVanishing;
+        return this.target instanceof BindingCurseEnchantment || this.target instanceof VanishingCurseEnchantment;
     }
 
     @Override
     public boolean canEnchantItem(ItemStack item) {
-        return target.canEnchant(CraftItemStack.asNMSCopy(item));
+        return this.target.canEnchant(CraftItemStack.asNMSCopy(item));
     }
 
     @Override
@@ -188,10 +187,10 @@ public class CraftEnchantment extends Enchantment {
             return false;
         }
         CraftEnchantment ench = (CraftEnchantment) other;
-        return !target.isCompatibleWith(ench.target);
+        return !this.target.isCompatibleWith(ench.target);
     }
 
     public net.minecraft.world.item.enchantment.Enchantment getHandle() {
-        return target;
+        return this.target;
     }
 }

@@ -1,6 +1,6 @@
 package org.bukkit;
 
-import net.minecraft.resources.MinecraftKey;
+import net.minecraft.resources.ResourceLocation;
 import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.loot.LootTable;
 import org.bukkit.loot.LootTables;
@@ -24,7 +24,7 @@ public class LootTablesTest extends AbstractTestingBase {
 
     @Test
     public void testNMS() {
-        for (MinecraftKey key : net.minecraft.world.level.storage.loot.LootTables.all()) {
+        for (ResourceLocation key : net.minecraft.world.level.storage.loot.BuiltInLootTables.all()) {
             NamespacedKey bukkitKey = CraftNamespacedKey.fromMinecraft(key);
             LootTables lootTable = Registry.LOOT_TABLES.get(bukkitKey);
 

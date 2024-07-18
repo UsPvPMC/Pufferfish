@@ -1,31 +1,31 @@
 package net.minecraft.world.level.block;
 
-import net.minecraft.core.BlockPosition;
-import net.minecraft.server.level.WorldServer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.IWorldReader;
-import net.minecraft.world.level.World;
-import net.minecraft.world.level.block.state.BlockBase;
-import net.minecraft.world.level.block.state.IBlockData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class RootedDirtBlock extends Block implements IBlockFragilePlantElement {
+public class RootedDirtBlock extends Block implements BonemealableBlock {
 
-    public RootedDirtBlock(BlockBase.Info blockbase_info) {
-        super(blockbase_info);
+    public RootedDirtBlock(BlockBehaviour.Properties settings) {
+        super(settings);
     }
 
     @Override
-    public boolean isValidBonemealTarget(IWorldReader iworldreader, BlockPosition blockposition, IBlockData iblockdata, boolean flag) {
-        return iworldreader.getBlockState(blockposition.below()).isAir();
+    public boolean isValidBonemealTarget(LevelReader world, BlockPos pos, BlockState state, boolean isClient) {
+        return world.getBlockState(pos.below()).isAir();
     }
 
     @Override
-    public boolean isBonemealSuccess(World world, RandomSource randomsource, BlockPosition blockposition, IBlockData iblockdata) {
+    public boolean isBonemealSuccess(Level world, RandomSource random, BlockPos pos, BlockState state) {
         return true;
     }
 
     @Override
-    public void performBonemeal(WorldServer worldserver, RandomSource randomsource, BlockPosition blockposition, IBlockData iblockdata) {
-        org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockSpreadEvent(worldserver, blockposition, blockposition.below(), Blocks.HANGING_ROOTS.defaultBlockState()); // CraftBukkit
+    public void performBonemeal(ServerLevel world, RandomSource random, BlockPos pos, BlockState state) {
+        org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockSpreadEvent(world, pos, pos.below(), Blocks.HANGING_ROOTS.defaultBlockState()); // CraftBukkit
     }
 }

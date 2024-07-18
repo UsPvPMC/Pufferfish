@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.banner.Pattern;
@@ -71,25 +71,25 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
         }
 
         CraftMetaBanner banner = (CraftMetaBanner) meta;
-        base = banner.base;
-        patterns = new ArrayList<Pattern>(banner.patterns);
+        this.base = banner.base;
+        this.patterns = new ArrayList<Pattern>(banner.patterns);
     }
 
-    CraftMetaBanner(NBTTagCompound tag) {
+    CraftMetaBanner(CompoundTag tag) {
         super(tag);
 
         if (!tag.contains("BlockEntityTag")) {
             return;
         }
 
-        NBTTagCompound entityTag = tag.getCompound("BlockEntityTag");
+        CompoundTag entityTag = tag.getCompound("BlockEntityTag");
 
-        base = entityTag.contains(BASE.NBT) ? DyeColor.getByWoolData((byte) entityTag.getInt(BASE.NBT)) : null;
+        this.base = entityTag.contains(BASE.NBT) ? DyeColor.getByWoolData((byte) entityTag.getInt(BASE.NBT)) : null;
 
         if (entityTag.contains(PATTERNS.NBT)) {
-            NBTTagList patterns = entityTag.getList(PATTERNS.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND);
+            ListTag patterns = entityTag.getList(PATTERNS.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND);
             for (int i = 0; i < Math.min(patterns.size(), 20); i++) {
-                NBTTagCompound p = patterns.getCompound(i);
+                CompoundTag p = patterns.getCompound(i);
                 DyeColor color = DyeColor.getByWoolData((byte) p.getInt(COLOR.NBT));
                 PatternType pattern = PatternType.getByIdentifier(p.getString(PATTERN.NBT));
 
@@ -105,7 +105,7 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
 
         String baseStr = SerializableMeta.getString(map, BASE.BUKKIT, true);
         if (baseStr != null) {
-            base = DyeColor.legacyValueOf(baseStr);
+            this.base = DyeColor.legacyValueOf(baseStr);
         }
 
         Iterable<?> rawPatternList = SerializableMeta.getObject(Iterable.class, map, PATTERNS.BUKKIT, true);
@@ -117,22 +117,22 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
             if (!(obj instanceof Pattern)) {
                 throw new IllegalArgumentException("Object in pattern list is not valid. " + obj.getClass());
             }
-            addPattern((Pattern) obj);
+            this.addPattern((Pattern) obj);
         }
     }
     @Override
-    void applyToItem(NBTTagCompound tag) {
+    void applyToItem(CompoundTag tag) {
         super.applyToItem(tag);
 
-        NBTTagCompound entityTag = new NBTTagCompound();
-        if (base != null) {
-            entityTag.putInt(BASE.NBT, base.getWoolData());
+        CompoundTag entityTag = new CompoundTag();
+        if (this.base != null) {
+            entityTag.putInt(BASE.NBT, this.base.getWoolData());
         }
 
-        NBTTagList newPatterns = new NBTTagList();
+        ListTag newPatterns = new ListTag();
 
-        for (Pattern p : patterns) {
-            NBTTagCompound compound = new NBTTagCompound();
+        for (Pattern p : this.patterns) {
+            CompoundTag compound = new CompoundTag();
             compound.putInt(COLOR.NBT, p.getColor().getWoolData());
             compound.putString(PATTERN.NBT, p.getPattern().getIdentifier());
             newPatterns.add(compound);
@@ -144,17 +144,17 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
 
     @Override
     public DyeColor getBaseColor() {
-        return base;
+        return this.base;
     }
 
     @Override
     public void setBaseColor(DyeColor color) {
-        base = color;
+        this.base = color;
     }
 
     @Override
     public List<Pattern> getPatterns() {
-        return new ArrayList<Pattern>(patterns);
+        return new ArrayList<Pattern>(this.patterns);
     }
 
     @Override
@@ -164,38 +164,38 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
 
     @Override
     public void addPattern(Pattern pattern) {
-        patterns.add(pattern);
+        this.patterns.add(pattern);
     }
 
     @Override
     public Pattern getPattern(int i) {
-        return patterns.get(i);
+        return this.patterns.get(i);
     }
 
     @Override
     public Pattern removePattern(int i) {
-        return patterns.remove(i);
+        return this.patterns.remove(i);
     }
 
     @Override
     public void setPattern(int i, Pattern pattern) {
-        patterns.set(i, pattern);
+        this.patterns.set(i, pattern);
     }
 
     @Override
     public int numberOfPatterns() {
-        return patterns.size();
+        return this.patterns.size();
     }
 
     @Override
     ImmutableMap.Builder<String, Object> serialize(ImmutableMap.Builder<String, Object> builder) {
         super.serialize(builder);
 
-        if (base != null) {
-            builder.put(BASE.BUKKIT, base.toString());
+        if (this.base != null) {
+            builder.put(BASE.BUKKIT, this.base.toString());
         }
 
-        if (!patterns.isEmpty()) {
+        if (!this.patterns.isEmpty()) {
             builder.put(PATTERNS.BUKKIT, ImmutableList.copyOf(patterns));
         }
 
@@ -206,11 +206,11 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
     int applyHash() {
         final int original;
         int hash = original = super.applyHash();
-        if (base != null) {
-            hash = 31 * hash + base.hashCode();
+        if (this.base != null) {
+            hash = 31 * hash + this.base.hashCode();
         }
-        if (!patterns.isEmpty()) {
-            hash = 31 * hash + patterns.hashCode();
+        if (!this.patterns.isEmpty()) {
+            hash = 31 * hash + this.patterns.hashCode();
         }
         return original != hash ? CraftMetaBanner.class.hashCode() ^ hash : hash;
     }
@@ -223,30 +223,30 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
         if (meta instanceof CraftMetaBanner) {
             CraftMetaBanner that = (CraftMetaBanner) meta;
 
-            return base == that.base && patterns.equals(that.patterns);
+            return this.base == that.base && this.patterns.equals(that.patterns);
         }
         return true;
     }
 
     @Override
     boolean notUncommon(CraftMetaItem meta) {
-        return super.notUncommon(meta) && (meta instanceof CraftMetaBanner || (patterns.isEmpty() && base == null));
+        return super.notUncommon(meta) && (meta instanceof CraftMetaBanner || (this.patterns.isEmpty() && this.base == null));
     }
 
     @Override
     boolean isEmpty() {
-        return super.isEmpty() && patterns.isEmpty() && base == null;
+        return super.isEmpty() && this.patterns.isEmpty() && this.base == null;
     }
 
     @Override
     boolean applicableTo(Material type) {
-        return BANNER_MATERIALS.contains(type);
+        return CraftMetaBanner.BANNER_MATERIALS.contains(type);
     }
 
     @Override
     public CraftMetaBanner clone() {
         CraftMetaBanner meta = (CraftMetaBanner) super.clone();
-        meta.patterns = new ArrayList<>(patterns);
+        meta.patterns = new ArrayList<>(this.patterns);
         return meta;
     }
 }

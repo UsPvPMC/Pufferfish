@@ -2,9 +2,8 @@ package org.bukkit.craftbukkit.entity;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.entity.projectile.EntityPotion;
-import net.minecraft.world.item.alchemy.PotionUtil;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.alchemy.PotionUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.CraftServer;
@@ -16,14 +15,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 
 public class CraftThrownPotion extends CraftThrowableProjectile implements ThrownPotion {
-    public CraftThrownPotion(CraftServer server, EntityPotion entity) {
+    public CraftThrownPotion(CraftServer server, net.minecraft.world.entity.projectile.ThrownPotion entity) {
         super(server, entity);
     }
 
     @Override
     public Collection<PotionEffect> getEffects() {
         ImmutableList.Builder<PotionEffect> builder = ImmutableList.builder();
-        for (MobEffect effect : PotionUtil.getMobEffects(getHandle().getItemRaw())) {
+        for (MobEffectInstance effect : PotionUtils.getMobEffects(this.getHandle().getItemRaw())) {
             builder.add(CraftPotionUtil.toBukkit(effect));
         }
         return builder.build();
@@ -31,7 +30,7 @@ public class CraftThrownPotion extends CraftThrowableProjectile implements Throw
 
     @Override
     public ItemStack getItem() {
-        return CraftItemStack.asBukkitCopy(getHandle().getItemRaw());
+        return CraftItemStack.asBukkitCopy(this.getHandle().getItemRaw());
     }
 
     @Override
@@ -42,12 +41,12 @@ public class CraftThrownPotion extends CraftThrowableProjectile implements Throw
         // The ItemStack must be a potion.
         Validate.isTrue(item.getType() == Material.LINGERING_POTION || item.getType() == Material.SPLASH_POTION, "ItemStack must be a lingering or splash potion. This item stack was " + item.getType() + ".");
 
-        getHandle().setItem(CraftItemStack.asNMSCopy(item));
+        this.getHandle().setItem(CraftItemStack.asNMSCopy(item));
     }
 
     @Override
-    public EntityPotion getHandle() {
-        return (EntityPotion) entity;
+    public net.minecraft.world.entity.projectile.ThrownPotion getHandle() {
+        return (net.minecraft.world.entity.projectile.ThrownPotion) entity;
     }
 
     @Override

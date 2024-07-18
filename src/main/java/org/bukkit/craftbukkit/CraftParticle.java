@@ -5,18 +5,18 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import java.util.HashMap;
 import java.util.Map;
-import net.minecraft.core.BlockPosition;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.DustColorTransitionOptions;
-import net.minecraft.core.particles.ParticleParam;
-import net.minecraft.core.particles.ParticleParamBlock;
-import net.minecraft.core.particles.ParticleParamItem;
-import net.minecraft.core.particles.ParticleParamRedstone;
-import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ItemParticleOption;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.SculkChargeParticleOptions;
 import net.minecraft.core.particles.ShriekParticleOption;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.particles.VibrationParticleOption;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.MinecraftKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.gameevent.BlockPositionSource;
 import net.minecraft.world.level.gameevent.EntityPositionSource;
@@ -139,9 +139,9 @@ public enum CraftParticle {
     LEGACY_BLOCK_CRACK("block"),
     LEGACY_BLOCK_DUST("block"),
     LEGACY_FALLING_DUST("falling_dust");
-    private final MinecraftKey minecraftKey;
+    private final ResourceLocation minecraftKey;
     private final Particle bukkit;
-    private static final BiMap<Particle, MinecraftKey> particles;
+    private static final BiMap<Particle, ResourceLocation> particles;
     private static final Map<Particle, Particle> aliases;
 
     static {
@@ -158,45 +158,45 @@ public enum CraftParticle {
     }
 
     private CraftParticle(String minecraftKey) {
-        this.minecraftKey = new MinecraftKey(minecraftKey);
+        this.minecraftKey = new ResourceLocation(minecraftKey);
 
         this.bukkit = Particle.valueOf(this.name());
-        Preconditions.checkState(bukkit != null, "Bukkit particle %s does not exist", this.name());
+        Preconditions.checkState(this.bukkit != null, "Bukkit particle %s does not exist", this.name());
     }
 
-    public static ParticleParam toNMS(Particle bukkit) {
+    public static ParticleOptions toNMS(Particle bukkit) {
         return toNMS(bukkit, null);
     }
 
-    public static <T> ParticleParam toNMS(Particle particle, T obj) {
+    public static <T> ParticleOptions toNMS(Particle particle, T obj) {
         Particle canonical = particle;
         if (aliases.containsKey(particle)) {
             canonical = aliases.get(particle);
         }
 
-        net.minecraft.core.particles.Particle nms = BuiltInRegistries.PARTICLE_TYPE.get(particles.get(canonical));
+        net.minecraft.core.particles.ParticleType nms = BuiltInRegistries.PARTICLE_TYPE.get(particles.get(canonical));
         Preconditions.checkArgument(nms != null, "No NMS particle %s", particle);
 
         if (particle.getDataType().equals(Void.class)) {
-            return (ParticleType) nms;
+            return (SimpleParticleType) nms;
         }
         Preconditions.checkArgument(obj != null, "Particle %s requires data, null provided", particle);
         if (particle.getDataType().equals(ItemStack.class)) {
             ItemStack itemStack = (ItemStack) obj;
-            return new ParticleParamItem((net.minecraft.core.particles.Particle<ParticleParamItem>) nms, CraftItemStack.asNMSCopy(itemStack));
+            return new ItemParticleOption((net.minecraft.core.particles.ParticleType<ItemParticleOption>) nms, CraftItemStack.asNMSCopy(itemStack));
         }
         if (particle.getDataType() == MaterialData.class) {
             MaterialData data = (MaterialData) obj;
-            return new ParticleParamBlock((net.minecraft.core.particles.Particle<ParticleParamBlock>) nms, CraftMagicNumbers.getBlock(data));
+            return new BlockParticleOption((net.minecraft.core.particles.ParticleType<BlockParticleOption>) nms, CraftMagicNumbers.getBlock(data));
         }
         if (particle.getDataType() == BlockData.class) {
             BlockData data = (BlockData) obj;
-            return new ParticleParamBlock((net.minecraft.core.particles.Particle<ParticleParamBlock>) nms, ((CraftBlockData) data).getState());
+            return new BlockParticleOption((net.minecraft.core.particles.ParticleType<BlockParticleOption>) nms, ((CraftBlockData) data).getState());
         }
         if (particle.getDataType() == Particle.DustOptions.class) {
             Particle.DustOptions data = (Particle.DustOptions) obj;
             Color color = data.getColor();
-            return new ParticleParamRedstone(new Vector3f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f), data.getSize());
+            return new DustParticleOptions(new Vector3f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f), data.getSize());
         }
         if (particle.getDataType() == Particle.DustTransition.class) {
             Particle.DustTransition data = (Particle.DustTransition) obj;
@@ -211,7 +211,7 @@ public enum CraftParticle {
             PositionSource source;
             if (vibration.getDestination() instanceof Vibration.Destination.BlockDestination) {
                 Location destination = ((Vibration.Destination.BlockDestination) vibration.getDestination()).getLocation();
-                source = new BlockPositionSource(new BlockPosition(destination.getBlockX(), destination.getBlockY(), destination.getBlockZ()));
+                source = new BlockPositionSource(new BlockPos(destination.getBlockX(), destination.getBlockY(), destination.getBlockZ()));
             } else if (vibration.getDestination() instanceof Vibration.Destination.EntityDestination) {
                 Entity destination = ((CraftEntity) ((Vibration.Destination.EntityDestination) vibration.getDestination()).getEntity()).getHandle();
                 source = new EntityPositionSource(destination, destination.getEyeHeight());
@@ -230,11 +230,11 @@ public enum CraftParticle {
         throw new IllegalArgumentException(particle.getDataType().toString());
     }
 
-    public static Particle toBukkit(net.minecraft.core.particles.ParticleParam nms) {
+    public static Particle toBukkit(net.minecraft.core.particles.ParticleOptions nms) {
         return toBukkit(nms.getType());
     }
 
-    public static Particle toBukkit(net.minecraft.core.particles.Particle nms) {
+    public static Particle toBukkit(net.minecraft.core.particles.ParticleType nms) {
         return particles.inverse().get(BuiltInRegistries.PARTICLE_TYPE.getKey(nms));
     }
 }

@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
 import org.bukkit.craftbukkit.configuration.ConfigSerializationUtil;
 
-final class CraftProfileProperty {
+public final class CraftProfileProperty {
 
     /**
      * Different JSON formatting styles to use for encoded property values.
@@ -70,7 +70,7 @@ final class CraftProfileProperty {
 
     @Nullable
     public static JsonObject decodePropertyValue(@Nonnull String encodedPropertyValue) {
-        String json = decodeBase64(encodedPropertyValue);
+        String json = CraftProfileProperty.decodeBase64(encodedPropertyValue);
         if (json == null) return null;
         try {
             JsonElement jsonElement = JsonParser.parseString(json);

@@ -22,7 +22,7 @@ public class CommandAliasHelpTopic extends HelpTopic {
     @Override
     public String getFullText(CommandSender forWho) {
         StringBuilder sb = new StringBuilder(shortText);
-        HelpTopic aliasForTopic = helpMap.getHelpTopic(aliasFor);
+        HelpTopic aliasForTopic = this.helpMap.getHelpTopic(aliasFor);
         if (aliasForTopic != null) {
             sb.append("\n");
             sb.append(aliasForTopic.getFullText(forWho));
@@ -33,7 +33,7 @@ public class CommandAliasHelpTopic extends HelpTopic {
     @Override
     public boolean canSee(CommandSender commandSender) {
         if (amendedPermission == null) {
-            HelpTopic aliasForTopic = helpMap.getHelpTopic(aliasFor);
+            HelpTopic aliasForTopic = this.helpMap.getHelpTopic(aliasFor);
             if (aliasForTopic != null) {
                 return aliasForTopic.canSee(commandSender);
             } else {

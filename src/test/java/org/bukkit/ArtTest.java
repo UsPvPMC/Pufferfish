@@ -26,8 +26,8 @@ public class ArtTest extends AbstractTestingBase {
         for (ResourceKey<PaintingVariant> key : BuiltInRegistries.PAINTING_VARIANT.registryKeySet()) {
             Holder<PaintingVariant> enumArt = BuiltInRegistries.PAINTING_VARIANT.getHolderOrThrow(key);
             String name = key.location().getPath();
-            int width = enumArt.value().getWidth() / UNIT_MULTIPLIER;
-            int height = enumArt.value().getHeight() / UNIT_MULTIPLIER;
+            int width = enumArt.value().getWidth() / ArtTest.UNIT_MULTIPLIER;
+            int height = enumArt.value().getHeight() / ArtTest.UNIT_MULTIPLIER;
 
             Art subject = CraftArt.NotchToBukkit(enumArt);
 

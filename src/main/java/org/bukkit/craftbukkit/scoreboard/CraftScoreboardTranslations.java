@@ -2,11 +2,11 @@ package org.bukkit.craftbukkit.scoreboard;
 
 import com.google.common.collect.ImmutableBiMap;
 import net.minecraft.world.scores.Scoreboard;
-import net.minecraft.world.scores.criteria.IScoreboardCriteria;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.RenderType;
 
-final class CraftScoreboardTranslations {
+public final class CraftScoreboardTranslations {
     static final int MAX_DISPLAY_SLOT = 19;
     static final ImmutableBiMap<DisplaySlot, String> SLOTS = ImmutableBiMap.<DisplaySlot, String>builder()
             .put(DisplaySlot.BELOW_NAME, "belowName")
@@ -32,19 +32,19 @@ final class CraftScoreboardTranslations {
 
     private CraftScoreboardTranslations() {}
 
-    static DisplaySlot toBukkitSlot(int i) {
-        return SLOTS.inverse().get(Scoreboard.getDisplaySlotName(i));
+    public static DisplaySlot toBukkitSlot(int i) {
+        return CraftScoreboardTranslations.SLOTS.inverse().get(Scoreboard.getDisplaySlotName(i));
     }
 
-    static int fromBukkitSlot(DisplaySlot slot) {
-        return Scoreboard.getDisplaySlotByName(SLOTS.get(slot));
+    public static int fromBukkitSlot(DisplaySlot slot) {
+        return Scoreboard.getDisplaySlotByName(CraftScoreboardTranslations.SLOTS.get(slot));
     }
 
-    static RenderType toBukkitRender(IScoreboardCriteria.EnumScoreboardHealthDisplay display) {
+    static RenderType toBukkitRender(ObjectiveCriteria.RenderType display) {
         return RenderType.valueOf(display.name());
     }
 
-    static IScoreboardCriteria.EnumScoreboardHealthDisplay fromBukkitRender(RenderType render) {
-        return IScoreboardCriteria.EnumScoreboardHealthDisplay.valueOf(render.name());
+    static ObjectiveCriteria.RenderType fromBukkitRender(RenderType render) {
+        return ObjectiveCriteria.RenderType.valueOf(render.name());
     }
 }

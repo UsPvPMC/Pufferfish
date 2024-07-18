@@ -3,15 +3,14 @@ package org.bukkit.craftbukkit.inventory;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import java.util.Iterator;
 import java.util.Map;
-import net.minecraft.resources.MinecraftKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.item.crafting.IRecipe;
-import net.minecraft.world.item.crafting.Recipes;
+import net.minecraft.world.item.crafting.RecipeType;
 import org.bukkit.inventory.Recipe;
 
 public class RecipeIterator implements Iterator<Recipe> {
-    private final Iterator<Map.Entry<Recipes<?>, Object2ObjectLinkedOpenHashMap<MinecraftKey, IRecipe<?>>>> recipes;
-    private Iterator<IRecipe<?>> current;
+    private final Iterator<Map.Entry<RecipeType<?>, Object2ObjectLinkedOpenHashMap<ResourceLocation, net.minecraft.world.item.crafting.Recipe<?>>>> recipes;
+    private Iterator<net.minecraft.world.item.crafting.Recipe<?>> current;
 
     public RecipeIterator() {
         this.recipes = MinecraftServer.getServer().getRecipeManager().recipes.entrySet().iterator();
@@ -19,13 +18,13 @@ public class RecipeIterator implements Iterator<Recipe> {
 
     @Override
     public boolean hasNext() {
-        if (current != null && current.hasNext()) {
+        if (this.current != null && this.current.hasNext()) {
             return true;
         }
 
-        if (recipes.hasNext()) {
-            current = recipes.next().getValue().values().iterator();
-            return hasNext();
+        if (this.recipes.hasNext()) {
+            this.current = this.recipes.next().getValue().values().iterator();
+            return this.hasNext();
         }
 
         return false;
@@ -33,20 +32,20 @@ public class RecipeIterator implements Iterator<Recipe> {
 
     @Override
     public Recipe next() {
-        if (current == null || !current.hasNext()) {
-            current = recipes.next().getValue().values().iterator();
-            return next();
+        if (this.current == null || !this.current.hasNext()) {
+            this.current = this.recipes.next().getValue().values().iterator();
+            return this.next();
         }
 
-        return current.next().toBukkitRecipe();
+        return this.current.next().toBukkitRecipe();
     }
 
     @Override
     public void remove() {
-        if (current == null) {
+        if (this.current == null) {
             throw new IllegalStateException("next() not yet called");
         }
 
-        current.remove();
+        this.current.remove();
     }
 }

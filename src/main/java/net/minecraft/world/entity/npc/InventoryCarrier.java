@@ -1,22 +1,22 @@
 package net.minecraft.world.entity.npc;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.InventorySubcontainer;
-import net.minecraft.world.entity.EntityInsentient;
-import net.minecraft.world.entity.item.EntityItem;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 
 public interface InventoryCarrier {
 
     String TAG_INVENTORY = "Inventory";
 
-    InventorySubcontainer getInventory();
+    SimpleContainer getInventory();
 
-    static void pickUpItem(EntityInsentient entityinsentient, InventoryCarrier inventorycarrier, EntityItem entityitem) {
-        ItemStack itemstack = entityitem.getItem();
+    static void pickUpItem(Mob entity, InventoryCarrier inventoryOwner, ItemEntity item) {
+        ItemStack itemstack = item.getItem();
 
-        if (entityinsentient.wantsToPickUp(itemstack)) {
-            InventorySubcontainer inventorysubcontainer = inventorycarrier.getInventory();
+        if (entity.wantsToPickUp(itemstack)) {
+            SimpleContainer inventorysubcontainer = inventoryOwner.getInventory();
             boolean flag = inventorysubcontainer.canAddItem(itemstack);
 
             if (!flag) {
@@ -24,19 +24,19 @@ public interface InventoryCarrier {
             }
 
             // CraftBukkit start
-            ItemStack remaining = new InventorySubcontainer(inventorysubcontainer).addItem(itemstack);
-            if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityPickupItemEvent(entityinsentient, entityitem, remaining.getCount(), false).isCancelled()) {
+            ItemStack remaining = new SimpleContainer(inventorysubcontainer).addItem(itemstack);
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityPickupItemEvent(entity, item, remaining.getCount(), false).isCancelled()) {
                 return;
             }
             // CraftBukkit end
 
-            entityinsentient.onItemPickup(entityitem);
+            entity.onItemPickup(item);
             int i = itemstack.getCount();
             ItemStack itemstack1 = inventorysubcontainer.addItem(itemstack);
 
-            entityinsentient.take(entityitem, i - itemstack1.getCount());
+            entity.take(item, i - itemstack1.getCount());
             if (itemstack1.isEmpty()) {
-                entityitem.discard();
+                item.discard();
             } else {
                 itemstack.setCount(itemstack1.getCount());
             }
@@ -44,14 +44,14 @@ public interface InventoryCarrier {
 
     }
 
-    default void readInventoryFromTag(NBTTagCompound nbttagcompound) {
-        if (nbttagcompound.contains("Inventory", 9)) {
-            this.getInventory().fromTag(nbttagcompound.getList("Inventory", 10));
+    default void readInventoryFromTag(CompoundTag nbt) {
+        if (nbt.contains("Inventory", 9)) {
+            this.getInventory().fromTag(nbt.getList("Inventory", 10));
         }
 
     }
 
-    default void writeInventoryToTag(NBTTagCompound nbttagcompound) {
-        nbttagcompound.put("Inventory", this.getInventory().createTag());
+    default void writeInventoryToTag(CompoundTag nbt) {
+        nbt.put("Inventory", this.getInventory().createTag());
     }
 }

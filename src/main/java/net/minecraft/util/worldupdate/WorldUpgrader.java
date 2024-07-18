@@ -26,31 +26,31 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.minecraft.ReportedException;
 import net.minecraft.SharedConstants;
-import net.minecraft.SystemUtils;
-import net.minecraft.core.IRegistry;
+import net.minecraft.Util;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.chat.IChatBaseComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.ChunkCoordIntPair;
-import net.minecraft.world.level.World;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.chunk.storage.IChunkLoader;
+import net.minecraft.world.level.chunk.storage.ChunkStorage;
 import net.minecraft.world.level.chunk.storage.RegionFile;
-import net.minecraft.world.level.dimension.WorldDimension;
-import net.minecraft.world.level.storage.Convertable;
-import net.minecraft.world.level.storage.WorldPersistentData;
+import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.storage.DimensionDataStorage;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import org.slf4j.Logger;
 
 public class WorldUpgrader {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final ThreadFactory THREAD_FACTORY = (new ThreadFactoryBuilder()).setDaemon(true).build();
-    private final IRegistry<WorldDimension> dimensions;
-    private final Set<ResourceKey<WorldDimension>> levels; // CraftBukkit
+    private final Registry<LevelStem> dimensions;
+    private final Set<ResourceKey<LevelStem>> levels; // CraftBukkit
     private final boolean eraseCache;
-    private final Convertable.ConversionSession levelStorage;
+    private final LevelStorageSource.LevelStorageAccess levelStorage;
     private final Thread thread;
     private final DataFixer dataFixer;
     private volatile boolean running = true;
@@ -59,22 +59,22 @@ public class WorldUpgrader {
     private volatile int totalChunks;
     private volatile int converted;
     private volatile int skipped;
-    private final Object2FloatMap<ResourceKey<WorldDimension>> progressMap = Object2FloatMaps.synchronize(new Object2FloatOpenCustomHashMap(SystemUtils.identityStrategy())); // CraftBukkit
-    private volatile IChatBaseComponent status = IChatBaseComponent.translatable("optimizeWorld.stage.counting");
-    private static final Pattern REGEX = Pattern.compile("^r\\.(-?[0-9]+)\\.(-?[0-9]+)\\.mca$");
-    private final WorldPersistentData overworldDataStorage;
+    private final Object2FloatMap<ResourceKey<LevelStem>> progressMap = Object2FloatMaps.synchronize(new Object2FloatOpenCustomHashMap(Util.identityStrategy())); // CraftBukkit
+    private volatile Component status = Component.translatable("optimizeWorld.stage.counting");
+    public static final Pattern REGEX = Pattern.compile("^r\\.(-?[0-9]+)\\.(-?[0-9]+)\\.mca$");
+    private final DimensionDataStorage overworldDataStorage;
 
-    public WorldUpgrader(Convertable.ConversionSession convertable_conversionsession, DataFixer datafixer, IRegistry<WorldDimension> iregistry, boolean flag) {
-        this.dimensions = iregistry;
-        this.levels = (Set) iregistry.registryKeySet().stream().collect(Collectors.toUnmodifiableSet()); // CraftBukkit
-        this.eraseCache = flag;
-        this.dataFixer = datafixer;
-        this.levelStorage = convertable_conversionsession;
-        this.overworldDataStorage = new WorldPersistentData(this.levelStorage.getDimensionPath(World.OVERWORLD).resolve("data").toFile(), datafixer);
+    public WorldUpgrader(LevelStorageSource.LevelStorageAccess session, DataFixer dataFixer, Registry<LevelStem> dimensionOptionsRegistry, boolean eraseCache) {
+        this.dimensions = dimensionOptionsRegistry;
+        this.levels = (Set) dimensionOptionsRegistry.registryKeySet().stream().collect(Collectors.toUnmodifiableSet()); // CraftBukkit
+        this.eraseCache = eraseCache;
+        this.dataFixer = dataFixer;
+        this.levelStorage = session;
+        this.overworldDataStorage = new DimensionDataStorage(this.levelStorage.getDimensionPath(Level.OVERWORLD).resolve("data").toFile(), dataFixer);
         this.thread = WorldUpgrader.THREAD_FACTORY.newThread(this::work);
         this.thread.setUncaughtExceptionHandler((thread, throwable) -> {
             WorldUpgrader.LOGGER.error("Error upgrading world", throwable);
-            this.status = IChatBaseComponent.translatable("optimizeWorld.stage.failed");
+            this.status = Component.translatable("optimizeWorld.stage.failed");
             this.finished = true;
         });
         this.thread.start();
@@ -93,12 +93,12 @@ public class WorldUpgrader {
 
     private void work() {
         this.totalChunks = 0;
-        Builder<ResourceKey<WorldDimension>, ListIterator<ChunkCoordIntPair>> builder = ImmutableMap.builder(); // CraftBukkit
+        Builder<ResourceKey<LevelStem>, ListIterator<ChunkPos>> builder = ImmutableMap.builder(); // CraftBukkit
 
         List list;
 
         for (Iterator iterator = this.levels.iterator(); iterator.hasNext(); this.totalChunks += list.size()) {
-            ResourceKey<WorldDimension> resourcekey = (ResourceKey) iterator.next(); // CraftBukkit
+            ResourceKey<LevelStem> resourcekey = (ResourceKey) iterator.next(); // CraftBukkit
 
             list = this.getAllChunkPos(resourcekey);
             builder.put(resourcekey, list.listIterator());
@@ -108,21 +108,21 @@ public class WorldUpgrader {
             this.finished = true;
         } else {
             float f = (float) this.totalChunks;
-            ImmutableMap<ResourceKey<WorldDimension>, ListIterator<ChunkCoordIntPair>> immutablemap = builder.build(); // CraftBukkit
-            Builder<ResourceKey<WorldDimension>, IChunkLoader> builder1 = ImmutableMap.builder(); // CraftBukkit
+            ImmutableMap<ResourceKey<LevelStem>, ListIterator<ChunkPos>> immutablemap = builder.build(); // CraftBukkit
+            Builder<ResourceKey<LevelStem>, ChunkStorage> builder1 = ImmutableMap.builder(); // CraftBukkit
             Iterator iterator1 = this.levels.iterator();
 
             while (iterator1.hasNext()) {
-                ResourceKey<WorldDimension> resourcekey1 = (ResourceKey) iterator1.next(); // CraftBukkit
+                ResourceKey<LevelStem> resourcekey1 = (ResourceKey) iterator1.next(); // CraftBukkit
                 Path path = this.levelStorage.getDimensionPath((ResourceKey) null); // CraftBukkit
 
-                builder1.put(resourcekey1, new IChunkLoader(path.resolve("region"), this.dataFixer, true));
+                builder1.put(resourcekey1, new ChunkStorage(path.resolve("region"), this.dataFixer, true));
             }
 
-            ImmutableMap<ResourceKey<WorldDimension>, IChunkLoader> immutablemap1 = builder1.build(); // CraftBukkit
-            long i = SystemUtils.getMillis();
+            ImmutableMap<ResourceKey<LevelStem>, ChunkStorage> immutablemap1 = builder1.build(); // CraftBukkit
+            long i = Util.getMillis();
 
-            this.status = IChatBaseComponent.translatable("optimizeWorld.stage.upgrading");
+            this.status = Component.translatable("optimizeWorld.stage.upgrading");
 
             while (this.running) {
                 boolean flag = false;
@@ -131,24 +131,24 @@ public class WorldUpgrader {
                 float f2;
 
                 for (Iterator iterator2 = this.levels.iterator(); iterator2.hasNext(); f1 += f2) {
-                    ResourceKey<WorldDimension> resourcekey2 = (ResourceKey) iterator2.next(); // CraftBukkit
-                    ListIterator<ChunkCoordIntPair> listiterator = (ListIterator) immutablemap.get(resourcekey2);
-                    IChunkLoader ichunkloader = (IChunkLoader) immutablemap1.get(resourcekey2);
+                    ResourceKey<LevelStem> resourcekey2 = (ResourceKey) iterator2.next(); // CraftBukkit
+                    ListIterator<ChunkPos> listiterator = (ListIterator) immutablemap.get(resourcekey2);
+                    ChunkStorage ichunkloader = (ChunkStorage) immutablemap1.get(resourcekey2);
 
                     if (listiterator.hasNext()) {
-                        ChunkCoordIntPair chunkcoordintpair = (ChunkCoordIntPair) listiterator.next();
+                        ChunkPos chunkcoordintpair = (ChunkPos) listiterator.next();
                         boolean flag1 = false;
 
                         try {
-                            NBTTagCompound nbttagcompound = (NBTTagCompound) ((Optional) ichunkloader.read(chunkcoordintpair).join()).orElse((Object) null);
+                            CompoundTag nbttagcompound = (CompoundTag) ((Optional) ichunkloader.read(chunkcoordintpair).join()).orElse((Object) null);
 
                             if (nbttagcompound != null) {
-                                int j = IChunkLoader.getVersion(nbttagcompound);
-                                ChunkGenerator chunkgenerator = ((WorldDimension) this.dimensions.getOrThrow(resourcekey2)).generator(); // CraftBukkit
-                                NBTTagCompound nbttagcompound1 = ichunkloader.upgradeChunkTag(resourcekey2, () -> {
+                                int j = ChunkStorage.getVersion(nbttagcompound);
+                                ChunkGenerator chunkgenerator = ((LevelStem) this.dimensions.getOrThrow(resourcekey2)).generator(); // CraftBukkit
+                                CompoundTag nbttagcompound1 = ichunkloader.upgradeChunkTag(resourcekey2, () -> {
                                     return this.overworldDataStorage;
                                 }, nbttagcompound, chunkgenerator.getTypeNameForDataFixer(), chunkcoordintpair, null); // CraftBukkit
-                                ChunkCoordIntPair chunkcoordintpair1 = new ChunkCoordIntPair(nbttagcompound1.getInt("xPos"), nbttagcompound1.getInt("zPos"));
+                                ChunkPos chunkcoordintpair1 = new ChunkPos(nbttagcompound1.getInt("xPos"), nbttagcompound1.getInt("zPos"));
 
                                 if (!chunkcoordintpair1.equals(chunkcoordintpair)) {
                                     WorldUpgrader.LOGGER.warn("Chunk {} has invalid position {}", chunkcoordintpair, chunkcoordintpair1);
@@ -161,10 +161,10 @@ public class WorldUpgrader {
                                     nbttagcompound1.remove("Heightmaps");
                                     flag2 = flag2 || nbttagcompound1.contains("isLightOn");
                                     nbttagcompound1.remove("isLightOn");
-                                    NBTTagList nbttaglist = nbttagcompound1.getList("sections", 10);
+                                    ListTag nbttaglist = nbttagcompound1.getList("sections", 10);
 
                                     for (int k = 0; k < nbttaglist.size(); ++k) {
-                                        NBTTagCompound nbttagcompound2 = nbttaglist.getCompound(k);
+                                        CompoundTag nbttagcompound2 = nbttaglist.getCompound(k);
 
                                         flag2 = flag2 || nbttagcompound2.contains("BlockLight");
                                         nbttagcompound2.remove("BlockLight");
@@ -207,11 +207,11 @@ public class WorldUpgrader {
                 }
             }
 
-            this.status = IChatBaseComponent.translatable("optimizeWorld.stage.finished");
+            this.status = Component.translatable("optimizeWorld.stage.finished");
             UnmodifiableIterator unmodifiableiterator = immutablemap1.values().iterator();
 
             while (unmodifiableiterator.hasNext()) {
-                IChunkLoader ichunkloader1 = (IChunkLoader) unmodifiableiterator.next();
+                ChunkStorage ichunkloader1 = (ChunkStorage) unmodifiableiterator.next();
 
                 try {
                     ichunkloader1.close();
@@ -221,13 +221,13 @@ public class WorldUpgrader {
             }
 
             this.overworldDataStorage.save();
-            i = SystemUtils.getMillis() - i;
+            i = Util.getMillis() - i;
             WorldUpgrader.LOGGER.info("World optimizaton finished after {} ms", i);
             this.finished = true;
         }
     }
 
-    private List<ChunkCoordIntPair> getAllChunkPos(ResourceKey<WorldDimension> resourcekey) { // CraftBukkit
+    private List<ChunkPos> getAllChunkPos(ResourceKey<LevelStem> world) { // CraftBukkit
         File file = this.levelStorage.getDimensionPath((ResourceKey) null).toFile(); // CraftBukkit
         File file1 = new File(file, "region");
         File[] afile = file1.listFiles((file2, s) -> {
@@ -237,7 +237,7 @@ public class WorldUpgrader {
         if (afile == null) {
             return ImmutableList.of();
         } else {
-            List<ChunkCoordIntPair> list = Lists.newArrayList();
+            List<ChunkPos> list = Lists.newArrayList();
             File[] afile1 = afile;
             int i = afile.length;
 
@@ -255,7 +255,7 @@ public class WorldUpgrader {
                         try {
                             for (int i1 = 0; i1 < 32; ++i1) {
                                 for (int j1 = 0; j1 < 32; ++j1) {
-                                    ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(i1 + k, j1 + l);
+                                    ChunkPos chunkcoordintpair = new ChunkPos(i1 + k, j1 + l);
 
                                     if (regionfile.doesChunkExist(chunkcoordintpair)) {
                                         list.add(chunkcoordintpair);
@@ -287,12 +287,12 @@ public class WorldUpgrader {
         return this.finished;
     }
 
-    public Set<ResourceKey<World>> levels() {
+    public Set<ResourceKey<Level>> levels() {
         throw new AssertionError("Unsupported"); // CraftBukkit
     }
 
-    public float dimensionProgress(ResourceKey<World> resourcekey) {
-        return this.progressMap.getFloat(resourcekey);
+    public float dimensionProgress(ResourceKey<Level> world) {
+        return this.progressMap.getFloat(world);
     }
 
     public float getProgress() {
@@ -311,7 +311,7 @@ public class WorldUpgrader {
         return this.skipped;
     }
 
-    public IChatBaseComponent getStatus() {
+    public Component getStatus() {
         return this.status;
     }
 }

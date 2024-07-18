@@ -1,59 +1,59 @@
 package org.bukkit.craftbukkit;
 
 import java.util.HashMap;
-import net.minecraft.world.level.block.SoundEffectType;
+import net.minecraft.world.level.block.SoundType;
 import org.bukkit.Sound;
 import org.bukkit.SoundGroup;
 
 public class CraftSoundGroup implements SoundGroup {
 
-    private final net.minecraft.world.level.block.SoundEffectType handle;
-    private static final HashMap<SoundEffectType, CraftSoundGroup> SOUND_GROUPS = new HashMap<>();
+    private final net.minecraft.world.level.block.SoundType handle;
+    private static final HashMap<SoundType, CraftSoundGroup> SOUND_GROUPS = new HashMap<>();
 
-    public static SoundGroup getSoundGroup(SoundEffectType soundEffectType) {
-        return SOUND_GROUPS.computeIfAbsent(soundEffectType, CraftSoundGroup::new);
+    public static SoundGroup getSoundGroup(SoundType soundEffectType) {
+        return CraftSoundGroup.SOUND_GROUPS.computeIfAbsent(soundEffectType, CraftSoundGroup::new);
     }
 
-    private CraftSoundGroup(net.minecraft.world.level.block.SoundEffectType soundEffectType) {
+    private CraftSoundGroup(net.minecraft.world.level.block.SoundType soundEffectType) {
         this.handle = soundEffectType;
     }
 
-    public net.minecraft.world.level.block.SoundEffectType getHandle() {
-        return handle;
+    public net.minecraft.world.level.block.SoundType getHandle() {
+        return this.handle;
     }
 
     @Override
     public float getVolume() {
-        return getHandle().getVolume();
+        return this.getHandle().getVolume();
     }
 
     @Override
     public float getPitch() {
-        return getHandle().getPitch();
+        return this.getHandle().getPitch();
     }
 
     @Override
     public Sound getBreakSound() {
-        return CraftSound.getBukkit(getHandle().breakSound);
+        return CraftSound.getBukkit(this.getHandle().breakSound);
     }
 
     @Override
     public Sound getStepSound() {
-        return CraftSound.getBukkit(getHandle().getStepSound());
+        return CraftSound.getBukkit(this.getHandle().getStepSound());
     }
 
     @Override
     public Sound getPlaceSound() {
-        return CraftSound.getBukkit(getHandle().getPlaceSound());
+        return CraftSound.getBukkit(this.getHandle().getPlaceSound());
     }
 
     @Override
     public Sound getHitSound() {
-        return CraftSound.getBukkit(getHandle().hitSound);
+        return CraftSound.getBukkit(this.getHandle().hitSound);
     }
 
     @Override
     public Sound getFallSound() {
-        return CraftSound.getBukkit(getHandle().getFallSound());
+        return CraftSound.getBukkit(this.getHandle().getFallSound());
     }
 }
