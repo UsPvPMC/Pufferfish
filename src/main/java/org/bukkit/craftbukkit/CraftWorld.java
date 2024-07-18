@@ -2389,9 +2389,6 @@ public class CraftWorld extends CraftRegionAccessor implements World {
                     getHandle().chunkSource.addLoadedChunk(chunk);
                 }
                 ret.complete(chunk == null ? null : new CraftChunk(chunk));
-                if(chunk != null) {
-                    getHandle().chunkSource.removeLoadedChunk(chunk);
-                }
             });
         });
 
