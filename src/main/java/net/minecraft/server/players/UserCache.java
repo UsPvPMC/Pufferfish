@@ -1,3 +1,4 @@
+// mc-dev import
 package net.minecraft.server.players;
 
 import com.google.common.collect.ImmutableList;
@@ -93,7 +94,7 @@ public class UserCache {
             }
 
             public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
-                atomicreference.set((Object) null);
+                atomicreference.set(null); // CraftBukkit - decompile error
             }
         };
 

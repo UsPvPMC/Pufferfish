@@ -25,9 +25,11 @@ public class ChunkSection {
     private short tickingBlockCount;
     private short tickingFluidCount;
     private final DataPaletteBlock<IBlockData> states;
-    private PalettedContainerRO<Holder<BiomeBase>> biomes;
+    // CraftBukkit start - read/write
+    private DataPaletteBlock<Holder<BiomeBase>> biomes;
 
-    public ChunkSection(int i, DataPaletteBlock<IBlockData> datapaletteblock, PalettedContainerRO<Holder<BiomeBase>> palettedcontainerro) {
+    public ChunkSection(int i, DataPaletteBlock<IBlockData> datapaletteblock, DataPaletteBlock<Holder<BiomeBase>> palettedcontainerro) {
+        // CraftBukkit end
         this.bottomBlockY = getBottomBlockY(i);
         this.states = datapaletteblock;
         this.biomes = palettedcontainerro;
@@ -199,6 +201,12 @@ public class ChunkSection {
     public Holder<BiomeBase> getNoiseBiome(int i, int j, int k) {
         return (Holder) this.biomes.get(i, j, k);
     }
+
+    // CraftBukkit start
+    public void setBiome(int i, int j, int k, Holder<BiomeBase> biome) {
+        this.biomes.set(i, j, k, biome);
+    }
+    // CraftBukkit end
 
     public void fillBiomesFromNoise(BiomeResolver biomeresolver, Climate.Sampler climate_sampler, int i, int j) {
         DataPaletteBlock<Holder<BiomeBase>> datapaletteblock = this.biomes.recreate();

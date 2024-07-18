@@ -11,6 +11,14 @@ import net.minecraft.world.IInventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.World;
 
+// CraftBukkit start
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.inventory.CraftSmithingRecipe;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
+import org.bukkit.inventory.Recipe;
+// CraftBukkit end
+
 /** @deprecated */
 @Deprecated(forRemoval = true)
 public class LegacyUpgradeRecipe implements SmithingRecipe {
@@ -85,6 +93,17 @@ public class LegacyUpgradeRecipe implements SmithingRecipe {
             return recipeitemstack.getItems().length == 0;
         });
     }
+
+    // CraftBukkit start
+    @Override
+    public Recipe toBukkitRecipe() {
+        CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
+
+        CraftSmithingRecipe recipe = new CraftSmithingRecipe(CraftNamespacedKey.fromMinecraft(this.id), result, CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
+
+        return recipe;
+    }
+    // CraftBukkit end
 
     public static class a implements RecipeSerializer<LegacyUpgradeRecipe> {
 

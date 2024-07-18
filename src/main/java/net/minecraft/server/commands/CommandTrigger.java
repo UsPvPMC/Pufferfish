@@ -90,7 +90,7 @@ public class CommandTrigger {
         if (scoreboardobjective.getCriteria() != IScoreboardCriteria.TRIGGER) {
             throw CommandTrigger.ERROR_INVALID_OBJECTIVE.create();
         } else {
-            Scoreboard scoreboard = entityplayer.getScoreboard();
+            Scoreboard scoreboard = entityplayer.getServer().getScoreboard(); // CraftBukkit - SPIGOT-6917: use main scoreboard
             String s = entityplayer.getScoreboardName();
 
             if (!scoreboard.hasPlayerScore(s, scoreboardobjective)) {

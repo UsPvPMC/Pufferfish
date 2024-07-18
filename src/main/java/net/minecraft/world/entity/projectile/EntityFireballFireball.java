@@ -68,6 +68,6 @@ public abstract class EntityFireballFireball extends EntityFireball implements I
         super.readAdditionalSaveData(nbttagcompound);
         ItemStack itemstack = ItemStack.of(nbttagcompound.getCompound("Item"));
 
-        this.setItem(itemstack);
+        if (!itemstack.isEmpty()) this.setItem(itemstack); // CraftBukkit - SPIGOT-5474 probably came from bugged earlier versions
     }
 }

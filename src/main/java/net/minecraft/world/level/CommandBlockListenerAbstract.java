@@ -30,6 +30,10 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
     private IChatBaseComponent lastOutput;
     private String command = "";
     private IChatBaseComponent name;
+    // CraftBukkit start
+    @Override
+    public abstract org.bukkit.command.CommandSender getBukkitSender(CommandListenerWrapper wrapper);
+    // CraftBukkit end
 
     public CommandBlockListenerAbstract() {
         this.name = CommandBlockListenerAbstract.DEFAULT_NAME;
@@ -126,7 +130,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
 
                         });
 
-                        minecraftserver.getCommands().performPrefixedCommand(commandlistenerwrapper, this.command);
+                        minecraftserver.getCommands().dispatchServerCommand(commandlistenerwrapper, this.command); // CraftBukkit
                     } catch (Throwable throwable) {
                         CrashReport crashreport = CrashReport.forThrowable(throwable, "Executing command block");
                         CrashReportSystemDetails crashreportsystemdetails = crashreport.addCategory("Command to be executed");

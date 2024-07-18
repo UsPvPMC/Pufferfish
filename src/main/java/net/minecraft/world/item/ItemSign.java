@@ -11,6 +11,8 @@ import net.minecraft.world.level.block.state.IBlockData;
 
 public class ItemSign extends ItemBlockWallable {
 
+    public static BlockPosition openSign; // CraftBukkit
+
     public ItemSign(Item.Info item_info, Block block, Block block1) {
         super(block, block1, item_info, EnumDirection.DOWN);
     }
@@ -20,7 +22,10 @@ public class ItemSign extends ItemBlockWallable {
         boolean flag = super.updateCustomBlockEntityTag(blockposition, world, entityhuman, itemstack, iblockdata);
 
         if (!world.isClientSide && !flag && entityhuman != null) {
-            entityhuman.openTextEdit((TileEntitySign) world.getBlockEntity(blockposition));
+            // CraftBukkit start - SPIGOT-4678
+            // entityhuman.openTextEdit((TileEntitySign) world.getBlockEntity(blockposition));
+            ItemSign.openSign = blockposition;
+            // CraftBukkit end
         }
 
         return flag;

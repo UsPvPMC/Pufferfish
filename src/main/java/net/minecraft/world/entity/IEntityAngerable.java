@@ -108,7 +108,7 @@ public interface IEntityAngerable {
     default void stopBeingAngry() {
         this.setLastHurtByMob((EntityLiving) null);
         this.setPersistentAngerTarget((UUID) null);
-        this.setTarget((EntityLiving) null);
+        this.setTarget((EntityLiving) null, org.bukkit.event.entity.EntityTargetEvent.TargetReason.FORGOT_TARGET, true); // CraftBukkit
         this.setRemainingPersistentAngerTime(0);
     }
 
@@ -120,6 +120,8 @@ public interface IEntityAngerable {
     void setLastHurtByPlayer(@Nullable EntityHuman entityhuman);
 
     void setTarget(@Nullable EntityLiving entityliving);
+
+    boolean setTarget(@Nullable EntityLiving entityliving, org.bukkit.event.entity.EntityTargetEvent.TargetReason reason, boolean fireEvent); // CraftBukkit
 
     boolean canAttack(EntityLiving entityliving);
 

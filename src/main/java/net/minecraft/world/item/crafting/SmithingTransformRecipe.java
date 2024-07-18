@@ -11,6 +11,14 @@ import net.minecraft.world.IInventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.World;
 
+// CraftBukkit start
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.inventory.CraftSmithingTransformRecipe;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
+import org.bukkit.inventory.Recipe;
+// CraftBukkit end
+
 public class SmithingTransformRecipe implements SmithingRecipe {
 
     private final MinecraftKey id;
@@ -78,6 +86,17 @@ public class SmithingTransformRecipe implements SmithingRecipe {
     public boolean isIncomplete() {
         return Stream.of(this.template, this.base, this.addition).anyMatch(RecipeItemStack::isEmpty);
     }
+
+    // CraftBukkit start
+    @Override
+    public Recipe toBukkitRecipe() {
+        CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
+
+        CraftSmithingTransformRecipe recipe = new CraftSmithingTransformRecipe(CraftNamespacedKey.fromMinecraft(this.id), result, CraftRecipe.toBukkit(this.template), CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
+
+        return recipe;
+    }
+    // CraftBukkit end
 
     public static class a implements RecipeSerializer<SmithingTransformRecipe> {
 

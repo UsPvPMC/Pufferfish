@@ -63,7 +63,7 @@ public class EnchantmentWeaponDamage extends Enchantment {
             if (this.type == 2 && i > 0 && entityliving1.getMobType() == EnumMonsterType.ARTHROPOD) {
                 int j = 20 + entityliving.getRandom().nextInt(10 * i);
 
-                entityliving1.addEffect(new MobEffect(MobEffects.MOVEMENT_SLOWDOWN, j, 3));
+                entityliving1.addEffect(new MobEffect(MobEffects.MOVEMENT_SLOWDOWN, j, 3), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.ATTACK); // CraftBukkit
             }
         }
 

@@ -17,13 +17,28 @@ import javax.annotation.Nullable;
 import net.minecraft.core.IRegistryCustom;
 import org.slf4j.Logger;
 
+import joptsimple.OptionSet; // CraftBukkit
+
 public abstract class PropertyManager<T extends PropertyManager<T>> {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     public final Properties properties;
+    // CraftBukkit start
+    private OptionSet options = null;
 
-    public PropertyManager(Properties properties) {
+    public PropertyManager(Properties properties, final OptionSet options) {
         this.properties = properties;
+
+        this.options = options;
+    }
+
+    private String getOverride(String name, String value) {
+        if ((this.options != null) && (this.options.has(name))) {
+            return String.valueOf(this.options.valueOf(name));
+        }
+
+        return value;
+        // CraftBukkit end
     }
 
     public static Properties loadFromFile(Path path) {
@@ -58,6 +73,11 @@ public abstract class PropertyManager<T extends PropertyManager<T>> {
 
     public void store(Path path) {
         try {
+            // CraftBukkit start - Don't attempt writing to file if it's read only
+            if (path.toFile().exists() && !path.toFile().canWrite()) {
+                return;
+            }
+            // CraftBukkit end
             OutputStream outputstream = Files.newOutputStream(path);
 
             try {
@@ -86,7 +106,7 @@ public abstract class PropertyManager<T extends PropertyManager<T>> {
     private static <V extends Number> Function<String, V> wrapNumberDeserializer(Function<String, V> function) {
         return (s) -> {
             try {
-                return (Number) function.apply(s);
+                return (V) function.apply(s); // CraftBukkit - decompile error
             } catch (NumberFormatException numberformatexception) {
                 return null;
             }
@@ -105,7 +125,7 @@ public abstract class PropertyManager<T extends PropertyManager<T>> {
 
     @Nullable
     private String getStringRaw(String s) {
-        return (String) this.properties.get(s);
+        return (String) getOverride(s, this.properties.getProperty(s)); // CraftBukkit
     }
 
     @Nullable
@@ -121,6 +141,16 @@ public abstract class PropertyManager<T extends PropertyManager<T>> {
     }
 
     protected <V> V get(String s, Function<String, V> function, Function<V, String> function1, V v0) {
+        // CraftBukkit start
+        try {
+            return get0(s, function, function1, v0);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not load invalidly configured property '" + s + "'", ex);
+        }
+    }
+
+    private <V> V get0(String s, Function<String, V> function, Function<V, String> function1, V v0) {
+        // CraftBukkit end
         String s1 = this.getStringRaw(s);
         V v1 = MoreObjects.firstNonNull(s1 != null ? function.apply(s1) : null, v0);
 
@@ -133,7 +163,7 @@ public abstract class PropertyManager<T extends PropertyManager<T>> {
         V v1 = MoreObjects.firstNonNull(s1 != null ? function.apply(s1) : null, v0);
 
         this.properties.put(s, function1.apply(v1));
-        return new PropertyManager.EditableProperty<>(s, v1, function1);
+        return new PropertyManager.EditableProperty(s, v1, function1); // CraftBukkit - decompile error
     }
 
     protected <V> V get(String s, Function<String, V> function, UnaryOperator<V> unaryoperator, Function<V, String> function1, V v0) {
@@ -197,7 +227,7 @@ public abstract class PropertyManager<T extends PropertyManager<T>> {
         return properties;
     }
 
-    protected abstract T reload(IRegistryCustom iregistrycustom, Properties properties);
+    protected abstract T reload(IRegistryCustom iregistrycustom, Properties properties, OptionSet optionset); // CraftBukkit
 
     public class EditableProperty<V> implements Supplier<V> {
 
@@ -205,7 +235,7 @@ public abstract class PropertyManager<T extends PropertyManager<T>> {
         private final V value;
         private final Function<V, String> serializer;
 
-        EditableProperty(String s, Object object, Function function) {
+        EditableProperty(String s, V object, Function function) { // CraftBukkit - decompile error
             this.key = s;
             this.value = object;
             this.serializer = function;
@@ -219,7 +249,7 @@ public abstract class PropertyManager<T extends PropertyManager<T>> {
             Properties properties = PropertyManager.this.cloneProperties();
 
             properties.put(this.key, this.serializer.apply(v0));
-            return PropertyManager.this.reload(iregistrycustom, properties);
+            return PropertyManager.this.reload(iregistrycustom, properties, PropertyManager.this.options); // CraftBukkit
         }
     }
 }

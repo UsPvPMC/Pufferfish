@@ -19,6 +19,13 @@ import net.minecraft.world.item.armortrim.TrimPattern;
 import net.minecraft.world.item.armortrim.TrimPatterns;
 import net.minecraft.world.level.World;
 
+// CraftBukkit start
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.inventory.CraftSmithingTrimRecipe;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
+import org.bukkit.inventory.Recipe;
+// CraftBukkit end
+
 public class SmithingTrimRecipe implements SmithingRecipe {
 
     private final MinecraftKey id;
@@ -114,6 +121,13 @@ public class SmithingTrimRecipe implements SmithingRecipe {
     public boolean isIncomplete() {
         return Stream.of(this.template, this.base, this.addition).anyMatch(RecipeItemStack::isEmpty);
     }
+
+    // CraftBukkit start
+    @Override
+    public Recipe toBukkitRecipe() {
+        return new CraftSmithingTrimRecipe(CraftNamespacedKey.fromMinecraft(this.id), CraftRecipe.toBukkit(this.template), CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
+    }
+    // CraftBukkit end
 
     public static class a implements RecipeSerializer<SmithingTrimRecipe> {
 

@@ -180,7 +180,7 @@ public class EntitySpider extends EntityMonster {
             MobEffectList mobeffectlist = entityspider_groupdataspider.effect;
 
             if (mobeffectlist != null) {
-                this.addEffect(new MobEffect(mobeffectlist, -1));
+                this.addEffect(new MobEffect(mobeffectlist, -1), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.SPIDER_SPAWN); // CraftBukkit
             }
         }
 

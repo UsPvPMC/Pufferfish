@@ -95,15 +95,25 @@ public class ServerConnection {
 
                     NetworkManager.configureSerialization(channelpipeline, EnumProtocolDirection.SERVERBOUND);
                     int j = ServerConnection.this.server.getRateLimitPacketsPerSecond();
-                    Object object = j > 0 ? new NetworkManagerServer(j) : new NetworkManager(EnumProtocolDirection.SERVERBOUND);
+                    NetworkManager object = j > 0 ? new NetworkManagerServer(j) : new NetworkManager(EnumProtocolDirection.SERVERBOUND); // CraftBukkit - decompile error
 
                     ServerConnection.this.connections.add(object);
                     channelpipeline.addLast("packet_handler", (ChannelHandler) object);
                     ((NetworkManager) object).setListener(new HandshakeListener(ServerConnection.this.server, (NetworkManager) object));
                 }
-            }).group((EventLoopGroup) lazyinitvar.get()).localAddress(inetaddress, i)).bind().syncUninterruptibly());
+            }).group((EventLoopGroup) lazyinitvar.get()).localAddress(inetaddress, i)).option(ChannelOption.AUTO_READ, false).bind().syncUninterruptibly()); // CraftBukkit
         }
     }
+
+    // CraftBukkit start
+    public void acceptConnections() {
+        synchronized (this.channels) {
+            for (ChannelFuture future : this.channels) {
+                future.channel().config().setAutoRead(true);
+            }
+        }
+    }
+    // CraftBukkit end
 
     public SocketAddress startMemoryChannel() {
         List list = this.channels;

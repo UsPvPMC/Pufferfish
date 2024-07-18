@@ -23,6 +23,8 @@ import net.minecraft.world.level.material.FluidTypes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.shapes.VoxelShapes;
 
+import org.bukkit.event.block.LeavesDecayEvent; // CraftBukkit
+
 public class BlockLeaves extends Block implements IBlockWaterlogged {
 
     public static final int DECAY_DISTANCE = 7;
@@ -49,6 +51,14 @@ public class BlockLeaves extends Block implements IBlockWaterlogged {
     @Override
     public void randomTick(IBlockData iblockdata, WorldServer worldserver, BlockPosition blockposition, RandomSource randomsource) {
         if (this.decaying(iblockdata)) {
+            // CraftBukkit start
+            LeavesDecayEvent event = new LeavesDecayEvent(worldserver.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()));
+            worldserver.getCraftServer().getPluginManager().callEvent(event);
+
+            if (event.isCancelled() || worldserver.getBlockState(blockposition).getBlock() != this) {
+                return;
+            }
+            // CraftBukkit end
             dropResources(iblockdata, worldserver, blockposition);
             worldserver.removeBlock(blockposition, false);
         }

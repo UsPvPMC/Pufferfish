@@ -26,6 +26,6 @@ public class RootedDirtBlock extends Block implements IBlockFragilePlantElement 
 
     @Override
     public void performBonemeal(WorldServer worldserver, RandomSource randomsource, BlockPosition blockposition, IBlockData iblockdata) {
-        worldserver.setBlockAndUpdate(blockposition.below(), Blocks.HANGING_ROOTS.defaultBlockState());
+        org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockSpreadEvent(worldserver, blockposition, blockposition.below(), Blocks.HANGING_ROOTS.defaultBlockState()); // CraftBukkit
     }
 }

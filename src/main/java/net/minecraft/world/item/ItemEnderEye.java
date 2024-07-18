@@ -89,7 +89,11 @@ public class ItemEnderEye extends Item {
                     entityendersignal.setItem(itemstack);
                     entityendersignal.signalTo(blockposition);
                     world.gameEvent(GameEvent.PROJECTILE_SHOOT, entityendersignal.position(), GameEvent.a.of((Entity) entityhuman));
-                    world.addFreshEntity(entityendersignal);
+                    // CraftBukkit start
+                    if (!world.addFreshEntity(entityendersignal)) {
+                        return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
+                    }
+                    // CraftBukkit end
                     if (entityhuman instanceof EntityPlayer) {
                         CriterionTriggers.USED_ENDER_EYE.trigger((EntityPlayer) entityhuman, blockposition);
                     }

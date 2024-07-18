@@ -42,7 +42,7 @@ public class CustomFunctionData {
     }
 
     public CommandDispatcher<CommandListenerWrapper> getDispatcher() {
-        return this.server.getCommands().getDispatcher();
+        return this.server.vanillaCommandDispatcher.getDispatcher(); // CraftBukkit
     }
 
     public void tick() {

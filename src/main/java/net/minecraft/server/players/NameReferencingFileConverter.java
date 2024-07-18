@@ -28,6 +28,11 @@ import net.minecraft.util.UtilColor;
 import net.minecraft.world.level.storage.SavedFile;
 import org.slf4j.Logger;
 
+// CraftBukkit start
+import net.minecraft.nbt.NBTCompressedStreamTools;
+import net.minecraft.nbt.NBTTagCompound;
+// CraftBukkit end
+
 public class NameReferencingFileConverter {
 
     static final Logger LOGGER = LogUtils.getLogger();
@@ -88,7 +93,7 @@ public class NameReferencingFileConverter {
                 try {
                     gameprofilebanlist.load();
                 } catch (IOException ioexception) {
-                    NameReferencingFileConverter.LOGGER.warn("Could not load existing file {}", gameprofilebanlist.getFile().getName(), ioexception);
+                    NameReferencingFileConverter.LOGGER.warn("Could not load existing file {}", gameprofilebanlist.getFile().getName()); // CraftBukkit - don't print stacktrace
                 }
             }
 
@@ -146,7 +151,7 @@ public class NameReferencingFileConverter {
                 try {
                     ipbanlist.load();
                 } catch (IOException ioexception) {
-                    NameReferencingFileConverter.LOGGER.warn("Could not load existing file {}", ipbanlist.getFile().getName(), ioexception);
+                    NameReferencingFileConverter.LOGGER.warn("Could not load existing file {}", ipbanlist.getFile().getName()); // CraftBukkit - don't print stacktrace
                 }
             }
 
@@ -187,7 +192,7 @@ public class NameReferencingFileConverter {
                 try {
                     oplist.load();
                 } catch (IOException ioexception) {
-                    NameReferencingFileConverter.LOGGER.warn("Could not load existing file {}", oplist.getFile().getName(), ioexception);
+                    NameReferencingFileConverter.LOGGER.warn("Could not load existing file {}", oplist.getFile().getName()); // CraftBukkit - don't print stacktrace
                 }
             }
 
@@ -231,7 +236,7 @@ public class NameReferencingFileConverter {
                 try {
                     whitelist.load();
                 } catch (IOException ioexception) {
-                    NameReferencingFileConverter.LOGGER.warn("Could not load existing file {}", whitelist.getFile().getName(), ioexception);
+                    NameReferencingFileConverter.LOGGER.warn("Could not load existing file {}", whitelist.getFile().getName()); // CraftBukkit - don't print stacktrace
                 }
             }
 
@@ -353,6 +358,30 @@ public class NameReferencingFileConverter {
                     private void movePlayerFile(File file4, String s2, String s3) {
                         File file5 = new File(file, s2 + ".dat");
                         File file6 = new File(file4, s3 + ".dat");
+
+                        // CraftBukkit start - Use old file name to seed lastKnownName
+                        NBTTagCompound root = null;
+
+                        try {
+                            root = NBTCompressedStreamTools.readCompressed(new java.io.FileInputStream(file5));
+                        } catch (Exception exception) {
+                            exception.printStackTrace();
+                        }
+
+                        if (root != null) {
+                            if (!root.contains("bukkit")) {
+                                root.put("bukkit", new NBTTagCompound());
+                            }
+                            NBTTagCompound data = root.getCompound("bukkit");
+                            data.putString("lastKnownName", s2);
+
+                            try {
+                                NBTCompressedStreamTools.writeCompressed(root, new java.io.FileOutputStream(file2));
+                            } catch (Exception exception) {
+                                exception.printStackTrace();
+                            }
+                       }
+                        // CraftBukkit end
 
                         NameReferencingFileConverter.ensureDirectoryExists(file4);
                         if (!file5.renameTo(file6)) {

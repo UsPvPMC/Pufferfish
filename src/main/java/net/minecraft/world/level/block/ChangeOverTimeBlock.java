@@ -69,7 +69,7 @@ public interface ChangeOverTimeBlock<T extends Enum<T>> {
 
         if (randomsource.nextFloat() < f1) {
             this.getNext(iblockdata).ifPresent((iblockdata2) -> {
-                worldserver.setBlockAndUpdate(blockposition, iblockdata2);
+                org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockFormEvent(worldserver, blockposition, iblockdata2); // CraftBukkit
             });
         }
 

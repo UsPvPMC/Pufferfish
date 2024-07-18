@@ -85,6 +85,16 @@ public class ChunkProviderServer extends IChunkProvider {
         this.clearCache();
     }
 
+    // CraftBukkit start - properly implement isChunkLoaded
+    public boolean isChunkLoaded(int chunkX, int chunkZ) {
+        PlayerChunk chunk = this.chunkMap.getUpdatingChunkIfPresent(ChunkCoordIntPair.asLong(chunkX, chunkZ));
+        if (chunk == null) {
+            return false;
+        }
+        return chunk.getFullChunkNow() != null;
+    }
+    // CraftBukkit end
+
     @Override
     public LightEngineThreaded getLightEngine() {
         return this.lightEngine;
@@ -129,7 +139,7 @@ public class ChunkProviderServer extends IChunkProvider {
             for (int l = 0; l < 4; ++l) {
                 if (k == this.lastChunkPos[l] && chunkstatus == this.lastChunkStatus[l]) {
                     ichunkaccess = this.lastChunk[l];
-                    if (ichunkaccess != null || !flag) {
+                    if (ichunkaccess != null) { // CraftBukkit - the chunk can become accessible in the meantime TODO for non-null chunks it might also make sense to check that the chunk's state hasn't changed in the meantime
                         return ichunkaccess;
                     }
                 }
@@ -177,12 +187,12 @@ public class ChunkProviderServer extends IChunkProvider {
             if (playerchunk == null) {
                 return null;
             } else {
-                Either<IChunkAccess, PlayerChunk.Failure> either = (Either) playerchunk.getFutureIfPresent(ChunkStatus.FULL).getNow((Object) null);
+                Either<IChunkAccess, PlayerChunk.Failure> either = (Either) playerchunk.getFutureIfPresent(ChunkStatus.FULL).getNow(null); // CraftBukkit - decompile error
 
                 if (either == null) {
                     return null;
                 } else {
-                    IChunkAccess ichunkaccess1 = (IChunkAccess) either.left().orElse((Object) null);
+                    IChunkAccess ichunkaccess1 = (IChunkAccess) either.left().orElse(null); // CraftBukkit - decompile error
 
                     if (ichunkaccess1 != null) {
                         this.storeInCache(k, ichunkaccess1, ChunkStatus.FULL);
@@ -230,7 +240,15 @@ public class ChunkProviderServer extends IChunkProvider {
         int l = 33 + ChunkStatus.getDistance(chunkstatus);
         PlayerChunk playerchunk = this.getVisibleChunkIfPresent(k);
 
-        if (flag) {
+        // CraftBukkit start - don't add new ticket for currently unloading chunk
+        boolean currentlyUnloading = false;
+        if (playerchunk != null) {
+            PlayerChunk.State oldChunkState = PlayerChunk.getFullChunkStatus(playerchunk.oldTicketLevel);
+            PlayerChunk.State currentChunkState = PlayerChunk.getFullChunkStatus(playerchunk.getTicketLevel());
+            currentlyUnloading = (oldChunkState.isOrAfter(PlayerChunk.State.BORDER) && !currentChunkState.isOrAfter(PlayerChunk.State.BORDER));
+        }
+        if (flag && !currentlyUnloading) {
+            // CraftBukkit end
             this.distanceManager.addTicket(TicketType.UNKNOWN, chunkcoordintpair, l, chunkcoordintpair);
             if (this.chunkAbsent(playerchunk, l)) {
                 GameProfilerFiller gameprofilerfiller = this.level.getProfiler();
@@ -249,7 +267,7 @@ public class ChunkProviderServer extends IChunkProvider {
     }
 
     private boolean chunkAbsent(@Nullable PlayerChunk playerchunk, int i) {
-        return playerchunk == null || playerchunk.getTicketLevel() > i;
+        return playerchunk == null || playerchunk.oldTicketLevel > i; // CraftBukkit using oldTicketLevel for isLoaded checks
     }
 
     @Override
@@ -316,7 +334,7 @@ public class ChunkProviderServer extends IChunkProvider {
         } else if (!this.level.shouldTickBlocksAt(i)) {
             return false;
         } else {
-            Either<Chunk, PlayerChunk.Failure> either = (Either) playerchunk.getTickingChunkFuture().getNow((Object) null);
+            Either<Chunk, PlayerChunk.Failure> either = (Either) playerchunk.getTickingChunkFuture().getNow(null); // CraftBukkit - decompile error
 
             return either != null && either.left().isPresent();
         }
@@ -329,10 +347,30 @@ public class ChunkProviderServer extends IChunkProvider {
 
     @Override
     public void close() throws IOException {
-        this.save(true);
+        // CraftBukkit start
+        close(true);
+    }
+
+    public void close(boolean save) throws IOException {
+        if (save) {
+            this.save(true);
+        }
+        // CraftBukkit end
         this.lightEngine.close();
         this.chunkMap.close();
     }
+
+    // CraftBukkit start - modelled on below
+    public void purgeUnload() {
+        this.level.getProfiler().push("purge");
+        this.distanceManager.purgeStaleTickets();
+        this.runDistanceManagerUpdates();
+        this.level.getProfiler().popPush("unload");
+        this.chunkMap.tick(() -> true);
+        this.level.getProfiler().pop();
+        this.clearCache();
+    }
+    // CraftBukkit end
 
     @Override
     public void tick(BooleanSupplier booleansupplier, boolean flag) {
@@ -365,7 +403,7 @@ public class ChunkProviderServer extends IChunkProvider {
 
             gameprofilerfiller.push("pollingChunks");
             int k = this.level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING);
-            boolean flag1 = worlddata.getGameTime() % 400L == 0L;
+            boolean flag1 = level.ticksPerSpawnCategory.getLong(org.bukkit.entity.SpawnCategory.ANIMAL) != 0L && worlddata.getGameTime() % level.ticksPerSpawnCategory.getLong(org.bukkit.entity.SpawnCategory.ANIMAL) == 0L; // CraftBukkit
 
             gameprofilerfiller.push("naturalSpawnCount");
             int l = this.distanceManager.getNaturalSpawnChunkCount();
@@ -386,7 +424,7 @@ public class ChunkProviderServer extends IChunkProvider {
             }
 
             gameprofilerfiller.popPush("spawnAndTick");
-            boolean flag2 = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING);
+            boolean flag2 = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING) && !level.players().isEmpty(); // CraftBukkit
 
             Collections.shuffle(list);
             Iterator iterator1 = list.iterator();
@@ -591,13 +629,19 @@ public class ChunkProviderServer extends IChunkProvider {
         }
 
         @Override
-        protected boolean pollTask() {
+        // CraftBukkit start - process pending Chunk loadCallback() and unloadCallback() after each run task
+        public boolean pollTask() {
+        try {
             if (ChunkProviderServer.this.runDistanceManagerUpdates()) {
                 return true;
             } else {
                 ChunkProviderServer.this.lightEngine.tryScheduleUpdate();
                 return super.pollTask();
             }
+        } finally {
+            chunkMap.callbackExecutor.run();
+        }
+        // CraftBukkit end
         }
     }
 

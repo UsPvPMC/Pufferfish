@@ -12,6 +12,8 @@ import net.minecraft.world.level.World;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.IBlockData;
 
+import org.bukkit.craftbukkit.inventory.CraftInventoryView; // CraftBukkit
+
 public class ContainerSmithing extends ContainerAnvilAbstract {
 
     public static final int TEMPLATE_SLOT = 0;
@@ -27,6 +29,9 @@ public class ContainerSmithing extends ContainerAnvilAbstract {
     @Nullable
     private SmithingRecipe selectedRecipe;
     private final List<SmithingRecipe> recipes;
+    // CraftBukkit start
+    private CraftInventoryView bukkitEntity;
+    // CraftBukkit end
 
     public ContainerSmithing(int i, PlayerInventory playerinventory) {
         this(i, playerinventory, ContainerAccess.NULL);
@@ -89,7 +94,7 @@ public class ContainerSmithing extends ContainerAnvilAbstract {
         List<SmithingRecipe> list = this.level.getRecipeManager().getRecipesFor(Recipes.SMITHING, this.inputSlots, this.level);
 
         if (list.isEmpty()) {
-            this.resultSlots.setItem(0, ItemStack.EMPTY);
+            org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareSmithingEvent(getBukkitView(), ItemStack.EMPTY); // CraftBukkit
         } else {
             SmithingRecipe smithingrecipe = (SmithingRecipe) list.get(0);
             ItemStack itemstack = smithingrecipe.assemble(this.inputSlots, this.level.registryAccess());
@@ -97,7 +102,9 @@ public class ContainerSmithing extends ContainerAnvilAbstract {
             if (itemstack.isItemEnabled(this.level.enabledFeatures())) {
                 this.selectedRecipe = smithingrecipe;
                 this.resultSlots.setRecipeUsed(smithingrecipe);
-                this.resultSlots.setItem(0, itemstack);
+                // CraftBukkit start
+                org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareSmithingEvent(getBukkitView(), itemstack);
+                // CraftBukkit end
             }
         }
 
@@ -125,4 +132,18 @@ public class ContainerSmithing extends ContainerAnvilAbstract {
             return findSlotMatchingIngredient(smithingrecipe, itemstack);
         }).anyMatch(Optional::isPresent);
     }
+
+    // CraftBukkit start
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        org.bukkit.craftbukkit.inventory.CraftInventory inventory = new org.bukkit.craftbukkit.inventory.CraftInventorySmithingNew(
+                access.getLocation(), this.inputSlots, this.resultSlots);
+        bukkitEntity = new CraftInventoryView(this.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 }

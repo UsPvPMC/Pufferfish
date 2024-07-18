@@ -46,6 +46,7 @@ public class ItemRecord extends Item {
             ItemStack itemstack = itemactioncontext.getItemInHand();
 
             if (!world.isClientSide) {
+                if (true) return EnumInteractionResult.SUCCESS; // CraftBukkit - handled in ItemStack
                 EntityHuman entityhuman = itemactioncontext.getPlayer();
                 TileEntity tileentity = world.getBlockEntity(blockposition);
 

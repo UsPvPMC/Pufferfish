@@ -76,7 +76,7 @@ public class MobSpawnerPhantom implements MobSpawner {
                                                 if (entityphantom != null) {
                                                     entityphantom.moveTo(blockposition1, 0.0F, 0.0F);
                                                     groupdataentity = entityphantom.finalizeSpawn(worldserver, difficultydamagescaler, EnumMobSpawn.NATURAL, groupdataentity, (NBTTagCompound) null);
-                                                    worldserver.addFreshEntityWithPassengers(entityphantom);
+                                                    worldserver.addFreshEntityWithPassengers(entityphantom, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL); // CraftBukkit
                                                     ++i;
                                                 }
                                             }

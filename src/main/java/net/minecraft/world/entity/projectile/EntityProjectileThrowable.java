@@ -30,13 +30,19 @@ public abstract class EntityProjectileThrowable extends EntityProjectile impleme
     public void setItem(ItemStack itemstack) {
         if (!itemstack.is(this.getDefaultItem()) || itemstack.hasTag()) {
             this.getEntityData().set(EntityProjectileThrowable.DATA_ITEM_STACK, (ItemStack) SystemUtils.make(itemstack.copy(), (itemstack1) -> {
-                itemstack1.setCount(1);
+                if (!itemstack1.isEmpty()) itemstack1.setCount(1); // CraftBukkit
             }));
         }
 
     }
 
     protected abstract Item getDefaultItem();
+
+    // CraftBukkit start
+    public Item getDefaultItemPublic() {
+        return getDefaultItem();
+    }
+    // CraftBukkit end
 
     public ItemStack getItemRaw() {
         return (ItemStack) this.getEntityData().get(EntityProjectileThrowable.DATA_ITEM_STACK);

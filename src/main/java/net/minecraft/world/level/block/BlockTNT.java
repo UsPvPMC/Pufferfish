@@ -121,6 +121,11 @@ public class BlockTNT extends Block {
             Entity entity = iprojectile.getOwner();
 
             if (iprojectile.isOnFire() && iprojectile.mayInteract(world, blockposition)) {
+                // CraftBukkit start
+                if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(iprojectile, blockposition, Blocks.AIR.defaultBlockState()).isCancelled()) {
+                    return;
+                }
+                // CraftBukkit end
                 explode(world, blockposition, entity instanceof EntityLiving ? (EntityLiving) entity : null);
                 world.removeBlock(blockposition, false);
             }

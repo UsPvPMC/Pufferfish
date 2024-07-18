@@ -39,9 +39,15 @@ public class DamageSources {
     private final DamageSource sweetBerryBush;
     private final DamageSource freeze;
     private final DamageSource stalagmite;
+    // CraftBukkit start
+    public final DamageSource melting;
+    public final DamageSource poison;
 
     public DamageSources(IRegistryCustom iregistrycustom) {
         this.damageTypes = iregistrycustom.registryOrThrow(Registries.DAMAGE_TYPE);
+        this.melting = this.source(DamageTypes.ON_FIRE).melting();
+        this.poison = this.source(DamageTypes.MAGIC).poison();
+        // CraftBukkit end
         this.inFire = this.source(DamageTypes.IN_FIRE);
         this.lightningBolt = this.source(DamageTypes.LIGHTNING_BOLT);
         this.onFire = this.source(DamageTypes.ON_FIRE);

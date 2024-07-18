@@ -155,6 +155,11 @@ public abstract class EntityIllagerWizard extends EntityIllagerAbstract {
         public void tick() {
             --this.attackWarmupDelay;
             if (this.attackWarmupDelay == 0) {
+                // CraftBukkit start
+                if (!org.bukkit.craftbukkit.event.CraftEventFactory.handleEntitySpellCastEvent(EntityIllagerWizard.this, this.getSpell())) {
+                    return;
+                }
+                // CraftBukkit end
                 this.performSpellCasting();
                 EntityIllagerWizard.this.playSound(EntityIllagerWizard.this.getCastingSoundEvent(), 1.0F, 1.0F);
             }

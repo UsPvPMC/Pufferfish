@@ -41,6 +41,11 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.shapes.VoxelShapeCollision;
 import net.minecraft.world.phys.shapes.VoxelShapes;
 
+// CraftBukkit start
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityInteractEvent;
+// CraftBukkit end
+
 public class BigDripleafBlock extends BlockFacingHorizontal implements IBlockFragilePlantElement, IBlockWaterlogged {
 
     private static final BlockStateBoolean WATERLOGGED = BlockProperties.WATERLOGGED;
@@ -109,7 +114,7 @@ public class BigDripleafBlock extends BlockFacingHorizontal implements IBlockFra
 
     @Override
     public void onProjectileHit(World world, IBlockData iblockdata, MovingObjectPositionBlock movingobjectpositionblock, IProjectile iprojectile) {
-        this.setTiltAndScheduleTick(iblockdata, world, movingobjectpositionblock.getBlockPos(), Tilt.FULL, SoundEffects.BIG_DRIPLEAF_TILT_DOWN);
+        this.setTiltAndScheduleTick(iblockdata, world, movingobjectpositionblock.getBlockPos(), Tilt.FULL, SoundEffects.BIG_DRIPLEAF_TILT_DOWN, iprojectile); // CraftBukkit
     }
 
     @Override
@@ -168,7 +173,20 @@ public class BigDripleafBlock extends BlockFacingHorizontal implements IBlockFra
     public void entityInside(IBlockData iblockdata, World world, BlockPosition blockposition, Entity entity) {
         if (!world.isClientSide) {
             if (iblockdata.getValue(BigDripleafBlock.TILT) == Tilt.NONE && canEntityTilt(blockposition, entity) && !world.hasNeighborSignal(blockposition)) {
-                this.setTiltAndScheduleTick(iblockdata, world, blockposition, Tilt.UNSTABLE, (SoundEffect) null);
+                // CraftBukkit start - tilt dripleaf
+                org.bukkit.event.Cancellable cancellable;
+                if (entity instanceof EntityHuman) {
+                    cancellable = CraftEventFactory.callPlayerInteractEvent((EntityHuman) entity, org.bukkit.event.block.Action.PHYSICAL, blockposition, null, null, null);
+                } else {
+                    cancellable = new EntityInteractEvent(entity.getBukkitEntity(), world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()));
+                    world.getCraftServer().getPluginManager().callEvent((EntityInteractEvent) cancellable);
+                }
+
+                if (cancellable.isCancelled()) {
+                    return;
+                }
+                this.setTiltAndScheduleTick(iblockdata, world, blockposition, Tilt.UNSTABLE, (SoundEffect) null, entity);
+                // CraftBukkit end
             }
 
         }
@@ -182,9 +200,9 @@ public class BigDripleafBlock extends BlockFacingHorizontal implements IBlockFra
             Tilt tilt = (Tilt) iblockdata.getValue(BigDripleafBlock.TILT);
 
             if (tilt == Tilt.UNSTABLE) {
-                this.setTiltAndScheduleTick(iblockdata, worldserver, blockposition, Tilt.PARTIAL, SoundEffects.BIG_DRIPLEAF_TILT_DOWN);
+                this.setTiltAndScheduleTick(iblockdata, worldserver, blockposition, Tilt.PARTIAL, SoundEffects.BIG_DRIPLEAF_TILT_DOWN, null); // CraftBukkit
             } else if (tilt == Tilt.PARTIAL) {
-                this.setTiltAndScheduleTick(iblockdata, worldserver, blockposition, Tilt.FULL, SoundEffects.BIG_DRIPLEAF_TILT_DOWN);
+                this.setTiltAndScheduleTick(iblockdata, worldserver, blockposition, Tilt.FULL, SoundEffects.BIG_DRIPLEAF_TILT_DOWN, null); // CraftBukkit
             } else if (tilt == Tilt.FULL) {
                 resetTilt(iblockdata, worldserver, blockposition);
             }
@@ -210,8 +228,10 @@ public class BigDripleafBlock extends BlockFacingHorizontal implements IBlockFra
         return entity.isOnGround() && entity.position().y > (double) ((float) blockposition.getY() + 0.6875F);
     }
 
-    private void setTiltAndScheduleTick(IBlockData iblockdata, World world, BlockPosition blockposition, Tilt tilt, @Nullable SoundEffect soundeffect) {
-        setTilt(iblockdata, world, blockposition, tilt);
+    // CraftBukkit start
+    private void setTiltAndScheduleTick(IBlockData iblockdata, World world, BlockPosition blockposition, Tilt tilt, @Nullable SoundEffect soundeffect, @Nullable Entity entity) {
+        if (!setTilt(iblockdata, world, blockposition, tilt, entity)) return;
+        // CraftBukkit end
         if (soundeffect != null) {
             playTiltSound(world, blockposition, soundeffect);
         }
@@ -225,14 +245,21 @@ public class BigDripleafBlock extends BlockFacingHorizontal implements IBlockFra
     }
 
     private static void resetTilt(IBlockData iblockdata, World world, BlockPosition blockposition) {
-        setTilt(iblockdata, world, blockposition, Tilt.NONE);
+        setTilt(iblockdata, world, blockposition, Tilt.NONE, null); // CraftBukkit
         if (iblockdata.getValue(BigDripleafBlock.TILT) != Tilt.NONE) {
             playTiltSound(world, blockposition, SoundEffects.BIG_DRIPLEAF_TILT_UP);
         }
 
     }
 
-    private static void setTilt(IBlockData iblockdata, World world, BlockPosition blockposition, Tilt tilt) {
+    // CraftBukkit start
+    private static boolean setTilt(IBlockData iblockdata, World world, BlockPosition blockposition, Tilt tilt, @Nullable Entity entity) {
+        if (entity != null) {
+            if (CraftEventFactory.callEntityChangeBlockEvent(entity, blockposition, iblockdata.setValue(BigDripleafBlock.TILT, tilt)).isCancelled()) {
+                return false;
+            }
+        }
+        // CraftBukkit end
         Tilt tilt1 = (Tilt) iblockdata.getValue(BigDripleafBlock.TILT);
 
         world.setBlock(blockposition, (IBlockData) iblockdata.setValue(BigDripleafBlock.TILT, tilt), 2);
@@ -240,6 +267,7 @@ public class BigDripleafBlock extends BlockFacingHorizontal implements IBlockFra
             world.gameEvent((Entity) null, GameEvent.BLOCK_CHANGE, blockposition);
         }
 
+        return true; // CraftBukkit
     }
 
     @Override

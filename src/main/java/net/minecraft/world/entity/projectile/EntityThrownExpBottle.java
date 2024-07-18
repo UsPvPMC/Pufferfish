@@ -39,8 +39,17 @@ public class EntityThrownExpBottle extends EntityProjectileThrowable {
     protected void onHit(MovingObjectPosition movingobjectposition) {
         super.onHit(movingobjectposition);
         if (this.level instanceof WorldServer) {
-            this.level.levelEvent(2002, this.blockPosition(), PotionUtil.getColor(Potions.WATER));
+            // CraftBukkit - moved to after event
+            // this.level.levelEvent(2002, this.blockPosition(), PotionUtil.getColor(Potions.WATER));
             int i = 3 + this.level.random.nextInt(5) + this.level.random.nextInt(5);
+
+            // CraftBukkit start
+            org.bukkit.event.entity.ExpBottleEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callExpBottleEvent(this, i);
+            i = event.getExperience();
+            if (event.getShowEffect()) {
+                this.level.levelEvent(2002, this.blockPosition(), PotionUtil.getColor(Potions.WATER));
+            }
+            // CraftBukkit end
 
             EntityExperienceOrb.award((WorldServer) this.level, this.position(), i);
             this.discard();

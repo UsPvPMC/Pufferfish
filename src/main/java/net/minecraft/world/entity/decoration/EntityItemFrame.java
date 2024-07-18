@@ -96,16 +96,27 @@ public class EntityItemFrame extends EntityHanging {
     @Override
     protected void recalculateBoundingBox() {
         if (this.direction != null) {
-            double d0 = 0.46875D;
-            double d1 = (double) this.pos.getX() + 0.5D - (double) this.direction.getStepX() * 0.46875D;
-            double d2 = (double) this.pos.getY() + 0.5D - (double) this.direction.getStepY() * 0.46875D;
-            double d3 = (double) this.pos.getZ() + 0.5D - (double) this.direction.getStepZ() * 0.46875D;
+            // CraftBukkit start code moved in to calculateBoundingBox
+            this.setBoundingBox(calculateBoundingBox(this, this.pos, this.direction, this.getWidth(), this.getHeight()));
+            // CraftBukkit end
+        }
+    }
 
-            this.setPosRaw(d1, d2, d3);
-            double d4 = (double) this.getWidth();
-            double d5 = (double) this.getHeight();
-            double d6 = (double) this.getWidth();
-            EnumDirection.EnumAxis enumdirection_enumaxis = this.direction.getAxis();
+    // CraftBukkit start - break out BB calc into own method
+    public static AxisAlignedBB calculateBoundingBox(@Nullable Entity entity, BlockPosition blockPosition, EnumDirection direction, int width, int height) {
+        {
+            double d0 = 0.46875D;
+            double d1 = (double) blockPosition.getX() + 0.5D - (double) direction.getStepX() * 0.46875D;
+            double d2 = (double) blockPosition.getY() + 0.5D - (double) direction.getStepY() * 0.46875D;
+            double d3 = (double) blockPosition.getZ() + 0.5D - (double) direction.getStepZ() * 0.46875D;
+
+            if (entity != null) {
+                entity.setPosRaw(d1, d2, d3);
+            }
+            double d4 = (double) width;
+            double d5 = (double) height;
+            double d6 = (double) width;
+            EnumDirection.EnumAxis enumdirection_enumaxis = direction.getAxis();
 
             switch (enumdirection_enumaxis) {
                 case X:
@@ -121,9 +132,10 @@ public class EntityItemFrame extends EntityHanging {
             d4 /= 32.0D;
             d5 /= 32.0D;
             d6 /= 32.0D;
-            this.setBoundingBox(new AxisAlignedBB(d1 - d4, d2 - d5, d3 - d6, d1 + d4, d2 + d5, d3 + d6));
+            return new AxisAlignedBB(d1 - d4, d2 - d5, d3 - d6, d1 + d4, d2 + d5, d3 + d6);
         }
     }
+    // CraftBukkit end
 
     @Override
     public boolean survives() {
@@ -173,6 +185,11 @@ public class EntityItemFrame extends EntityHanging {
             return false;
         } else if (!damagesource.is(DamageTypeTags.IS_EXPLOSION) && !this.getItem().isEmpty()) {
             if (!this.level.isClientSide) {
+                // CraftBukkit start - fire EntityDamageEvent
+                if (org.bukkit.craftbukkit.event.CraftEventFactory.handleNonLivingEntityDamageEvent(this, damagesource, f, false) || this.isRemoved()) {
+                    return true;
+                }
+                // CraftBukkit end
                 this.dropItem(damagesource.getEntity(), false);
                 this.gameEvent(GameEvent.BLOCK_CHANGE, damagesource.getEntity());
                 this.playSound(this.getRemoveItemSound(), 1.0F, 1.0F);
@@ -302,6 +319,12 @@ public class EntityItemFrame extends EntityHanging {
     }
 
     public void setItem(ItemStack itemstack, boolean flag) {
+        // CraftBukkit start
+        this.setItem(itemstack, flag, true);
+    }
+
+    public void setItem(ItemStack itemstack, boolean flag, boolean playSound) {
+        // CraftBukkit end
         if (!itemstack.isEmpty()) {
             itemstack = itemstack.copy();
             itemstack.setCount(1);
@@ -309,7 +332,7 @@ public class EntityItemFrame extends EntityHanging {
 
         this.onItemChanged(itemstack);
         this.getEntityData().set(EntityItemFrame.DATA_ITEM, itemstack);
-        if (!itemstack.isEmpty()) {
+        if (!itemstack.isEmpty() && playSound) { // CraftBukkit
             this.playSound(this.getAddItemSound(), 1.0F, 1.0F);
         }
 

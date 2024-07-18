@@ -153,7 +153,7 @@ public class EntityLlamaTrader extends EntityLlama {
 
         @Override
         public void start() {
-            this.mob.setTarget(this.ownerLastHurtBy);
+            this.mob.setTarget(this.ownerLastHurtBy, org.bukkit.event.entity.EntityTargetEvent.TargetReason.TARGET_ATTACKED_OWNER, true); // CraftBukkit
             Entity entity = this.llama.getLeashHolder();
 
             if (entity instanceof EntityVillagerTrader) {

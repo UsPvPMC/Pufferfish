@@ -192,7 +192,7 @@ public class EntityEvoker extends EntityIllagerWizard {
                     entityvex.setOwner(EntityEvoker.this);
                     entityvex.setBoundOrigin(blockposition);
                     entityvex.setLimitedLife(20 * (30 + EntityEvoker.this.random.nextInt(90)));
-                    worldserver.addFreshEntityWithPassengers(entityvex);
+                    worldserver.addFreshEntityWithPassengers(entityvex, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPELL); // CraftBukkit - Add SpawnReason
                 }
             }
 

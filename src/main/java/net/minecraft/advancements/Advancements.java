@@ -80,7 +80,7 @@ public class Advancements {
                 entry = (Entry) iterator.next();
                 MinecraftKey minecraftkey = (MinecraftKey) entry.getKey();
                 Advancement.SerializedAdvancement advancement_serializedadvancement = (Advancement.SerializedAdvancement) entry.getValue();
-                Map map1 = this.advancements;
+                Map<MinecraftKey, Advancement> map1 = this.advancements; // CraftBukkit - decompile error
 
                 Objects.requireNonNull(this.advancements);
                 if (advancement_serializedadvancement.canBuild(map1::get)) {
@@ -117,7 +117,7 @@ public class Advancements {
             }
         }
 
-        Advancements.LOGGER.info("Loaded {} advancements", this.advancements.size());
+        // Advancements.LOGGER.info("Loaded {} advancements", this.advancements.size()); // CraftBukkit - moved to AdvancementDataWorld#reload
     }
 
     public void clear() {

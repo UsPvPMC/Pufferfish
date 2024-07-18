@@ -57,7 +57,7 @@ public class CommandWorldBorder {
     }
 
     private static int setDamageBuffer(CommandListenerWrapper commandlistenerwrapper, float f) throws CommandSyntaxException {
-        WorldBorder worldborder = commandlistenerwrapper.getServer().overworld().getWorldBorder();
+        WorldBorder worldborder = commandlistenerwrapper.getLevel().getWorldBorder(); // CraftBukkit
 
         if (worldborder.getDamageSafeZone() == (double) f) {
             throw CommandWorldBorder.ERROR_SAME_DAMAGE_BUFFER.create();
@@ -69,7 +69,7 @@ public class CommandWorldBorder {
     }
 
     private static int setDamageAmount(CommandListenerWrapper commandlistenerwrapper, float f) throws CommandSyntaxException {
-        WorldBorder worldborder = commandlistenerwrapper.getServer().overworld().getWorldBorder();
+        WorldBorder worldborder = commandlistenerwrapper.getLevel().getWorldBorder(); // CraftBukkit
 
         if (worldborder.getDamagePerBlock() == (double) f) {
             throw CommandWorldBorder.ERROR_SAME_DAMAGE_AMOUNT.create();
@@ -81,7 +81,7 @@ public class CommandWorldBorder {
     }
 
     private static int setWarningTime(CommandListenerWrapper commandlistenerwrapper, int i) throws CommandSyntaxException {
-        WorldBorder worldborder = commandlistenerwrapper.getServer().overworld().getWorldBorder();
+        WorldBorder worldborder = commandlistenerwrapper.getLevel().getWorldBorder(); // CraftBukkit
 
         if (worldborder.getWarningTime() == i) {
             throw CommandWorldBorder.ERROR_SAME_WARNING_TIME.create();
@@ -93,7 +93,7 @@ public class CommandWorldBorder {
     }
 
     private static int setWarningDistance(CommandListenerWrapper commandlistenerwrapper, int i) throws CommandSyntaxException {
-        WorldBorder worldborder = commandlistenerwrapper.getServer().overworld().getWorldBorder();
+        WorldBorder worldborder = commandlistenerwrapper.getLevel().getWorldBorder(); // CraftBukkit
 
         if (worldborder.getWarningBlocks() == i) {
             throw CommandWorldBorder.ERROR_SAME_WARNING_DISTANCE.create();
@@ -105,14 +105,14 @@ public class CommandWorldBorder {
     }
 
     private static int getSize(CommandListenerWrapper commandlistenerwrapper) {
-        double d0 = commandlistenerwrapper.getServer().overworld().getWorldBorder().getSize();
+        double d0 = commandlistenerwrapper.getLevel().getWorldBorder().getSize(); // CraftBukkit
 
         commandlistenerwrapper.sendSuccess(IChatBaseComponent.translatable("commands.worldborder.get", String.format(Locale.ROOT, "%.0f", d0)), false);
         return MathHelper.floor(d0 + 0.5D);
     }
 
     private static int setCenter(CommandListenerWrapper commandlistenerwrapper, Vec2F vec2f) throws CommandSyntaxException {
-        WorldBorder worldborder = commandlistenerwrapper.getServer().overworld().getWorldBorder();
+        WorldBorder worldborder = commandlistenerwrapper.getLevel().getWorldBorder(); // CraftBukkit
 
         if (worldborder.getCenterX() == (double) vec2f.x && worldborder.getCenterZ() == (double) vec2f.y) {
             throw CommandWorldBorder.ERROR_SAME_CENTER.create();
@@ -126,7 +126,7 @@ public class CommandWorldBorder {
     }
 
     private static int setSize(CommandListenerWrapper commandlistenerwrapper, double d0, long i) throws CommandSyntaxException {
-        WorldBorder worldborder = commandlistenerwrapper.getServer().overworld().getWorldBorder();
+        WorldBorder worldborder = commandlistenerwrapper.getLevel().getWorldBorder(); // CraftBukkit
         double d1 = worldborder.getSize();
 
         if (d1 == d0) {

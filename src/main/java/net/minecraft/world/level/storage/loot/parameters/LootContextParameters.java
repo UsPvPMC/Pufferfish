@@ -21,6 +21,7 @@ public class LootContextParameters {
     public static final LootContextParameter<TileEntity> BLOCK_ENTITY = create("block_entity");
     public static final LootContextParameter<ItemStack> TOOL = create("tool");
     public static final LootContextParameter<Float> EXPLOSION_RADIUS = create("explosion_radius");
+    public static final LootContextParameter<Integer> LOOTING_MOD = new LootContextParameter<>(new MinecraftKey("bukkit:looting_mod")); // CraftBukkit
 
     public LootContextParameters() {}
 

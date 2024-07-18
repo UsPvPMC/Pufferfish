@@ -38,6 +38,11 @@ public abstract class AbstractCandleBlock extends Block {
     @Override
     public void onProjectileHit(World world, IBlockData iblockdata, MovingObjectPositionBlock movingobjectpositionblock, IProjectile iprojectile) {
         if (!world.isClientSide && iprojectile.isOnFire() && this.canBeLit(iblockdata)) {
+            // CraftBukkit start
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockIgniteEvent(world, movingobjectpositionblock.getBlockPos(), iprojectile).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
             setLit(world, iblockdata, movingobjectpositionblock.getBlockPos(), true);
         }
 

@@ -47,6 +47,7 @@ public class BlockDispenser extends BlockTileEntity {
         object2objectopenhashmap.defaultReturnValue(new DispenseBehaviorItem());
     });
     private static final int TRIGGER_DURATION = 4;
+    public static boolean eventFired = false; // CraftBukkit
 
     public static void registerBehavior(IMaterial imaterial, IDispenseBehavior idispensebehavior) {
         BlockDispenser.DISPENSER_REGISTRY.put(imaterial.asItem(), idispensebehavior);
@@ -90,6 +91,7 @@ public class BlockDispenser extends BlockTileEntity {
             IDispenseBehavior idispensebehavior = this.getDispenseMethod(itemstack);
 
             if (idispensebehavior != IDispenseBehavior.NOOP) {
+                eventFired = false; // CraftBukkit - reset event status
                 tileentitydispenser.setItem(i, idispensebehavior.dispense(sourceblock, itemstack));
             }
 

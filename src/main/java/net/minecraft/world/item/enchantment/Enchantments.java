@@ -50,6 +50,10 @@ public class Enchantments {
     public Enchantments() {}
 
     private static Enchantment register(String s, Enchantment enchantment) {
-        return (Enchantment) IRegistry.register(BuiltInRegistries.ENCHANTMENT, s, enchantment);
+        // CraftBukkit start
+        enchantment = (Enchantment) IRegistry.register(BuiltInRegistries.ENCHANTMENT, s, enchantment);
+        org.bukkit.enchantments.Enchantment.registerEnchantment(new org.bukkit.craftbukkit.enchantments.CraftEnchantment(enchantment));
+        return enchantment;
+        // CraftBukkit end
     }
 }

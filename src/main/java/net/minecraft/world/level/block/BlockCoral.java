@@ -25,6 +25,11 @@ public class BlockCoral extends Block {
     @Override
     public void tick(IBlockData iblockdata, WorldServer worldserver, BlockPosition blockposition, RandomSource randomsource) {
         if (!this.scanForWater(worldserver, blockposition)) {
+            // CraftBukkit start
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockFadeEvent(worldserver, blockposition, this.deadBlock.defaultBlockState()).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
             worldserver.setBlock(blockposition, this.deadBlock.defaultBlockState(), 2);
         }
 

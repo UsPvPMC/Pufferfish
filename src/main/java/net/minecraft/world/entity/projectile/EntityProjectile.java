@@ -66,7 +66,7 @@ public abstract class EntityProjectile extends IProjectile {
         }
 
         if (movingobjectposition.getType() != MovingObjectPosition.EnumMovingObjectType.MISS && !flag) {
-            this.onHit(movingobjectposition);
+            this.preOnHit(movingobjectposition); // CraftBukkit - projectile hit event
         }
 
         this.checkInsideBlocks();

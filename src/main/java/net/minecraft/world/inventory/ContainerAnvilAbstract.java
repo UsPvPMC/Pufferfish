@@ -124,6 +124,7 @@ public abstract class ContainerAnvilAbstract extends Container {
 
     @Override
     public boolean stillValid(EntityHuman entityhuman) {
+        if (!this.checkReachable) return true; // CraftBukkit
         return (Boolean) this.access.evaluate((world, blockposition) -> {
             return !this.isValidBlock(world.getBlockState(blockposition)) ? false : entityhuman.distanceToSqr((double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 0.5D, (double) blockposition.getZ() + 0.5D) <= 64.0D;
         }, true);

@@ -208,7 +208,7 @@ public class RegionLimitedWorldAccess implements GeneratorAccessSeed {
         if (iblockdata.isAir()) {
             return false;
         } else {
-            if (flag) {
+            if (false) { // CraftBukkit - SPIGOT-6833: Do not drop during world generation
                 TileEntity tileentity = iblockdata.hasBlockEntity() ? this.getBlockEntity(blockposition) : null;
 
                 Block.dropResources(iblockdata, this.level, blockposition, tileentity, entity, ItemStack.EMPTY);
@@ -327,6 +327,13 @@ public class RegionLimitedWorldAccess implements GeneratorAccessSeed {
 
     @Override
     public boolean addFreshEntity(Entity entity) {
+        // CraftBukkit start
+        return addFreshEntity(entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.DEFAULT);
+    }
+
+    @Override
+    public boolean addFreshEntity(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason) {
+        // CraftBukkit end
         int i = SectionPosition.blockToSectionCoord(entity.getBlockX());
         int j = SectionPosition.blockToSectionCoord(entity.getBlockZ());
 

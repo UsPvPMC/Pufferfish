@@ -39,7 +39,16 @@ public class ItemChorusFruit extends Item {
 
                 Vec3D vec3d = entityliving.position();
 
-                if (entityliving.randomTeleport(d3, d4, d5, true)) {
+                // CraftBukkit start - handle canceled status of teleport event
+                java.util.Optional<Boolean> status = entityliving.randomTeleport(d3, d4, d5, true, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
+
+                if (!status.isPresent()) {
+                    // teleport event was canceled, no more tries
+                    break;
+                }
+
+                if (status.get()) {
+                    // CraftBukkit end
                     world.gameEvent(GameEvent.TELEPORT, vec3d, GameEvent.a.of((Entity) entityliving));
                     SoundEffect soundeffect = entityliving instanceof EntityFox ? SoundEffects.FOX_TELEPORT : SoundEffects.CHORUS_FRUIT_TELEPORT;
 

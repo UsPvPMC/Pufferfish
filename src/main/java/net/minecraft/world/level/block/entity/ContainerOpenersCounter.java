@@ -13,6 +13,7 @@ public abstract class ContainerOpenersCounter {
 
     private static final int CHECK_TICK_DELAY = 5;
     private int openCount;
+    public boolean opened; // CraftBukkit
 
     public ContainerOpenersCounter() {}
 
@@ -22,10 +23,35 @@ public abstract class ContainerOpenersCounter {
 
     protected abstract void openerCountChanged(World world, BlockPosition blockposition, IBlockData iblockdata, int i, int j);
 
+    // CraftBukkit start
+    public void onAPIOpen(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        onOpen(world, blockposition, iblockdata);
+    }
+
+    public void onAPIClose(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        onClose(world, blockposition, iblockdata);
+    }
+
+    public void openerAPICountChanged(World world, BlockPosition blockposition, IBlockData iblockdata, int i, int j) {
+        openerCountChanged(world, blockposition, iblockdata, i, j);
+    }
+    // CraftBukkit end
+
     protected abstract boolean isOwnContainer(EntityHuman entityhuman);
 
     public void incrementOpeners(EntityHuman entityhuman, World world, BlockPosition blockposition, IBlockData iblockdata) {
+        int oldPower = Math.max(0, Math.min(15, this.openCount)); // CraftBukkit - Get power before new viewer is added
         int i = this.openCount++;
+
+        // CraftBukkit start - Call redstone event
+        if (world.getBlockState(blockposition).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
+            int newPower = Math.max(0, Math.min(15, this.openCount));
+
+            if (oldPower != newPower) {
+                org.bukkit.craftbukkit.event.CraftEventFactory.callRedstoneChange(world, blockposition, oldPower, newPower);
+            }
+        }
+        // CraftBukkit end
 
         if (i == 0) {
             this.onOpen(world, blockposition, iblockdata);
@@ -37,7 +63,18 @@ public abstract class ContainerOpenersCounter {
     }
 
     public void decrementOpeners(EntityHuman entityhuman, World world, BlockPosition blockposition, IBlockData iblockdata) {
+        int oldPower = Math.max(0, Math.min(15, this.openCount)); // CraftBukkit - Get power before new viewer is added
         int i = this.openCount--;
+
+        // CraftBukkit start - Call redstone event
+        if (world.getBlockState(blockposition).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
+            int newPower = Math.max(0, Math.min(15, this.openCount));
+
+            if (oldPower != newPower) {
+                org.bukkit.craftbukkit.event.CraftEventFactory.callRedstoneChange(world, blockposition, oldPower, newPower);
+            }
+        }
+        // CraftBukkit end
 
         if (this.openCount == 0) {
             this.onClose(world, blockposition, iblockdata);
@@ -59,6 +96,7 @@ public abstract class ContainerOpenersCounter {
 
     public void recheckOpeners(World world, BlockPosition blockposition, IBlockData iblockdata) {
         int i = this.getOpenCount(world, blockposition);
+        if (opened) i++; // CraftBukkit - add dummy count from API
         int j = this.openCount;
 
         if (j != i) {

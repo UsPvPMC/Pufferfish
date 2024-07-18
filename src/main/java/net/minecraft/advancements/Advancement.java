@@ -40,6 +40,7 @@ public class Advancement {
     private final String[][] requirements;
     private final Set<Advancement> children = Sets.newLinkedHashSet();
     private final IChatBaseComponent chatComponent;
+    public final org.bukkit.advancement.Advancement bukkit = new org.bukkit.craftbukkit.advancement.CraftAdvancement(this); // CraftBukkit
 
     public Advancement(MinecraftKey minecraftkey, @Nullable Advancement advancement, @Nullable AdvancementDisplay advancementdisplay, AdvancementRewards advancementrewards, Map<String, Criterion> map, String[][] astring) {
         this.id = minecraftkey;

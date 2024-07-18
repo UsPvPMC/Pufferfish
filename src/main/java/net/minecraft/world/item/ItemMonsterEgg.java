@@ -186,7 +186,7 @@ public class ItemMonsterEgg extends Item {
                     return Optional.empty();
                 } else {
                     ((EntityInsentient) object).moveTo(vec3d.x(), vec3d.y(), vec3d.z(), 0.0F, 0.0F);
-                    worldserver.addFreshEntityWithPassengers((Entity) object);
+                    worldserver.addFreshEntityWithPassengers((Entity) object, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER_EGG); // CraftBukkit
                     if (itemstack.hasCustomHoverName()) {
                         ((EntityInsentient) object).setCustomName(itemstack.getHoverName());
                     }
@@ -195,7 +195,7 @@ public class ItemMonsterEgg extends Item {
                         itemstack.shrink(1);
                     }
 
-                    return Optional.of(object);
+                    return Optional.of((EntityInsentient) object); // CraftBukkit - decompile error
                 }
             }
         }

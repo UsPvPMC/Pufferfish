@@ -26,7 +26,7 @@ public class RayTrace {
         this.to = vec3d1;
         this.block = raytrace_blockcollisionoption;
         this.fluid = raytrace_fluidcollisionoption;
-        this.collisionContext = VoxelShapeCollision.of(entity);
+        this.collisionContext = (entity == null) ? VoxelShapeCollision.empty() : VoxelShapeCollision.of(entity); // CraftBukkit
     }
 
     public Vec3D getTo() {
@@ -75,7 +75,7 @@ public class RayTrace {
 
         private final Predicate<Fluid> canPick;
 
-        private FluidCollisionOption(Predicate predicate) {
+        private FluidCollisionOption(Predicate<Fluid> predicate) { // CraftBukkit - decompile error
             this.canPick = predicate;
         }
 

@@ -46,7 +46,7 @@ public class SlotFurnaceResult extends Slot {
     protected void checkTakeAchievements(ItemStack itemstack) {
         itemstack.onCraftedBy(this.player.level, this.player, this.removeCount);
         if (this.player instanceof EntityPlayer && this.container instanceof TileEntityFurnace) {
-            ((TileEntityFurnace) this.container).awardUsedRecipesAndPopExperience((EntityPlayer) this.player);
+            ((TileEntityFurnace) this.container).awardUsedRecipesAndPopExperience((EntityPlayer) this.player, itemstack, this.removeCount); // CraftBukkit
         }
 
         this.removeCount = 0;

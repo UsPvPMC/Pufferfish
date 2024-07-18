@@ -21,6 +21,8 @@ import net.minecraft.world.level.pathfinder.PathMode;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.shapes.VoxelShapeCollision;
 
+import org.bukkit.craftbukkit.event.CraftEventFactory; // CraftBukkit
+
 public class BlockCactus extends Block {
 
     public static final BlockStateInteger AGE = BlockProperties.AGE_15;
@@ -57,7 +59,7 @@ public class BlockCactus extends Block {
                 int j = (Integer) iblockdata.getValue(BlockCactus.AGE);
 
                 if (j == 15) {
-                    worldserver.setBlockAndUpdate(blockposition1, this.defaultBlockState());
+                    CraftEventFactory.handleBlockGrowEvent(worldserver, blockposition1, this.defaultBlockState()); // CraftBukkit
                     IBlockData iblockdata1 = (IBlockData) iblockdata.setValue(BlockCactus.AGE, 0);
 
                     worldserver.setBlock(blockposition, iblockdata1, 4);
@@ -114,7 +116,9 @@ public class BlockCactus extends Block {
 
     @Override
     public void entityInside(IBlockData iblockdata, World world, BlockPosition blockposition, Entity entity) {
+        CraftEventFactory.blockDamage = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()); // CraftBukkit
         entity.hurt(world.damageSources().cactus(), 1.0F);
+        CraftEventFactory.blockDamage = null; // CraftBukkit
     }
 
     @Override

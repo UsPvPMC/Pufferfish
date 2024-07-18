@@ -21,6 +21,11 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.IChunkAccess;
 import net.minecraft.world.phys.Vec3D;
 
+// CraftBukkit start
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.event.entity.EntityInteractEvent;
+// CraftBukkit end
+
 public class PathfinderGoalRemoveBlock extends PathfinderGoalGotoTarget {
 
     private final Block blockToRemove;
@@ -96,6 +101,14 @@ public class PathfinderGoalRemoveBlock extends PathfinderGoalGotoTarget {
             }
 
             if (this.ticksSinceReachedGoal > 60) {
+                // CraftBukkit start - Step on eggs
+                EntityInteractEvent event = new EntityInteractEvent(this.removerMob.getBukkitEntity(), CraftBlock.at(world, blockposition1));
+                world.getCraftServer().getPluginManager().callEvent((EntityInteractEvent) event);
+
+                if (event.isCancelled()) {
+                    return;
+                }
+                // CraftBukkit end
                 world.removeBlock(blockposition1, false);
                 if (!world.isClientSide) {
                     for (int i = 0; i < 20; ++i) {

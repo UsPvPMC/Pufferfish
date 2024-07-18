@@ -33,6 +33,11 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.MaterialMapColor;
 import net.minecraft.world.level.saveddata.maps.WorldMap;
 
+// CraftBukkit start
+import org.bukkit.Bukkit;
+import org.bukkit.event.server.MapInitializeEvent;
+// CraftBukkit end
+
 public class ItemWorldMap extends ItemWorldMapBase {
 
     public static final int IMAGE_WIDTH = 128;
@@ -69,7 +74,7 @@ public class ItemWorldMap extends ItemWorldMapBase {
     public static Integer getMapId(ItemStack itemstack) {
         NBTTagCompound nbttagcompound = itemstack.getTag();
 
-        return nbttagcompound != null && nbttagcompound.contains("map", 99) ? nbttagcompound.getInt("map") : null;
+        return nbttagcompound != null && nbttagcompound.contains("map", 99) ? nbttagcompound.getInt("map") : -1; // CraftBukkit - make new maps for no tag
     }
 
     public static int createNewSavedData(World world, int i, int j, int k, boolean flag, boolean flag1, ResourceKey<World> resourcekey) {
@@ -77,6 +82,10 @@ public class ItemWorldMap extends ItemWorldMapBase {
         int l = world.getFreeMapId();
 
         world.setMapData(makeKey(l), worldmap);
+        // CraftBukkit start
+        MapInitializeEvent event = new MapInitializeEvent(worldmap.mapView);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        // CraftBukkit end
         return l;
     }
 

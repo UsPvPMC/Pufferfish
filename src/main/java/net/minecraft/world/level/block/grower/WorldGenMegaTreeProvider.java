@@ -40,11 +40,12 @@ public abstract class WorldGenMegaTreeProvider extends WorldGenTreeProvider {
         if (resourcekey == null) {
             return false;
         } else {
-            Holder<WorldGenFeatureConfigured<?, ?>> holder = (Holder) worldserver.registryAccess().registryOrThrow(Registries.CONFIGURED_FEATURE).getHolder(resourcekey).orElse((Object) null);
+            Holder<WorldGenFeatureConfigured<?, ?>> holder = (Holder) worldserver.registryAccess().registryOrThrow(Registries.CONFIGURED_FEATURE).getHolder(resourcekey).orElse(null); // CraftBukkit - decompile error
 
             if (holder == null) {
                 return false;
             } else {
+                setTreeType(holder); // CraftBukkit
                 WorldGenFeatureConfigured<?, ?> worldgenfeatureconfigured = (WorldGenFeatureConfigured) holder.value();
                 IBlockData iblockdata1 = Blocks.AIR.defaultBlockState();
 

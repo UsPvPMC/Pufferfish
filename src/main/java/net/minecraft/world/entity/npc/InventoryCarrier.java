@@ -23,6 +23,13 @@ public interface InventoryCarrier {
                 return;
             }
 
+            // CraftBukkit start
+            ItemStack remaining = new InventorySubcontainer(inventorysubcontainer).addItem(itemstack);
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityPickupItemEvent(entityinsentient, entityitem, remaining.getCount(), false).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
+
             entityinsentient.onItemPickup(entityitem);
             int i = itemstack.getCount();
             ItemStack itemstack1 = inventorysubcontainer.addItem(itemstack);

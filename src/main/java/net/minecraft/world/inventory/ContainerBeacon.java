@@ -11,6 +11,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.World;
 import net.minecraft.world.level.block.Blocks;
 
+// CraftBukkit start
+import net.minecraft.world.entity.player.PlayerInventory;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+// CraftBukkit end
+
 public class ContainerBeacon extends Container {
 
     private static final int PAYMENT_SLOT = 0;
@@ -24,6 +29,10 @@ public class ContainerBeacon extends Container {
     private final ContainerBeacon.SlotBeacon paymentSlot;
     private final ContainerAccess access;
     private final IContainerProperties beaconData;
+    // CraftBukkit start
+    private CraftInventoryView bukkitEntity = null;
+    private PlayerInventory player;
+    // CraftBukkit end
 
     public ContainerBeacon(int i, IInventory iinventory) {
         this(i, iinventory, new ContainerProperties(3), ContainerAccess.NULL);
@@ -31,6 +40,7 @@ public class ContainerBeacon extends Container {
 
     public ContainerBeacon(int i, IInventory iinventory, IContainerProperties icontainerproperties, ContainerAccess containeraccess) {
         super(Containers.BEACON, i);
+        player = (PlayerInventory) iinventory; // CraftBukkit - TODO: check this
         this.beacon = new InventorySubcontainer(1) {
             @Override
             public boolean canPlaceItem(int j, ItemStack itemstack) {
@@ -80,6 +90,7 @@ public class ContainerBeacon extends Container {
 
     @Override
     public boolean stillValid(EntityHuman entityhuman) {
+        if (!this.checkReachable) return true; // CraftBukkit
         return stillValid(this.access, entityhuman, Blocks.BEACON);
     }
 
@@ -180,4 +191,17 @@ public class ContainerBeacon extends Container {
             return 1;
         }
     }
+
+    // CraftBukkit start
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        org.bukkit.craftbukkit.inventory.CraftInventory inventory = new org.bukkit.craftbukkit.inventory.CraftInventoryBeacon(this.beacon);
+        bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 }

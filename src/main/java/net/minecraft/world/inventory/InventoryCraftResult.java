@@ -9,11 +9,50 @@ import net.minecraft.world.entity.player.EntityHuman;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.IRecipe;
 
+// CraftBukkit start
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+// CraftBukkit end
+
 public class InventoryCraftResult implements IInventory, RecipeHolder {
 
     private final NonNullList<ItemStack> itemStacks;
     @Nullable
     private IRecipe<?> recipeUsed;
+
+    // CraftBukkit start
+    private int maxStack = MAX_STACK;
+
+    public java.util.List<ItemStack> getContents() {
+        return this.itemStacks;
+    }
+
+    public org.bukkit.inventory.InventoryHolder getOwner() {
+        return null; // Result slots don't get an owner
+    }
+
+    // Don't need a transaction; the InventoryCrafting keeps track of it for us
+    public void onOpen(CraftHumanEntity who) {}
+    public void onClose(CraftHumanEntity who) {}
+    public java.util.List<HumanEntity> getViewers() {
+        return new java.util.ArrayList<HumanEntity>();
+    }
+
+    @Override
+    public int getMaxStackSize() {
+        return maxStack;
+    }
+
+    public void setMaxStackSize(int size) {
+        maxStack = size;
+    }
+
+    @Override
+    public Location getLocation() {
+        return null;
+    }
+    // CraftBukkit end
 
     public InventoryCraftResult() {
         this.itemStacks = NonNullList.withSize(1, ItemStack.EMPTY);

@@ -25,7 +25,7 @@ public class BlockWaterLily extends BlockPlant {
     @Override
     public void entityInside(IBlockData iblockdata, World world, BlockPosition blockposition, Entity entity) {
         super.entityInside(iblockdata, world, blockposition, entity);
-        if (world instanceof WorldServer && entity instanceof EntityBoat) {
+        if (world instanceof WorldServer && entity instanceof EntityBoat && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(entity, blockposition, Blocks.AIR.defaultBlockState()).isCancelled()) { // CraftBukkit
             world.destroyBlock(new BlockPosition(blockposition), true, entity);
         }
 

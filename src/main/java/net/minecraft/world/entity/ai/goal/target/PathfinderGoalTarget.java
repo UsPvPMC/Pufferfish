@@ -11,6 +11,8 @@ import net.minecraft.world.level.pathfinder.PathEntity;
 import net.minecraft.world.level.pathfinder.PathPoint;
 import net.minecraft.world.scores.ScoreboardTeamBase;
 
+import org.bukkit.event.entity.EntityTargetEvent; // CraftBukkit
+
 public abstract class PathfinderGoalTarget extends PathfinderGoal {
 
     private static final int EMPTY_REACH_CACHE = 0;
@@ -69,7 +71,7 @@ public abstract class PathfinderGoalTarget extends PathfinderGoal {
                         }
                     }
 
-                    this.mob.setTarget(entityliving);
+                    this.mob.setTarget(entityliving, EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true); // CraftBukkit
                     return true;
                 }
             }
@@ -89,7 +91,7 @@ public abstract class PathfinderGoalTarget extends PathfinderGoal {
 
     @Override
     public void stop() {
-        this.mob.setTarget((EntityLiving) null);
+        this.mob.setTarget((EntityLiving) null, EntityTargetEvent.TargetReason.FORGOT_TARGET, true); // CraftBukkit
         this.targetMob = null;
     }
 

@@ -35,11 +35,11 @@ public interface GeneratorAccess extends ICombinedAccess, IWorldTime {
 
     LevelTickAccess<Block> getBlockTicks();
 
-    private default <T> NextTickListEntry<T> createTick(BlockPosition blockposition, T t0, int i, TickListPriority ticklistpriority) {
+    default <T> NextTickListEntry<T> createTick(BlockPosition blockposition, T t0, int i, TickListPriority ticklistpriority) { // CraftBukkit - decompile error
         return new NextTickListEntry<>(t0, blockposition, this.getLevelData().getGameTime() + (long) i, ticklistpriority, this.nextSubTickCount());
     }
 
-    private default <T> NextTickListEntry<T> createTick(BlockPosition blockposition, T t0, int i) {
+    default <T> NextTickListEntry<T> createTick(BlockPosition blockposition, T t0, int i) { // CraftBukkit - decompile error
         return new NextTickListEntry<>(t0, blockposition, this.getLevelData().getGameTime() + (long) i, this.nextSubTickCount());
     }
 
@@ -114,4 +114,6 @@ public interface GeneratorAccess extends ICombinedAccess, IWorldTime {
     default void gameEvent(GameEvent gameevent, BlockPosition blockposition, GameEvent.a gameevent_a) {
         this.gameEvent(gameevent, Vec3D.atCenterOf(blockposition), gameevent_a);
     }
+
+    net.minecraft.server.level.WorldServer getMinecraftWorld(); // CraftBukkit
 }

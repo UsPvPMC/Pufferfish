@@ -88,8 +88,14 @@ public class EntityRabbit extends EntityAnimal implements VariantHolder<EntityRa
         super(entitytypes, world);
         this.jumpControl = new EntityRabbit.ControllerJumpRabbit(this);
         this.moveControl = new EntityRabbit.ControllerMoveRabbit(this);
+        this.initializePathFinderGoals(); // CraftBukkit - moved code
+    }
+
+    // CraftBukkit start - code from constructor
+    public void initializePathFinderGoals(){
         this.setSpeedModifier(0.0D);
     }
+    // CraftBukkit end
 
     @Override
     public void registerGoals() {
@@ -570,9 +576,23 @@ public class EntityRabbit extends EntityAnimal implements VariantHolder<EntityRa
                     int i = (Integer) iblockdata.getValue(BlockCarrots.AGE);
 
                     if (i == 0) {
+                        // CraftBukkit start
+                        if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(this.rabbit, blockposition, Blocks.AIR.defaultBlockState()).isCancelled()) {
+                            return;
+                        }
+                        // CraftBukkit end
                         world.setBlock(blockposition, Blocks.AIR.defaultBlockState(), 2);
                         world.destroyBlock(blockposition, true, this.rabbit);
                     } else {
+                        // CraftBukkit start
+                        if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(
+                                this.rabbit,
+                                blockposition,
+                                iblockdata.setValue(BlockCarrots.AGE, i - 1)
+                        ).isCancelled()) {
+                            return;
+                        }
+                        // CraftBukkit end
                         world.setBlock(blockposition, (IBlockData) iblockdata.setValue(BlockCarrots.AGE, i - 1), 2);
                         world.levelEvent(2001, blockposition, Block.getId(iblockdata));
                     }

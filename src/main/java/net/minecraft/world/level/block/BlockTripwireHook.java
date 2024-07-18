@@ -27,6 +27,8 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.shapes.VoxelShapeCollision;
 
+import org.bukkit.event.block.BlockRedstoneEvent; // CraftBukkit
+
 public class BlockTripwireHook extends Block {
 
     public static final BlockStateDirection FACING = BlockFacingHorizontal.FACING;
@@ -160,6 +162,17 @@ public class BlockTripwireHook extends Block {
             this.notifyNeighbors(world, blockposition1, enumdirection1);
             this.emitState(world, blockposition1, flag4, flag5, flag2, flag3);
         }
+
+        // CraftBukkit start
+        org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
+
+        BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 15, 0);
+        world.getCraftServer().getPluginManager().callEvent(eventRedstone);
+
+        if (eventRedstone.getNewCurrent() > 0) {
+            return;
+        }
+        // CraftBukkit end
 
         this.emitState(world, blockposition, flag4, flag5, flag2, flag3);
         if (!flag) {

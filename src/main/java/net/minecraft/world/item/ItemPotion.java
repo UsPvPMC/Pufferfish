@@ -60,7 +60,7 @@ public class ItemPotion extends Item {
                 if (mobeffect.getEffect().isInstantenous()) {
                     mobeffect.getEffect().applyInstantenousEffect(entityhuman, entityhuman, entityliving, mobeffect.getAmplifier(), 1.0D);
                 } else {
-                    entityliving.addEffect(new MobEffect(mobeffect));
+                    entityliving.addEffect(new MobEffect(mobeffect), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.POTION_DRINK); // CraftBukkit
                 }
             }
         }
